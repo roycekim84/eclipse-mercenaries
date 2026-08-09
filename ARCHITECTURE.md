@@ -16,6 +16,7 @@
 - `core/content/game_content_repository.dart`: 콘텐츠 조회 인터페이스와 알파 정적 구현
 - `core/content/game_visuals.dart`: 용병/무기의 색상, 아이콘, 이미지 경로
 - `core/persistence/save_repository.dart`: versioned 계정 저장 모델과 저장 인터페이스
+- `domain/progression.dart`: 용병 레벨·승급, 무기 영구 레벨·단계와 성장 영수증 규칙
 - `core/widgets`: 판타지 패널, 버튼, 카드, 상태 표시와 지도 painter
 - `features`: 캠프, 계약/출전, 장비, 전투 HUD, 용병, 결과 화면
 - `domain/game_data.dart`: Flutter 의존성이 없는 용병과 무기 규칙 데이터
@@ -248,6 +249,8 @@ SaveGame
 └── settings
 ```
 
+현재 schema v2의 실제 저장 필드는 `gold`, `crystals`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
+
 원칙:
 
 - save schema version 필수
@@ -256,6 +259,8 @@ SaveGame
 - 마지막 정상 저장 백업
 - Web local storage와 모바일 파일 저장을 repository 뒤에서 교체
 - 저장 실패 시 사용자에게 알리고 메모리 상태를 유지한 채 재시도
+
+저장 순서는 기존 primary를 backup으로 복사한 뒤 새 primary를 기록한다. load는 primary→backup→initial 순서로 복구하며 backup을 사용한 경우 primary를 즉시 복원한다. UI와 테스트에서는 `MemoryKeyValueStore`를 주입해 플랫폼 plugin 없이 같은 repository 계약을 검증한다.
 
 ## 13. 자산 로딩
 

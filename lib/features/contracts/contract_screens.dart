@@ -87,6 +87,7 @@ class MercenarySelectScreen extends StatelessWidget {
     super.key,
     required this.selected,
     required this.equippedWeapon,
+    required this.mercenaryProgress,
     required this.onSelect,
     required this.onBack,
     required this.onEquipment,
@@ -95,6 +96,7 @@ class MercenarySelectScreen extends StatelessWidget {
 
   final MercenarySpec selected;
   final WeaponSpec equippedWeapon;
+  final Map<String, MercenaryProgress> mercenaryProgress;
   final ValueChanged<MercenarySpec> onSelect;
   final VoidCallback onBack;
   final VoidCallback onEquipment;
@@ -127,6 +129,7 @@ class MercenarySelectScreen extends StatelessWidget {
                       height: compact ? double.infinity : 128,
                       child: DeploymentMercenaryCard(
                         mercenary: mercenary,
+                        progress: mercenaryProgress[mercenary.id],
                         selected: selected.id == mercenary.id,
                         onTap: () => onSelect(mercenary),
                       ),
@@ -165,10 +168,12 @@ class DeploymentMercenaryCard extends StatelessWidget {
   const DeploymentMercenaryCard({
     super.key,
     required this.mercenary,
+    required this.progress,
     required this.selected,
     required this.onTap,
   });
   final MercenarySpec mercenary;
+  final MercenaryProgress? progress;
   final bool selected;
   final VoidCallback onTap;
 
@@ -229,7 +234,7 @@ class DeploymentMercenaryCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Lv.${mercenary.level}  ★★★★★',
+                      'Lv.${progress?.level ?? mercenary.level}  ★★★★★',
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 10,

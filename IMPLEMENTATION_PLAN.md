@@ -269,6 +269,8 @@ M2.4 구현은 최대 4개 무기/무기 5단계/패시브 5단계/개인 특성
 
 ### E10. 영구 성장과 저장
 
+상태: M4.1에서 schema v2, v1 migration, backup 복구, Web/iOS/Android 저장 adapter, 용병·무기·inventory 영구 성장을 구현 완료. 소비 재화를 사용하는 수동 승급·강화 UI는 E11/M4.2에서 연결한다.
+
 작업:
 
 - save schema version과 migration

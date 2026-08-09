@@ -4,10 +4,14 @@ class ResultScreen extends StatelessWidget {
   const ResultScreen({
     super.key,
     required this.report,
+    required this.growthReceipt,
+    this.saveNotice,
     required this.onCamp,
     required this.onReplay,
   });
   final BattleReport report;
+  final GrowthReceipt growthReceipt;
+  final String? saveNotice;
   final VoidCallback onCamp;
   final VoidCallback onReplay;
   @override
@@ -121,6 +125,27 @@ class ResultScreen extends StatelessWidget {
                     const Divider(color: Color(0xff665536)),
                     const SizedBox(height: 12),
                     _RewardBreakdownPanel(breakdown: report.rewardBreakdown),
+                    const SizedBox(height: 10),
+                    _PermanentGrowthPanel(receipt: growthReceipt),
+                    if (saveNotice != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0x663b1719),
+                          border: Border.all(color: const Color(0xff9e554e)),
+                        ),
+                        child: Text(
+                          saveNotice!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xffe6a197),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     const Align(
                       alignment: Alignment.centerLeft,
@@ -196,6 +221,126 @@ class ResultScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PermanentGrowthPanel extends StatelessWidget {
+  const _PermanentGrowthPanel({required this.receipt});
+
+  final GrowthReceipt receipt;
+
+  @override
+  Widget build(BuildContext context) {
+    final mercenary = gameContent.mercenaryById(receipt.mercenaryId);
+    final weapon = gameContent.weaponById(receipt.weaponId);
+    final mercenaryLevelUp =
+        receipt.mercenaryAfter.level > receipt.mercenaryBefore.level;
+    final weaponLevelUp =
+        receipt.weaponAfter.level > receipt.weaponBefore.level;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0x66201c32),
+        border: Border.all(color: const Color(0x665f4b73)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.trending_up, color: Color(0xffc7a6df), size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _GrowthLine(
+              name: mercenary.name,
+              level: receipt.mercenaryAfter.level,
+              xp: receipt.mercenaryAfter.xp,
+              nextXp: ProgressionRules.mercenaryXpToNext(
+                receipt.mercenaryAfter.level,
+              ),
+              gained: receipt.mercenaryXpGained,
+              levelUp: mercenaryLevelUp,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: _GrowthLine(
+              name: weapon.name,
+              level: receipt.weaponAfter.level,
+              xp: receipt.weaponAfter.xp,
+              nextXp: ProgressionRules.weaponXpToNext(
+                receipt.weaponAfter.level,
+              ),
+              gained: receipt.weaponXpGained,
+              levelUp: weaponLevelUp,
+              stage: receipt.weaponAfter.stage,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GrowthLine extends StatelessWidget {
+  const _GrowthLine({
+    required this.name,
+    required this.level,
+    required this.xp,
+    required this.nextXp,
+    required this.gained,
+    required this.levelUp,
+    this.stage,
+  });
+
+  final String name;
+  final int level;
+  final int xp;
+  final int nextXp;
+  final int gained;
+  final bool levelUp;
+  final int? stage;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10, color: Colors.white70),
+            ),
+          ),
+          Text(
+            'Lv.$level${stage == null ? '' : ' · $stage단계'}',
+            style: TextStyle(
+              color: levelUp
+                  ? const Color(0xffffd27c)
+                  : const Color(0xffc7a6df),
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 5),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: LinearProgressIndicator(
+          minHeight: 4,
+          value: nextXp <= 0 ? 1 : (xp / nextXp).clamp(0, 1),
+          backgroundColor: const Color(0xff171923),
+          color: const Color(0xff8e6eae),
+        ),
+      ),
+      const SizedBox(height: 3),
+      Text(
+        '+$gained XP · $xp / $nextXp${levelUp ? '  LEVEL UP' : ''}',
+        style: const TextStyle(fontSize: 8, color: Colors.white38),
+      ),
+    ],
+  );
 }
 
 class _MvpPanel extends StatelessWidget {

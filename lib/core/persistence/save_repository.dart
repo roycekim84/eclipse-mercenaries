@@ -1,3 +1,11 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../domain/progression.dart';
+
+enum SaveLoadSource { primary, backup, initial }
+
 class AccountSave {
   const AccountSave({
     required this.schemaVersion,
@@ -5,6 +13,9 @@ class AccountSave {
     required this.crystals,
     required this.selectedMercenaryId,
     required this.equippedWeaponByMercenary,
+    required this.mercenaryProgress,
+    required this.weaponProgress,
+    required this.inventory,
   });
 
   factory AccountSave.initial() => const AccountSave(
@@ -17,45 +28,291 @@ class AccountSave {
       'kael': 'blood_fang',
       'sera': 'glass_flame',
     },
+    mercenaryProgress: {
+      'luna': MercenaryProgress(level: 45, xp: 0, ascension: 0),
+      'kael': MercenaryProgress(level: 42, xp: 0, ascension: 0),
+      'sera': MercenaryProgress(level: 40, xp: 0, ascension: 0),
+    },
+    weaponProgress: {
+      'moon_blades': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'blood_fang': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'glass_flame': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'war_bow': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'ember_orb': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'guard_spear': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'shadow_knife': WeaponProgress(level: 1, xp: 0, stage: 1),
+    },
+    inventory: {},
   );
 
-  static const currentSchemaVersion = 1;
+  static const currentSchemaVersion = 2;
 
   final int schemaVersion;
   final int gold;
   final int crystals;
   final String selectedMercenaryId;
   final Map<String, String> equippedWeaponByMercenary;
+  final Map<String, MercenaryProgress> mercenaryProgress;
+  final Map<String, WeaponProgress> weaponProgress;
+  final Map<String, int> inventory;
 
   AccountSave copyWith({
     int? gold,
     int? crystals,
     String? selectedMercenaryId,
     Map<String, String>? equippedWeaponByMercenary,
+    Map<String, MercenaryProgress>? mercenaryProgress,
+    Map<String, WeaponProgress>? weaponProgress,
+    Map<String, int>? inventory,
   }) => AccountSave(
-    schemaVersion: schemaVersion,
+    schemaVersion: currentSchemaVersion,
     gold: gold ?? this.gold,
     crystals: crystals ?? this.crystals,
     selectedMercenaryId: selectedMercenaryId ?? this.selectedMercenaryId,
     equippedWeaponByMercenary:
         equippedWeaponByMercenary ?? this.equippedWeaponByMercenary,
+    mercenaryProgress: mercenaryProgress ?? this.mercenaryProgress,
+    weaponProgress: weaponProgress ?? this.weaponProgress,
+    inventory: inventory ?? this.inventory,
   );
+
+  Map<String, Object> toJson() => {
+    'schemaVersion': currentSchemaVersion,
+    'gold': gold,
+    'crystals': crystals,
+    'selectedMercenaryId': selectedMercenaryId,
+    'equippedWeaponByMercenary': equippedWeaponByMercenary,
+    'mercenaryProgress': {
+      for (final entry in mercenaryProgress.entries)
+        entry.key: entry.value.toJson(),
+    },
+    'weaponProgress': {
+      for (final entry in weaponProgress.entries)
+        entry.key: entry.value.toJson(),
+    },
+    'inventory': inventory,
+  };
+
+  factory AccountSave.fromJson(Map<String, Object?> raw) {
+    final migrated = SaveMigration.migrate(raw);
+    final defaults = AccountSave.initial();
+    return AccountSave(
+      schemaVersion: currentSchemaVersion,
+      gold: (migrated['gold'] as num?)?.toInt() ?? defaults.gold,
+      crystals: (migrated['crystals'] as num?)?.toInt() ?? defaults.crystals,
+      selectedMercenaryId:
+          migrated['selectedMercenaryId'] as String? ??
+          defaults.selectedMercenaryId,
+      equippedWeaponByMercenary: _stringMap(
+        migrated['equippedWeaponByMercenary'],
+        defaults.equippedWeaponByMercenary,
+      ),
+      mercenaryProgress: _progressMap(
+        migrated['mercenaryProgress'],
+        defaults.mercenaryProgress,
+        MercenaryProgress.fromJson,
+      ),
+      weaponProgress: _progressMap(
+        migrated['weaponProgress'],
+        defaults.weaponProgress,
+        WeaponProgress.fromJson,
+      ),
+      inventory: _intMap(migrated['inventory']),
+    );
+  }
+
+  static Map<String, String> _stringMap(
+    Object? value,
+    Map<String, String> fallback,
+  ) {
+    if (value is! Map) return Map.of(fallback);
+    return {
+      ...fallback,
+      for (final entry in value.entries)
+        if (entry.key is String && entry.value is String)
+          entry.key as String: entry.value as String,
+    };
+  }
+
+  static Map<String, int> _intMap(Object? value) {
+    if (value is! Map) return {};
+    return {
+      for (final entry in value.entries)
+        if (entry.key is String && entry.value is num)
+          entry.key as String: (entry.value as num).toInt(),
+    };
+  }
+
+  static Map<String, T> _progressMap<T>(
+    Object? value,
+    Map<String, T> fallback,
+    T Function(Map<String, Object?>) decode,
+  ) {
+    final result = Map<String, T>.of(fallback);
+    if (value is! Map) return result;
+    for (final entry in value.entries) {
+      if (entry.key is String && entry.value is Map) {
+        result[entry.key as String] = decode(
+          Map<String, Object?>.from(entry.value as Map),
+        );
+      }
+    }
+    return result;
+  }
+}
+
+abstract final class SaveMigration {
+  static Map<String, Object?> migrate(Map<String, Object?> raw) {
+    var current = Map<String, Object?>.from(raw);
+    var version = (current['schemaVersion'] as num?)?.toInt() ?? 1;
+    if (version < 2) {
+      final defaults = AccountSave.initial();
+      current = {
+        ...current,
+        'schemaVersion': 2,
+        'mercenaryProgress': {
+          for (final entry in defaults.mercenaryProgress.entries)
+            entry.key: entry.value.toJson(),
+        },
+        'weaponProgress': {
+          for (final entry in defaults.weaponProgress.entries)
+            entry.key: entry.value.toJson(),
+        },
+        'inventory': <String, int>{},
+      };
+      version = 2;
+    }
+    if (version != AccountSave.currentSchemaVersion) {
+      throw const FormatException('Unsupported save schema');
+    }
+    return current;
+  }
+}
+
+abstract interface class KeyValueStore {
+  Future<String?> getString(String key);
+  Future<void> setString(String key, String value);
+  Future<void> remove(String key);
+}
+
+class SharedPreferencesKeyValueStore implements KeyValueStore {
+  SharedPreferencesKeyValueStore([SharedPreferencesAsync? preferences])
+    : _preferences = preferences ?? SharedPreferencesAsync();
+
+  final SharedPreferencesAsync _preferences;
+
+  @override
+  Future<String?> getString(String key) => _preferences.getString(key);
+
+  @override
+  Future<void> setString(String key, String value) async {
+    await _preferences.setString(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) async {
+    await _preferences.remove(key);
+  }
 }
 
 abstract interface class SaveRepository {
-  AccountSave load();
-  void save(AccountSave value);
+  SaveLoadSource get lastLoadSource;
+  Future<AccountSave> load();
+  Future<void> save(AccountSave value);
+  Future<AccountSave> reset();
 }
 
-class InMemorySaveRepository implements SaveRepository {
-  InMemorySaveRepository([AccountSave? initial])
-    : _value = initial ?? AccountSave.initial();
+class JsonSaveRepository implements SaveRepository {
+  JsonSaveRepository(this._store);
 
-  AccountSave _value;
+  static const primaryKey = 'eclipse_mercenaries.save.v2';
+  static const backupKey = 'eclipse_mercenaries.save.backup';
+
+  final KeyValueStore _store;
 
   @override
-  AccountSave load() => _value;
+  SaveLoadSource lastLoadSource = SaveLoadSource.initial;
 
   @override
-  void save(AccountSave value) => _value = value;
+  Future<AccountSave> load() async {
+    final primary = await _decode(await _store.getString(primaryKey));
+    if (primary != null) {
+      lastLoadSource = SaveLoadSource.primary;
+      return primary;
+    }
+    final backup = await _decode(await _store.getString(backupKey));
+    if (backup != null) {
+      lastLoadSource = SaveLoadSource.backup;
+      await _store.setString(primaryKey, jsonEncode(backup.toJson()));
+      return backup;
+    }
+    final initial = AccountSave.initial();
+    lastLoadSource = SaveLoadSource.initial;
+    await _store.setString(primaryKey, jsonEncode(initial.toJson()));
+    return initial;
+  }
+
+  @override
+  Future<void> save(AccountSave value) async {
+    final current = await _store.getString(primaryKey);
+    if (current != null) await _store.setString(backupKey, current);
+    await _store.setString(primaryKey, jsonEncode(value.toJson()));
+  }
+
+  @override
+  Future<AccountSave> reset() async {
+    await _store.remove(primaryKey);
+    await _store.remove(backupKey);
+    return load();
+  }
+
+  Future<AccountSave?> _decode(String? encoded) async {
+    if (encoded == null) return null;
+    try {
+      final decoded = jsonDecode(encoded);
+      if (decoded is! Map) return null;
+      return AccountSave.fromJson(Map<String, Object?>.from(decoded));
+    } on FormatException {
+      return null;
+    } on TypeError {
+      return null;
+    }
+  }
+}
+
+class MemoryKeyValueStore implements KeyValueStore {
+  MemoryKeyValueStore([Map<String, String>? values])
+    : values = values ?? <String, String>{};
+
+  final Map<String, String> values;
+
+  @override
+  Future<String?> getString(String key) async => values[key];
+
+  @override
+  Future<void> setString(String key, String value) async {
+    values[key] = value;
+  }
+
+  @override
+  Future<void> remove(String key) async {
+    values.remove(key);
+  }
+}
+
+class InMemorySaveRepository extends JsonSaveRepository {
+  factory InMemorySaveRepository([AccountSave? initial]) {
+    final store = MemoryKeyValueStore();
+    if (initial != null) {
+      store.values[JsonSaveRepository.primaryKey] = jsonEncode(
+        initial.toJson(),
+      );
+    }
+    return InMemorySaveRepository._(store);
+  }
+
+  InMemorySaveRepository._(this.store) : super(store);
+
+  final MemoryKeyValueStore store;
 }

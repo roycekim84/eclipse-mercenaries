@@ -24,7 +24,8 @@ extension WeaponSystem on SurvivorGame {
                     (state.level ~/ 2)) *
                 (1 +
                     _passiveLevel('battle_instinct') * .1 +
-                    (mercenary.id == 'kael' ? _traitLevel * .08 : 0)))
+                    (mercenary.id == 'kael' ? _traitLevel * .08 : 0)) *
+                _permanentDamageMultiplier)
             .round();
     final nocturnal =
         mercenary.id == 'luna' &&

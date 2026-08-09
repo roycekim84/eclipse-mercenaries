@@ -5,11 +5,13 @@ class EquipmentScreen extends StatelessWidget {
     super.key,
     required this.mercenary,
     required this.equipped,
+    required this.weaponProgress,
     required this.onEquip,
     required this.onBack,
   });
   final MercenarySpec mercenary;
   final WeaponSpec equipped;
+  final Map<String, WeaponProgress> weaponProgress;
   final ValueChanged<WeaponSpec> onEquip;
   final VoidCallback onBack;
 
@@ -41,6 +43,7 @@ class EquipmentScreen extends StatelessWidget {
                       itemBuilder: (_, index) {
                         final weapon = gameContent.weapons[index];
                         final active = weapon.id == equipped.id;
+                        final progress = weaponProgress[weapon.id];
                         return InkWell(
                           onTap: () => onEquip(weapon),
                           child: Container(
@@ -84,6 +87,13 @@ class EquipmentScreen extends StatelessWidget {
                                     color: Colors.white54,
                                   ),
                                 ),
+                                Text(
+                                  '영구 Lv.${progress?.level ?? 1} · ${progress?.stage ?? 1}단계',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    color: Color(0xffc7a6df),
+                                  ),
+                                ),
                                 if (weapon.ownerId != null)
                                   const Text(
                                     '고유 장비',
@@ -104,6 +114,7 @@ class EquipmentScreen extends StatelessWidget {
                     child: WeaponDetailPanel(
                       mercenary: mercenary,
                       weapon: equipped,
+                      progress: weaponProgress[equipped.id],
                     ),
                   ),
                 ],
@@ -121,9 +132,11 @@ class WeaponDetailPanel extends StatelessWidget {
     super.key,
     required this.mercenary,
     required this.weapon,
+    required this.progress,
   });
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
+  final WeaponProgress? progress;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +167,10 @@ class WeaponDetailPanel extends StatelessWidget {
               Text(
                 '${weapon.grade} 등급',
                 style: TextStyle(color: weapon.visual.color),
+              ),
+              Text(
+                '영구 Lv.${progress?.level ?? 1} · 성장 ${progress?.stage ?? 1}단계',
+                style: const TextStyle(color: Color(0xffc7a6df), fontSize: 11),
               ),
               const Divider(color: Color(0xff665536)),
               StatRow('공격력', '${weapon.attack}'),

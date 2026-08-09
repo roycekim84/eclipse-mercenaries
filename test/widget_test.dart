@@ -1,12 +1,16 @@
 import 'package:eclipse_mercenaries/app/game_app.dart';
+import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
+import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('camp renders primary actions', (tester) async {
-    await tester.pumpWidget(const EclipseMercenariesApp());
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('전쟁터 출전'), findsOneWidget);
@@ -15,7 +19,9 @@ void main() {
   });
 
   testWidgets('contract flows into mercenary selection', (tester) async {
-    await tester.pumpWidget(const EclipseMercenariesApp());
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('전쟁터 출전'));
@@ -31,7 +37,9 @@ void main() {
   });
 
   testWidgets('equipment screen exposes alpha weapon set', (tester) async {
-    await tester.pumpWidget(const EclipseMercenariesApp());
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('장비'));
@@ -43,7 +51,9 @@ void main() {
   });
 
   testWidgets('camp codex exposes enemy catalog and filters', (tester) async {
-    await tester.pumpWidget(const EclipseMercenariesApp());
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('도감'));
@@ -95,7 +105,26 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: ResultScreen(report: report, onCamp: () {}, onReplay: () {}),
+        home: ResultScreen(
+          report: report,
+          growthReceipt: const GrowthReceipt(
+            mercenaryId: 'luna',
+            mercenaryBefore: MercenaryProgress(level: 45, xp: 0, ascension: 0),
+            mercenaryAfter: MercenaryProgress(
+              level: 45,
+              xp: 1500,
+              ascension: 0,
+            ),
+            mercenaryXpGained: 1500,
+            weaponId: 'moon_blades',
+            weaponBefore: WeaponProgress(level: 1, xp: 0, stage: 1),
+            weaponAfter: WeaponProgress(level: 2, xp: 400, stage: 1),
+            weaponXpGained: 750,
+            inventoryAdded: {'officer_map': 1},
+          ),
+          onCamp: () {},
+          onReplay: () {},
+        ),
       ),
     );
     await tester.pumpAndSettle();

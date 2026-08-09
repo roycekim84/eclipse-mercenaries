@@ -1,5 +1,16 @@
 # 변경 기록
 
+## Persistent progression and save migration — 2026-08-10
+
+- `shared_preferences` 2.5.5 기반 Web/iOS/Android 비동기 저장 adapter 추가
+- 골드·크리스탈·장착·용병·무기·전리품 inventory를 포함하는 save schema v2 구현
+- schema v1 migration과 primary 손상 시 backup/초기 상태 복구 추가
+- 용병 영구 경험치·레벨 상한·2회 승급과 무기 Lv.1~20/4단계 성장 규칙 구현
+- 영구 용병·무기 성장의 HP·피해·이동속도 보너스를 다음 전투에 연결
+- 결과 화면 영구 성장 게이지와 무기 LEVEL UP, 출전·장비 화면 저장 레벨 표시
+- 저장 완료 후 결과 전환, 저장 실패 경고와 repository 주입 테스트 구조 추가
+- M4.1 저장과 영구 성장 완료
+
 ## Reward breakdown and loot table — 2026-08-10
 
 - 계약·목표·전과·사건별 골드/경험치 보상 명세와 사건 배율 계산 추가

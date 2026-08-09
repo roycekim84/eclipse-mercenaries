@@ -6,12 +6,16 @@ class BattleScreen extends StatefulWidget {
     required this.contract,
     required this.mercenary,
     required this.weapon,
+    required this.mercenaryProgress,
+    required this.weaponProgress,
     required this.onVictory,
     required this.onExit,
   });
   final BattlefieldContract contract;
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
+  final MercenaryProgress mercenaryProgress;
+  final WeaponProgress weaponProgress;
   final ValueChanged<BattleReport> onVictory;
   final VoidCallback onExit;
 
@@ -36,6 +40,9 @@ class _BattleScreenState extends State<BattleScreen>
         contractName: widget.contract.name,
         contractGold: widget.contract.reward,
         contractXp: widget.contract.xp,
+        mercenaryPermanentLevel: widget.mercenaryProgress.level,
+        weaponPermanentLevel: widget.weaponProgress.level,
+        weaponGrowthStage: widget.weaponProgress.stage,
       ),
       onVictory: widget.onVictory,
     );

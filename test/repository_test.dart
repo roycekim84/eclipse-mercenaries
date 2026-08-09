@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
@@ -9,6 +10,7 @@ import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
+import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:eclipse_mercenaries/domain/run_growth.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -226,9 +228,9 @@ void main() {
     }
   });
 
-  test('save repository preserves loadout and reward state', () {
+  test('save repository preserves loadout and reward state', () async {
     final repository = InMemorySaveRepository();
-    final initial = repository.load();
+    final initial = await repository.load();
     final updated = initial.copyWith(
       gold: initial.gold + 500,
       selectedMercenaryId: 'kael',
@@ -238,11 +240,129 @@ void main() {
       },
     );
 
-    repository.save(updated);
+    await repository.save(updated);
 
-    expect(repository.load().gold, 46178);
-    expect(repository.load().selectedMercenaryId, 'kael');
-    expect(repository.load().equippedWeaponByMercenary['kael'], 'iron_sword');
+    final restored = await repository.load();
+    expect(restored.gold, 46178);
+    expect(restored.selectedMercenaryId, 'kael');
+    expect(restored.equippedWeaponByMercenary['kael'], 'iron_sword');
+  });
+
+  test(
+    'version one save migrates progression and inventory to schema two',
+    () async {
+      final store = MemoryKeyValueStore({
+        JsonSaveRepository.primaryKey: jsonEncode({
+          'schemaVersion': 1,
+          'gold': 12345,
+          'crystals': 600,
+          'selectedMercenaryId': 'kael',
+          'equippedWeaponByMercenary': {'kael': 'iron_sword'},
+        }),
+      });
+      final repository = JsonSaveRepository(store);
+
+      final migrated = await repository.load();
+
+      expect(migrated.schemaVersion, 2);
+      expect(migrated.gold, 12345);
+      expect(migrated.mercenaryProgress['kael']?.level, 42);
+      expect(migrated.weaponProgress['iron_sword']?.stage, 1);
+      expect(migrated.inventory, isEmpty);
+    },
+  );
+
+  test('corrupt primary save recovers from the last valid backup', () async {
+    final backup = AccountSave.initial().copyWith(
+      gold: 77777,
+      inventory: {'officer_map': 2},
+    );
+    final store = MemoryKeyValueStore({
+      JsonSaveRepository.primaryKey: '{broken json',
+      JsonSaveRepository.backupKey: jsonEncode(backup.toJson()),
+    });
+    final repository = JsonSaveRepository(store);
+
+    final recovered = await repository.load();
+
+    expect(repository.lastLoadSource, SaveLoadSource.backup);
+    expect(recovered.gold, 77777);
+    expect(recovered.inventory['officer_map'], 2);
+    expect(store.values[JsonSaveRepository.primaryKey], isNot('{broken json'));
+  });
+
+  test('mercenary and weapon permanent growth crosses level thresholds', () {
+    final mercenary = ProgressionRules.addMercenaryXp(
+      const MercenaryProgress(level: 1, xp: 0, ascension: 0),
+      1000,
+    );
+    final weapon = ProgressionRules.addWeaponXp(
+      const WeaponProgress(level: 1, xp: 0, stage: 1),
+      1000,
+    );
+
+    expect(mercenary.level, 2);
+    expect(mercenary.xp, 520);
+    expect(weapon.level, 3);
+    expect(weapon.xp, 200);
+    expect(weapon.stage, 1);
+  });
+
+  test(
+    'ascension expands the mercenary level cap when sigils are available',
+    () {
+      const capped = MercenaryProgress(level: 50, xp: 0, ascension: 0);
+
+      expect(ProgressionRules.canAscend(capped, 1), isFalse);
+      expect(ProgressionRules.canAscend(capped, 2), isTrue);
+      final ascended = ProgressionRules.ascend(capped, availableSigils: 2);
+      expect(ascended.ascension, 1);
+      expect(ascended.levelCap, 55);
+    },
+  );
+
+  test('permanent levels increase the next battle combat multipliers', () {
+    expect(
+      ProgressionRules.mercenaryHpMultiplier(45, 46),
+      closeTo(1.012, .001),
+    );
+    expect(
+      ProgressionRules.mercenarySpeedMultiplier(45, 46),
+      closeTo(1.003, .001),
+    );
+    expect(
+      ProgressionRules.combatDamageMultiplier(
+        baseMercenaryLevel: 45,
+        permanentMercenaryLevel: 46,
+        weaponLevel: 6,
+        weaponStage: 2,
+      ),
+      closeTo(1.205, .001),
+    );
+  });
+
+  test('save round trip preserves growth and loot inventory', () async {
+    final repository = InMemorySaveRepository();
+    final initial = await repository.load();
+    final updated = initial.copyWith(
+      mercenaryProgress: {
+        ...initial.mercenaryProgress,
+        'luna': const MercenaryProgress(level: 46, xp: 125, ascension: 1),
+      },
+      weaponProgress: {
+        ...initial.weaponProgress,
+        'moon_blades': const WeaponProgress(level: 6, xp: 80, stage: 2),
+      },
+      inventory: {'red_moon_shard': 1, 'war_scrap': 4},
+    );
+
+    await repository.save(updated);
+    final restored = await repository.load();
+
+    expect(restored.mercenaryProgress['luna']?.level, 46);
+    expect(restored.mercenaryProgress['luna']?.ascension, 1);
+    expect(restored.weaponProgress['moon_blades']?.stage, 2);
+    expect(restored.inventory['war_scrap'], 4);
   });
 
   test('battle config is an immutable session boundary', () {
@@ -254,6 +374,9 @@ void main() {
       durationSeconds: 300,
       seed: 20260809,
       unitCount: 500,
+      mercenaryPermanentLevel: 44,
+      weaponPermanentLevel: 6,
+      weaponGrowthStage: 2,
     );
 
     expect(config.mercenary.style.name, 'magic');
@@ -263,6 +386,9 @@ void main() {
     expect(config.battlefield, BattlefieldType.evacuation);
     expect(config.condition, BattlefieldCondition.ashWind);
     expect(config.unitCount, 500);
+    expect(config.mercenaryPermanentLevel, 44);
+    expect(config.weaponPermanentLevel, 6);
+    expect(config.weaponGrowthStage, 2);
   });
 
   test('every mercenary has one resolvable signature ultimate pairing', () {

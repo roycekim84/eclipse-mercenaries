@@ -78,6 +78,9 @@ class BattleConfig {
     this.contractName = '성문 방어전',
     this.contractGold = 3000,
     this.contractXp = 1200,
+    this.mercenaryPermanentLevel,
+    this.weaponPermanentLevel = 1,
+    this.weaponGrowthStage = 1,
   });
 
   final MercenarySpec mercenary;
@@ -91,6 +94,9 @@ class BattleConfig {
   final String contractName;
   final int contractGold;
   final int contractXp;
+  final int? mercenaryPermanentLevel;
+  final int weaponPermanentLevel;
+  final int weaponGrowthStage;
 }
 
 class BattleStats {

@@ -10,6 +10,7 @@ import '../domain/battle_rewards.dart';
 import '../domain/combat_rules.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
+import '../domain/progression.dart';
 import '../domain/run_growth.dart';
 import '../core/content/game_visuals.dart';
 import 'render/player_sprite_component.dart';
@@ -24,6 +25,12 @@ part 'systems/weapon_system.dart';
 part 'systems/pooled_effects_system.dart';
 part 'systems/run_growth_system.dart';
 
+double _permanentPlayerMaxHp(BattleConfig config) {
+  final level = config.mercenaryPermanentLevel ?? config.mercenary.level;
+  return config.mercenary.maxHp *
+      ProgressionRules.mercenaryHpMultiplier(config.mercenary.level, level);
+}
+
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
     : _random = math.Random(config.seed),
@@ -31,7 +38,7 @@ class SurvivorGame extends FlameGame {
       _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
     stats = ValueNotifier(
       BattleStats(
-        hp: config.mercenary.maxHp.toDouble(),
+        hp: _permanentPlayerMaxHp(config),
         level: 1,
         xp: 0,
         nextXp: 40,
@@ -59,6 +66,15 @@ class SurvivorGame extends FlameGame {
   final BattleConfig config;
   MercenarySpec get mercenary => config.mercenary;
   WeaponSpec get weapon => config.weapon;
+  double get _permanentDamageMultiplier =>
+      ProgressionRules.combatDamageMultiplier(
+        baseMercenaryLevel: mercenary.level,
+        permanentMercenaryLevel:
+            config.mercenaryPermanentLevel ?? mercenary.level,
+        weaponLevel: config.weaponPermanentLevel,
+        weaponStage: config.weaponGrowthStage,
+      );
+  double get _playerMaxHp => _permanentPlayerMaxHp(config);
   final void Function(BattleReport) onVictory;
   late final ValueNotifier<BattleStats> stats;
   final choice = ValueNotifier<BattleChoice?>(null);
@@ -137,10 +153,14 @@ class SurvivorGame extends FlameGame {
     await add(_playerSprite);
     _speed =
         mercenary.speed *
+        ProgressionRules.mercenarySpeedMultiplier(
+          mercenary.level,
+          config.mercenaryPermanentLevel ?? mercenary.level,
+        ) *
         (config.condition == BattlefieldCondition.ashWind ? .94 : 1);
     _runWeapons.add(RunWeaponState(weapon));
     stats.value = BattleStats(
-      hp: mercenary.maxHp.toDouble(),
+      hp: _playerMaxHp,
       level: 1,
       xp: 0,
       nextXp: 40,
@@ -327,7 +347,7 @@ class SurvivorGame extends FlameGame {
 
   void _publishStats() {
     final next = BattleStats(
-      hp: mercenary.maxHp.toDouble(),
+      hp: _playerMaxHp,
       level: _level,
       xp: _xp,
       nextXp: _nextXp,

@@ -9,6 +9,8 @@ flutter pub get
 flutter run -d chrome
 ```
 
+진행 상태는 `shared_preferences`를 통해 Web local storage와 iOS/Android 플랫폼 저장소에 자동 저장됩니다.
+
 현재 플레이 루프는 `캠프 → 전쟁 계약 → Flame 전투 → 레벨업 → 전장 사건 선택 → 승리/후퇴/패배 → 보상`입니다. 캠프의 `용병` 메뉴에서 루나의 상세 화면도 확인할 수 있습니다.
 
 ## 조작

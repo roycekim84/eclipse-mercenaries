@@ -177,11 +177,11 @@ M3 종료 기준:
 
 ### M4.1 저장과 영구 성장
 
-- [ ] save schema/version/migration
-- [ ] Web local 저장과 모바일 저장 adapter
-- [ ] 용병 경험치, 레벨, 승급
-- [ ] 무기 영구 레벨과 성장 단계
-- [ ] 재화와 장착 정보 복구
+- [x] save schema/version/migration
+- [x] Web local 저장과 모바일 저장 adapter
+- [x] 용병 경험치, 레벨, 승급
+- [x] 무기 영구 레벨과 성장 단계
+- [x] 재화와 장착 정보 복구
 
 ### M4.2 캠프 화면
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flame/game.dart';
@@ -12,6 +13,7 @@ import '../domain/battlefield_events.dart';
 import '../domain/battle_rewards.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
+import '../domain/progression.dart';
 import '../domain/run_growth.dart';
 import '../game/survivor_game.dart';
 
@@ -31,7 +33,9 @@ part '../features/results/result_screen.dart';
 const gameContent = StaticGameContentRepository();
 
 class EclipseMercenariesApp extends StatelessWidget {
-  const EclipseMercenariesApp({super.key});
+  const EclipseMercenariesApp({super.key, this.saveRepository});
+
+  final SaveRepository? saveRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +43,7 @@ class EclipseMercenariesApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: '월식 용병단',
       theme: buildGameTheme(),
-      home: const GameShell(),
+      home: GameShell(saveRepository: saveRepository),
     );
   }
 }
@@ -57,35 +61,88 @@ enum AppScene {
 }
 
 class GameShell extends StatefulWidget {
-  const GameShell({super.key});
+  const GameShell({super.key, this.saveRepository});
+
+  final SaveRepository? saveRepository;
 
   @override
   State<GameShell> createState() => _GameShellState();
 }
 
 class _GameShellState extends State<GameShell> {
-  final SaveRepository _saveRepository = InMemorySaveRepository();
+  late final SaveRepository _saveRepository;
   AppScene scene = AppScene.camp;
   BattlefieldContract selected = contracts.first;
-  late AccountSave account;
+  AccountSave? _account;
   late MercenarySpec selectedMercenary;
   late WeaponSpec equippedWeapon;
   AppScene equipmentReturn = AppScene.camp;
   BattleReport? report;
+  GrowthReceipt? growthReceipt;
   bool _rewardApplied = false;
+  String? saveNotice;
 
+  AccountSave get account => _account!;
   int get gold => account.gold;
   int get crystals => account.crystals;
 
   @override
   void initState() {
     super.initState();
-    account = _saveRepository.load();
-    selectedMercenary = gameContent.mercenaryById(account.selectedMercenaryId);
-    equippedWeapon = gameContent.weaponById(
-      account.equippedWeaponByMercenary[selectedMercenary.id] ??
-          selectedMercenary.signatureWeaponId,
-    );
+    _saveRepository =
+        widget.saveRepository ??
+        JsonSaveRepository(SharedPreferencesKeyValueStore());
+    unawaited(_loadSave());
+  }
+
+  Future<void> _loadSave() async {
+    AccountSave loaded;
+    try {
+      loaded = await _saveRepository.load();
+    } on Object {
+      loaded = AccountSave.initial();
+      saveNotice = '저장소를 불러오지 못해 안전한 기본 상태로 시작했습니다.';
+    }
+    final mercenaryIds = gameContent.mercenaries
+        .map((mercenary) => mercenary.id)
+        .toSet();
+    final mercenaryId = mercenaryIds.contains(loaded.selectedMercenaryId)
+        ? loaded.selectedMercenaryId
+        : 'luna';
+    selectedMercenary = gameContent.mercenaryById(mercenaryId);
+    final weaponIds = gameContent.weapons.map((weapon) => weapon.id).toSet();
+    final savedWeapon = loaded.equippedWeaponByMercenary[mercenaryId];
+    final weaponId = weaponIds.contains(savedWeapon)
+        ? savedWeapon!
+        : selectedMercenary.signatureWeaponId;
+    equippedWeapon = gameContent.weaponById(weaponId);
+    if (mercenaryId != loaded.selectedMercenaryId || savedWeapon != weaponId) {
+      loaded = loaded.copyWith(
+        selectedMercenaryId: mercenaryId,
+        equippedWeaponByMercenary: {
+          ...loaded.equippedWeaponByMercenary,
+          mercenaryId: weaponId,
+        },
+      );
+      try {
+        await _saveRepository.save(loaded);
+      } on Object {
+        saveNotice = '복구한 장착 정보를 저장하지 못했습니다.';
+      }
+    }
+    if (!mounted) return;
+    setState(() => _account = loaded);
+  }
+
+  Future<void> _persistAccount() async {
+    try {
+      await _saveRepository.save(account);
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        saveNotice = '자동 저장에 실패했습니다. 현재 실행의 진행 상태는 유지됩니다.';
+      });
+    }
   }
 
   void go(AppScene next) => setState(() => scene = next);
@@ -97,13 +154,58 @@ class _GameShellState extends State<GameShell> {
     });
   }
 
-  void finishBattle(BattleReport value) {
+  Future<void> finishBattle(BattleReport value) async {
     if (_rewardApplied) return;
+    _rewardApplied = true;
+    final mercenaryBefore =
+        account.mercenaryProgress[selectedMercenary.id] ??
+        MercenaryProgress(level: selectedMercenary.level, xp: 0, ascension: 0);
+    final weaponBefore =
+        account.weaponProgress[equippedWeapon.id] ??
+        const WeaponProgress(level: 1, xp: 0, stage: 1);
+    final mercenaryAfter = ProgressionRules.addMercenaryXp(
+      mercenaryBefore,
+      value.xp,
+    );
+    final weaponXp = (value.xp / 2).round();
+    final weaponAfter = ProgressionRules.addWeaponXp(weaponBefore, weaponXp);
+    final inventoryAdded = ProgressionRules.lootQuantities(value.lootDrops);
+    final nextAccount = account.copyWith(
+      gold: account.gold + value.gold,
+      mercenaryProgress: {
+        ...account.mercenaryProgress,
+        selectedMercenary.id: mercenaryAfter,
+      },
+      weaponProgress: {
+        ...account.weaponProgress,
+        equippedWeapon.id: weaponAfter,
+      },
+      inventory: {
+        ...account.inventory,
+        for (final entry in inventoryAdded.entries)
+          entry.key: (account.inventory[entry.key] ?? 0) + entry.value,
+      },
+    );
+    try {
+      await _saveRepository.save(nextAccount);
+    } on Object {
+      saveNotice = '자동 저장에 실패했습니다. 현재 실행의 진행 상태는 유지됩니다.';
+    }
+    if (!mounted) return;
     setState(() {
-      _rewardApplied = true;
+      _account = nextAccount;
       report = value;
-      account = account.copyWith(gold: account.gold + value.gold);
-      _saveRepository.save(account);
+      growthReceipt = GrowthReceipt(
+        mercenaryId: selectedMercenary.id,
+        mercenaryBefore: mercenaryBefore,
+        mercenaryAfter: mercenaryAfter,
+        mercenaryXpGained: value.xp,
+        weaponId: equippedWeapon.id,
+        weaponBefore: weaponBefore,
+        weaponAfter: weaponAfter,
+        weaponXpGained: weaponXp,
+        inventoryAdded: inventoryAdded,
+      );
       scene = AppScene.result;
     });
   }
@@ -112,12 +214,22 @@ class _GameShellState extends State<GameShell> {
     setState(() {
       _rewardApplied = false;
       report = null;
+      growthReceipt = null;
       scene = AppScene.battle;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_account == null) {
+      return const Scaffold(
+        body: DarkBackdrop(
+          child: Center(
+            child: CircularProgressIndicator(color: Color(0xffc49a54)),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 320),
@@ -142,6 +254,7 @@ class _GameShellState extends State<GameShell> {
             key: const ValueKey('mercenary-select'),
             selected: selectedMercenary,
             equippedWeapon: equippedWeapon,
+            mercenaryProgress: account.mercenaryProgress,
             onSelect: (mercenary) {
               setState(() {
                 selectedMercenary = mercenary;
@@ -149,8 +262,8 @@ class _GameShellState extends State<GameShell> {
                   account.equippedWeaponByMercenary[mercenary.id] ??
                       mercenary.signatureWeaponId,
                 );
-                account = account.copyWith(selectedMercenaryId: mercenary.id);
-                _saveRepository.save(account);
+                _account = account.copyWith(selectedMercenaryId: mercenary.id);
+                unawaited(_persistAccount());
               });
             },
             onBack: () => go(AppScene.contracts),
@@ -161,16 +274,17 @@ class _GameShellState extends State<GameShell> {
             key: const ValueKey('equipment'),
             mercenary: selectedMercenary,
             equipped: equippedWeapon,
+            weaponProgress: account.weaponProgress,
             onEquip: (weapon) {
               setState(() {
                 equippedWeapon = weapon;
-                account = account.copyWith(
+                _account = account.copyWith(
                   equippedWeaponByMercenary: {
                     ...account.equippedWeaponByMercenary,
                     selectedMercenary.id: weapon.id,
                   },
                 );
-                _saveRepository.save(account);
+                unawaited(_persistAccount());
               });
             },
             onBack: () => go(equipmentReturn),
@@ -189,12 +303,24 @@ class _GameShellState extends State<GameShell> {
             contract: selected,
             mercenary: selectedMercenary,
             weapon: equippedWeapon,
+            mercenaryProgress:
+                account.mercenaryProgress[selectedMercenary.id] ??
+                MercenaryProgress(
+                  level: selectedMercenary.level,
+                  xp: 0,
+                  ascension: 0,
+                ),
+            weaponProgress:
+                account.weaponProgress[equippedWeapon.id] ??
+                const WeaponProgress(level: 1, xp: 0, stage: 1),
             onExit: () => go(AppScene.camp),
             onVictory: finishBattle,
           ),
           AppScene.result => ResultScreen(
             key: const ValueKey('result'),
             report: report!,
+            growthReceipt: growthReceipt!,
+            saveNotice: saveNotice,
             onCamp: () => go(AppScene.camp),
             onReplay: startBattle,
           ),
