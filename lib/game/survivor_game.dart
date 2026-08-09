@@ -2,10 +2,11 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/game.dart';
-import 'package:flutter/material.dart' show Icons, Offset, ValueNotifier;
+import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
 import '../domain/game_data.dart';
+import '../core/content/game_visuals.dart';
 
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
@@ -283,17 +284,9 @@ class SurvivorGame extends FlameGame {
     _pausedForChoice = true;
     pauseEngine();
     choice.value = BattleChoice([
-      UpgradeOption('${weapon.name} 강화', '공격 피해와 공격 속도가 증가합니다.', weapon.icon),
-      UpgradeOption(
-        '${mercenary.race}의 발놀림',
-        '이동속도가 12% 증가합니다.',
-        Icons.directions_run,
-      ),
-      UpgradeOption(
-        mercenary.trait,
-        mercenary.traitDescription,
-        mercenary.icon,
-      ),
+      UpgradeOption('${weapon.name} 강화', '공격 피해와 공격 속도가 증가합니다.', weapon.id),
+      UpgradeOption('${mercenary.race}의 발놀림', '이동속도가 12% 증가합니다.', 'movement'),
+      UpgradeOption(mercenary.trait, mercenary.traitDescription, mercenary.id),
     ]);
   }
 
@@ -396,7 +389,7 @@ class SurvivorGame extends FlameGame {
     for (final fx in _slashes) {
       final alpha = (255 * (fx.life / .24)).clamp(0, 255).toInt();
       final fxColor = switch (fx.style) {
-        CombatStyle.blades => mercenary.accent,
+        CombatStyle.blades => mercenary.visual.accent,
         CombatStyle.greatsword => const Color(0xffd2675b),
         CombatStyle.magic => const Color(0xff71d4e7),
       };
@@ -436,7 +429,7 @@ class SurvivorGame extends FlameGame {
       Offset(_player.x, _player.y),
       14,
       Paint()
-        ..color = mercenary.accent.withValues(alpha: .45)
+        ..color = mercenary.visual.accent.withValues(alpha: .45)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
@@ -446,7 +439,7 @@ class SurvivorGame extends FlameGame {
         width: 12,
         height: 20,
       ),
-      Paint()..color = mercenary.color,
+      Paint()..color = mercenary.visual.color,
     );
     canvas.drawCircle(
       Offset(_player.x, _player.y - 12),
@@ -467,7 +460,7 @@ class SurvivorGame extends FlameGame {
         ..style = PaintingStyle.fill,
     );
     final blade = Paint()
-      ..color = mercenary.accent
+      ..color = mercenary.visual.accent
       ..strokeWidth = 2;
     if (mercenary.style == CombatStyle.blades) {
       canvas.drawLine(
@@ -497,7 +490,7 @@ class SurvivorGame extends FlameGame {
       canvas.drawCircle(
         Offset(_player.x + 16, _player.y - 28),
         5,
-        Paint()..color = mercenary.accent,
+        Paint()..color = mercenary.visual.accent,
       );
     }
   }

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart' show IconData;
-
 import 'game_data.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
@@ -59,11 +57,11 @@ class BattleReport {
 }
 
 class UpgradeOption {
-  const UpgradeOption(this.title, this.description, this.icon);
+  const UpgradeOption(this.title, this.description, this.iconId);
 
   final String title;
   final String description;
-  final IconData icon;
+  final String iconId;
 }
 
 class BattleChoice {

@@ -11,15 +11,18 @@
 ## 2. 현재 상태
 
 - `main.dart`: 앱 부팅만 담당하는 9줄 진입점
-- `app/game_app.dart`: 화면 상태, 캠프, 계약, 출전 선택, 장비, 명부, 상세, HUD, 결과
+- `app/game_app.dart`: 앱 구성, 화면 상태와 기능 화면 조합
 - `core/theme/game_theme.dart`: 공통 팔레트와 Flutter 테마
 - `core/content/game_content_repository.dart`: 콘텐츠 조회 인터페이스와 알파 정적 구현
+- `core/content/game_visuals.dart`: 용병/무기의 색상, 아이콘, 이미지 경로
 - `core/persistence/save_repository.dart`: versioned 계정 저장 모델과 저장 인터페이스
-- `domain/game_data.dart`: 용병과 무기 정의
+- `core/widgets`: 판타지 패널, 버튼, 카드, 상태 표시와 지도 painter
+- `features`: 캠프, 계약/출전, 장비, 전투 HUD, 용병, 결과 화면
+- `domain/game_data.dart`: Flutter 의존성이 없는 용병과 무기 규칙 데이터
 - `domain/battle_models.dart`: BattleConfig, BattleStats, BattleReport와 전투 오버레이 모델
 - `game/survivor_game.dart`: 이동, 유닛, 진영 교전, 자동 공격, 경험치, 레벨업, 사건, 승리
 
-앱/도메인/게임 런타임의 1차 경계는 만들어졌으며, 다음 구조 작업은 `game_app.dart`의 화면과 공통 컴포넌트를 기능 폴더로 분리하는 것이다.
+앱/도메인/게임 런타임 경계와 기능별 화면 분리가 완료됐다. 화면 파일은 Dart library part로 묶어 현재 비공개 상태 경계를 유지하며, 기능이 커질 때 독립 public widget library로 전환한다.
 
 ## 3. 목표 레이어
 

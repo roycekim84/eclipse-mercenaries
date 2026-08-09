@@ -1,4 +1,5 @@
 import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
+import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,15 @@ void main() {
     expect(content.weapons, hasLength(8));
     expect(content.mercenaryById('kael').race, '늑대족');
     expect(content.weaponById('glass_flame').ownerId, 'sera');
+  });
+
+  test('every alpha content entry has presentation metadata', () {
+    for (final mercenary in content.mercenaries) {
+      expect(mercenary.visual.portraitAsset, startsWith('assets/images/'));
+    }
+    for (final weapon in content.weapons) {
+      expect(weapon.visual.icon.codePoint, isPositive);
+    }
   });
 
   test('save repository preserves loadout and reward state', () {

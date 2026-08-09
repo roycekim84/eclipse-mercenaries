@@ -21,10 +21,13 @@
 - BattleConfig/BattleReport 전투 세션 경계
 - 콘텐츠 Repository와 versioned SaveRepository 인터페이스
 - 공통 게임 팔레트와 ThemeData 분리
+- 캠프, 계약, 장비, 전투 HUD, 용병, 결과 화면을 기능별 파일로 분리
+- 공통 판타지 UI 컴포넌트와 카드/painter 분리
+- 도메인 모델에서 Flutter Color/IconData/이미지 경로 제거
+- 별도 Visual catalog로 게임 규칙과 프레젠테이션 데이터 분리
 
 ## 다음 작업
 
-- `game_app.dart`의 화면과 공통 UI 컴포넌트 분리
 - 실제 픽셀 스프라이트 애니메이션
 - 성문 방어 목표와 지휘관 AI
 - 영구 성장 저장

@@ -1,5 +1,13 @@
 # 변경 기록
 
+## Feature UI separation — 2026-08-09
+
+- 2,286줄 UI 파일을 앱 셸, 6개 기능 화면 그룹, 공통 컴포넌트 그룹으로 분리
+- 모든 기능 화면 파일을 400줄 이하로 정리
+- 캐릭터/무기 색상, 아이콘, 이미지 경로를 Visual catalog로 이동
+- 도메인 콘텐츠와 전투 모델의 Flutter 의존성 제거
+- M1.2 구조 분리 마일스톤 완료
+
 ## Architecture foundation — 2026-08-09
 
 - 앱 진입점을 UI 구현에서 분리하고 `app/domain/game/core` 폴더 도입
