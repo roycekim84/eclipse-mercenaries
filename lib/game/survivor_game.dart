@@ -6,6 +6,7 @@ import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
 import '../domain/battlefield_events.dart';
+import '../domain/battle_rewards.dart';
 import '../domain/combat_rules.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';

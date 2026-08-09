@@ -1,4 +1,7 @@
-import 'package:eclipse_mercenaries/main.dart';
+import 'package:eclipse_mercenaries/app/game_app.dart';
+import 'package:eclipse_mercenaries/domain/battle_models.dart';
+import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -52,5 +55,53 @@ void main() {
     expect(find.text('정예 2'), findsOneWidget);
     expect(find.text('지휘관 2'), findsOneWidget);
     expect(find.text('바르가르 징집병'), findsWidgets);
+  });
+
+  testWidgets('result screen exposes reward loot and MVP details', (
+    tester,
+  ) async {
+    final reward = BattleRewardRules.calculate(
+      contractGold: 3000,
+      contractXp: 1200,
+      kills: 100,
+      completedObjectives: 3,
+      eventGold: 0,
+      eventXp: 0,
+      eventMultiplier: 1,
+      preservationRate: 1,
+    );
+    final report = BattleReport(
+      time: '00:45',
+      kills: 100,
+      gold: reward.keptGold,
+      xp: reward.keptXp,
+      contractName: '성문 방어전',
+      rewardBreakdown: reward,
+      lootDrops: const [
+        LootDrop(
+          id: 'officer_map',
+          name: '장교의 전술지도',
+          rarity: LootRarity.rare,
+          quantity: 1,
+          source: '전투 전리품',
+        ),
+      ],
+      award: const BattleAward(
+        title: '북문의 철벽',
+        detail: '성문 방어선을 흔들림 없이 유지했습니다.',
+        honors: [],
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ResultScreen(report: report, onCamp: () {}, onReplay: () {}),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('MVP · 북문의 철벽'), findsOneWidget);
+    expect(find.text('보상 명세'), findsOneWidget);
+    expect(find.text('희귀 · 장교의 전술지도'), findsOneWidget);
   });
 }

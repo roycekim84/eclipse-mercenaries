@@ -1,6 +1,7 @@
 import 'game_data.dart';
 import 'run_growth.dart';
 import 'battlefield_events.dart';
+import 'battle_rewards.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
@@ -73,6 +74,10 @@ class BattleConfig {
     this.durationSeconds = 45,
     this.seed = 19,
     this.unitCount = 500,
+    this.contractId = 'gate_defense',
+    this.contractName = '성문 방어전',
+    this.contractGold = 3000,
+    this.contractXp = 1200,
   });
 
   final MercenarySpec mercenary;
@@ -82,6 +87,10 @@ class BattleConfig {
   final int durationSeconds;
   final int seed;
   final int unitCount;
+  final String contractId;
+  final String contractName;
+  final int contractGold;
+  final int contractXp;
 }
 
 class BattleStats {
@@ -144,6 +153,7 @@ class BattleReport {
     required this.kills,
     required this.gold,
     required this.xp,
+    required this.contractName,
     this.outcome = BattleOutcome.victory,
     this.alliedKills = 0,
     this.triggeredEventIds = const [],
@@ -158,12 +168,17 @@ class BattleReport {
     this.frameTimeP95Ms = 0,
     this.rareDropIds = const [],
     this.eventRecords = const [],
+    required this.rewardBreakdown,
+    required this.lootDrops,
+    required this.award,
+    this.ultimateActivations = 0,
   });
 
   final String time;
   final int kills;
   final int gold;
   final int xp;
+  final String contractName;
   final BattleOutcome outcome;
   final int alliedKills;
   final List<String> triggeredEventIds;
@@ -178,6 +193,10 @@ class BattleReport {
   final double frameTimeP95Ms;
   final List<String> rareDropIds;
   final List<BattlefieldEventRecord> eventRecords;
+  final RewardBreakdown rewardBreakdown;
+  final List<LootDrop> lootDrops;
+  final BattleAward award;
+  final int ultimateActivations;
 }
 
 abstract final class EvacuationRules {

@@ -84,7 +84,7 @@ class ContractSummary extends StatelessWidget {
             ),
           ),
           Text(
-            '권장 ${contract.power}\n보상 ${contract.reward} G',
+            '권장 ${contract.power}\n${contract.reward} G · ${contract.xp} XP',
             textAlign: TextAlign.right,
             style: const TextStyle(fontSize: 11, color: Color(0xffd6bd82)),
           ),

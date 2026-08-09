@@ -5,6 +5,7 @@ import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battlefield_events.dart';
+import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
@@ -138,6 +139,81 @@ void main() {
         .toSet();
 
     expect(retreatChoices, {'tactical_retreat', 'royal_retreat'});
+  });
+
+  test('reward breakdown separates sources before preservation', () {
+    final reward = BattleRewardRules.calculate(
+      contractGold: 3000,
+      contractXp: 1200,
+      kills: 100,
+      completedObjectives: 3,
+      eventGold: 500,
+      eventXp: 200,
+      eventMultiplier: 1.25,
+      preservationRate: .5,
+    );
+
+    expect(reward.contractGold, 3000);
+    expect(reward.objectiveGold, 900);
+    expect(reward.combatGold, 800);
+    expect(reward.eventGold, 500);
+    expect(reward.grossGold, 6500);
+    expect(reward.keptGold, 3250);
+    expect(reward.grossXp, 2500);
+    expect(reward.keptXp, 1250);
+  });
+
+  test('outcomes preserve rewards at 100 50 and 20 percent', () {
+    expect(BattleRewardRules.preservationRate('victory'), 1);
+    expect(BattleRewardRules.preservationRate('retreat'), .5);
+    expect(BattleRewardRules.preservationRate('defeat'), .2);
+  });
+
+  test('loot table is deterministic and prioritizes rare preserved loot', () {
+    List<LootDrop> roll(double preservationRate) => BattleLootRules.resolve(
+      seed: 20260810,
+      completedObjectives: 3,
+      eventCount: 2,
+      rareDropIds: const ['marshal_seal'],
+      eventChoiceIds: const ['embrace_red_moon'],
+      preservationRate: preservationRate,
+    );
+
+    final first = roll(1);
+    final second = roll(1);
+    final retreat = roll(.5);
+
+    expect(
+      first.map((drop) => (drop.id, drop.quantity)),
+      second.map((drop) => (drop.id, drop.quantity)),
+    );
+    expect(first.any((drop) => drop.id == 'red_moon_shard'), isTrue);
+    expect(first.any((drop) => drop.id == 'marshal_seal'), isTrue);
+    expect(retreat.length, lessThan(first.length));
+    expect(
+      retreat.map((drop) => drop.rarity.index),
+      orderedEquals(
+        retreat.map((drop) => drop.rarity.index).toList()
+          ..sort((a, b) => b.compareTo(a)),
+      ),
+    );
+  });
+
+  test('battle award records MVP and major feats', () {
+    final award = BattleRewardRules.award(
+      kills: 130,
+      alliedKills: 80,
+      objectiveRatio: 1,
+      evacuation: false,
+      commanderSurvived: true,
+      enemyCommanderDefeated: true,
+      ultimateActivations: 1,
+      completedObjectives: 3,
+      eventCount: 2,
+    );
+
+    expect(award.title, '지휘관 사냥꾼');
+    expect(award.honors, containsAll(['백인참', '적 지휘관 격퇴', '전술 목표 완수']));
   });
 
   test('every alpha content entry has presentation metadata', () {

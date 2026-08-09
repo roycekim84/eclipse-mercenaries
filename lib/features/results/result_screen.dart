@@ -18,12 +18,10 @@ class ResultScreen extends StatelessWidget {
       BattleOutcome.defeat => 'DEFEAT',
     };
     final evacuation = report.battlefield == BattlefieldType.evacuation;
-    final subtitle = switch ((report.outcome, evacuation)) {
-      (BattleOutcome.victory, true) => '계약 완수 · 철수 행렬 호위 성공',
-      (BattleOutcome.victory, false) => '계약 완수 · 성문 방어선 사수',
-      (BattleOutcome.retreat, _) => '전술적 철수 · 획득 보상의 50% 보존',
-      (BattleOutcome.defeat, true) => '계약 실패 · 철수 인원 손실',
-      (BattleOutcome.defeat, false) => '계약 실패 · 북문 함락',
+    final subtitle = switch (report.outcome) {
+      BattleOutcome.victory => '계약 완수 · ${report.contractName}',
+      BattleOutcome.retreat => '전술적 철수 · 획득 보상의 50% 보존',
+      BattleOutcome.defeat => '계약 실패 · 획득 보상의 20% 회수',
     };
     final titleColor = switch (report.outcome) {
       BattleOutcome.victory => const Color(0xffffd27c),
@@ -117,9 +115,13 @@ class ResultScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 14),
+                    _MvpPanel(award: report.award),
                     const SizedBox(height: 18),
                     const Divider(color: Color(0xff665536)),
                     const SizedBox(height: 12),
+                    _RewardBreakdownPanel(breakdown: report.rewardBreakdown),
+                    const SizedBox(height: 16),
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -128,39 +130,24 @@ class ResultScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Loot(
-                          icon: Icons.monetization_on,
-                          amount: '${report.gold}',
-                        ),
-                        Loot(
-                          icon: Icons.shield_outlined,
-                          amount: '${report.alliedKills}',
-                        ),
-                        Loot(
-                          icon: Icons.workspace_premium_outlined,
-                          amount: '${report.completedBonusIds.length}',
-                        ),
-                        Loot(icon: Icons.science, amount: '${report.xp}'),
-                      ],
-                    ),
-                    if (report.rareDropIds.isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                    if (report.lootDrops.isEmpty)
+                      const Text(
+                        '회수한 전리품이 없습니다.',
+                        style: TextStyle(color: Colors.white38, fontSize: 11),
+                      )
+                    else
                       Wrap(
                         alignment: WrapAlignment.center,
-                        spacing: 7,
-                        runSpacing: 6,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          for (final dropId in report.rareDropIds)
-                            ResultTag(
-                              icon: Icons.auto_awesome,
-                              label: '희귀 · ${rareDropName(dropId)}',
-                              positive: true,
+                          for (var i = 0; i < report.lootDrops.length; i++)
+                            _LootDropCard(
+                              drop: report.lootDrops[i],
+                              revealIndex: i,
                             ),
                         ],
                       ),
-                    ],
                     if (report.eventRecords.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       const Divider(color: Color(0xff665536)),
@@ -205,6 +192,223 @@ class ResultScreen extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MvpPanel extends StatelessWidget {
+  const _MvpPanel({required this.award});
+
+  final BattleAward award;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0x88392717), Color(0x88201c32)],
+      ),
+      border: Border.all(color: const Color(0x88c49a54)),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.workspace_premium, color: Color(0xffffd27c), size: 30),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'MVP · ${award.title}',
+                style: const TextStyle(
+                  color: Color(0xffffd27c),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                award.detail,
+                style: const TextStyle(color: Colors.white60, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+        if (award.honors.isNotEmpty)
+          Flexible(
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 5,
+              runSpacing: 4,
+              children: [
+                for (final honor in award.honors)
+                  ResultTag(
+                    icon: Icons.military_tech_outlined,
+                    label: honor,
+                    positive: true,
+                  ),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+class _RewardBreakdownPanel extends StatelessWidget {
+  const _RewardBreakdownPanel({required this.breakdown});
+
+  final RewardBreakdown breakdown;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = [
+      ('계약', breakdown.contractGold, breakdown.contractXp),
+      ('목표', breakdown.objectiveGold, breakdown.objectiveXp),
+      ('전과', breakdown.combatGold, breakdown.combatXp),
+      ('사건', breakdown.eventGold, breakdown.eventXp),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(12),
+      color: const Color(0x6610141b),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('보상 명세', style: TextStyle(color: Color(0xffd6bd81))),
+              const Spacer(),
+              if (breakdown.rewardMultiplier > 1)
+                Text(
+                  '사건 배율 ×${breakdown.rewardMultiplier.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Color(0xffc28adc),
+                    fontSize: 10,
+                  ),
+                ),
+              const SizedBox(width: 10),
+              Text(
+                '보존 ${(breakdown.preservationRate * 100).round()}%',
+                style: const TextStyle(color: Color(0xff8fc6d8), fontSize: 10),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Row(
+            children: [
+              for (final entry in entries)
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        entry.$1,
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 9,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${entry.$2 >= 0 ? '+' : ''}${entry.$2} G  ·  ${entry.$3 >= 0 ? '+' : ''}${entry.$3} XP',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Text(
+            '산출 ${breakdown.grossGold} G / ${breakdown.grossXp} XP  →  회수 ${breakdown.keptGold} G / ${breakdown.keptXp} XP',
+            style: const TextStyle(
+              color: Color(0xffffd27c),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LootDropCard extends StatelessWidget {
+  const _LootDropCard({required this.drop, required this.revealIndex});
+
+  final LootDrop drop;
+  final int revealIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (drop.rarity) {
+      LootRarity.common => const Color(0xffaab4bf),
+      LootRarity.uncommon => const Color(0xff70bc83),
+      LootRarity.rare => const Color(0xff66b9da),
+      LootRarity.epic => const Color(0xffc28adc),
+      LootRarity.legendary => const Color(0xffffbd5d),
+    };
+    final rarity = switch (drop.rarity) {
+      LootRarity.common => '일반',
+      LootRarity.uncommon => '고급',
+      LootRarity.rare => '희귀',
+      LootRarity.epic => '영웅',
+      LootRarity.legendary => '전설',
+    };
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 360 + revealIndex * 120),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) => Opacity(
+        opacity: value.clamp(0, 1),
+        child: Transform.scale(scale: .9 + value * .1, child: child),
+      ),
+      child: Container(
+        width: 205,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withValues(alpha: .18), const Color(0xff10131a)],
+          ),
+          border: Border.all(color: color.withValues(alpha: .72)),
+          boxShadow: drop.rarity.index >= LootRarity.epic.index
+              ? [BoxShadow(color: color.withValues(alpha: .18), blurRadius: 10)]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              drop.rarity == LootRarity.legendary
+                  ? Icons.auto_awesome
+                  : Icons.inventory_2_outlined,
+              color: color,
+              size: 22,
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$rarity · ${drop.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${drop.source}  ×${drop.quantity}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white38, fontSize: 9),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

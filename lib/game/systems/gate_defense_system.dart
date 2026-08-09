@@ -197,30 +197,45 @@ extension GateDefenseSystem on SurvivorGame {
               (unit) => !unit.dead && !unit.ally && unit.elite,
             ),
           );
-    final rewardRate = switch (outcome) {
-      BattleOutcome.victory => 1.0,
-      BattleOutcome.retreat => .5,
-      BattleOutcome.defeat => .2,
-    };
+    final rewardRate = BattleRewardRules.preservationRate(outcome.name);
+    final reward = BattleRewardRules.calculate(
+      contractGold: config.contractGold,
+      contractXp: config.contractXp,
+      kills: _kills,
+      completedObjectives: bonuses.length,
+      eventGold: _eventGoldBonus,
+      eventXp: _eventXpBonus,
+      eventMultiplier: _eventRewardMultiplier,
+      preservationRate: rewardRate,
+    );
+    final award = BattleRewardRules.award(
+      kills: _kills,
+      alliedKills: _alliedKills,
+      objectiveRatio: objectiveRatio,
+      evacuation: evacuation,
+      commanderSurvived: _allyCommander?.dead != true,
+      enemyCommanderDefeated: _enemyCommander?.dead == true,
+      ultimateActivations: _ultimateActivation,
+      completedObjectives: bonuses.length,
+      eventCount: _eventRecords.length,
+    );
+    final lootDrops = BattleLootRules.resolve(
+      seed: config.seed,
+      completedObjectives: bonuses.length,
+      eventCount: _eventRecords.length,
+      rareDropIds: _rareDrops,
+      eventChoiceIds: _eventRecords.map((record) => record.choiceId).toList(),
+      preservationRate: rewardRate,
+    );
     onVictory(
       BattleReport(
         time:
             '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
         kills: _kills,
         alliedKills: _alliedKills,
-        gold:
-            (((evacuation ? 4500 : 3240) +
-                        _kills * 8 +
-                        bonuses.length * 300 +
-                        _eventGoldBonus) *
-                    rewardRate *
-                    _eventRewardMultiplier)
-                .round(),
-        xp:
-            (((evacuation ? 1450 : 1200) + _kills * 3 + _eventXpBonus) *
-                    rewardRate *
-                    _eventRewardMultiplier)
-                .round(),
+        gold: reward.keptGold,
+        xp: reward.keptXp,
+        contractName: config.contractName,
         outcome: outcome,
         objectiveHpRatio: objectiveRatio,
         completedBonusIds: bonuses,
@@ -234,6 +249,10 @@ extension GateDefenseSystem on SurvivorGame {
         rareDropIds: List.unmodifiable(_rareDrops),
         triggeredEventIds: List.unmodifiable(_triggeredEventIds),
         eventRecords: List.unmodifiable(_eventRecords),
+        rewardBreakdown: reward,
+        lootDrops: List.unmodifiable(lootDrops),
+        award: award,
+        ultimateActivations: _ultimateActivation,
       ),
     );
   }

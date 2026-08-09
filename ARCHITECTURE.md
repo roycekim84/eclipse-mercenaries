@@ -23,6 +23,7 @@
 - `domain/run_growth.dart`: 런 성장 상태, 선택 유효성, 가중치 비복원 추출 순수 규칙
 - `domain/enemy_catalog.dart`: 8 일반·2 정예·2 보스 원형, 세력·능력·드롭 데이터
 - `domain/battlefield_events.dart`: 8종 사건 정의, 선택 명세와 결정론적 가중치 추출 규칙
+- `domain/battle_rewards.dart`: 보상 출처별 계산, 결과 보존율, loot table과 MVP 순수 규칙
 - `game/survivor_game.dart`: 전투 세션 조합, 이동, 자동 공격, 경험치, 레벨업, 사건
 - `game/systems/run_growth_system.dart`: 다중 무기 타이머, 선택 적용과 HUD 빌드 스냅샷
 - `game/systems/gate_defense_system.dart`: 성문 목표, 진영 배치, 공성 피해, 승패/결과
@@ -123,6 +124,8 @@ Flame은 HUD용 읽기 전용 `ValueNotifier` 또는 명시적인 상태 스트�
 ### 종료
 
 Flame은 `BattleReport`를 한 번만 발행한다. Flutter가 결과를 검증하고 보상 적용/저장을 완료한 뒤 결과 화면을 표시한다.
+
+M3.4에서는 `RewardBreakdown`, `LootDrop`, `BattleAward`를 `BattleReport`의 불변 결과로 전달한다. 앱 셸의 `_rewardApplied` guard가 같은 전투 결과의 중복 반영을 막고, 재출전 시에만 새 보상 세션을 연다. M4.1에서 이 경계를 transaction ID와 영구 inventory 저장으로 확장한다.
 
 ### 궁극기 시퀀스
 
@@ -272,6 +275,7 @@ AudioService가 BGM, SFX, UI, voice 채널을 관리한다. 동시 재생 상한
 
 - 전투 시작 시 seed 저장
 - 사건 선택, 드롭, 치명타가 동일 seed와 입력에서 재현 가능하도록 RNG 주입
+- 전리품 RNG는 `seed ^ 0x7f4a7c15`로 분리하고 희귀도 정렬 후 결과 보존율을 적용한다.
 - 시스템 시간을 직접 읽지 않고 GameClock 사용
 - 고정 timestep 또는 상한이 있는 dt 처리
 - 결과 보고서 snapshot 비교 가능

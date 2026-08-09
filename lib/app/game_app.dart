@@ -9,6 +9,7 @@ import '../core/persistence/save_repository.dart';
 import '../core/theme/game_theme.dart';
 import '../domain/battle_models.dart';
 import '../domain/battlefield_events.dart';
+import '../domain/battle_rewards.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
 import '../domain/run_growth.dart';
@@ -71,6 +72,7 @@ class _GameShellState extends State<GameShell> {
   late WeaponSpec equippedWeapon;
   AppScene equipmentReturn = AppScene.camp;
   BattleReport? report;
+  bool _rewardApplied = false;
 
   int get gold => account.gold;
   int get crystals => account.crystals;
@@ -96,11 +98,21 @@ class _GameShellState extends State<GameShell> {
   }
 
   void finishBattle(BattleReport value) {
+    if (_rewardApplied) return;
     setState(() {
+      _rewardApplied = true;
       report = value;
       account = account.copyWith(gold: account.gold + value.gold);
       _saveRepository.save(account);
       scene = AppScene.result;
+    });
+  }
+
+  void startBattle() {
+    setState(() {
+      _rewardApplied = false;
+      report = null;
+      scene = AppScene.battle;
     });
   }
 
@@ -143,7 +155,7 @@ class _GameShellState extends State<GameShell> {
             },
             onBack: () => go(AppScene.contracts),
             onEquipment: () => openEquipment(AppScene.mercenarySelect),
-            onDeploy: () => go(AppScene.battle),
+            onDeploy: startBattle,
           ),
           AppScene.equipment => EquipmentScreen(
             key: const ValueKey('equipment'),
@@ -184,7 +196,7 @@ class _GameShellState extends State<GameShell> {
             key: const ValueKey('result'),
             report: report!,
             onCamp: () => go(AppScene.camp),
-            onReplay: () => go(AppScene.battle),
+            onReplay: startBattle,
           ),
           AppScene.enemyCodex => EnemyCodexScreen(
             key: const ValueKey('enemy-codex'),
@@ -198,53 +210,63 @@ class _GameShellState extends State<GameShell> {
 
 class BattlefieldContract {
   const BattlefieldContract({
+    required this.id,
     required this.battlefield,
     required this.condition,
     required this.name,
     required this.subtitle,
     required this.power,
     required this.reward,
+    required this.xp,
     required this.color,
     required this.icon,
   });
+  final String id;
   final BattlefieldType battlefield;
   final BattlefieldCondition condition;
   final String name;
   final String subtitle;
   final int power;
   final int reward;
+  final int xp;
   final Color color;
   final IconData icon;
 }
 
 const contracts = [
   BattlefieldContract(
+    id: 'north_gate_defense',
     battlefield: BattlefieldType.gateDefense,
     condition: BattlefieldCondition.moonlitNight,
     name: '성문 방어전',
     subtitle: '새벽까지 북문을 사수하라',
     power: 18000,
     reward: 3000,
+    xp: 1200,
     color: Color(0xff334d6f),
     icon: Icons.shield_outlined,
   ),
   BattlefieldContract(
+    id: 'ashwind_evacuation',
     battlefield: BattlefieldType.evacuation,
     condition: BattlefieldCondition.ashWind,
     name: '철수전',
     subtitle: '부상병과 보급대를 호위하라',
     power: 22000,
     reward: 4500,
+    xp: 1450,
     color: Color(0xff8c6031),
     icon: Icons.directions_run,
   ),
   BattlefieldContract(
+    id: 'commander_assassination',
     battlefield: BattlefieldType.gateDefense,
     condition: BattlefieldCondition.moonlitNight,
     name: '적 지휘관 암살',
     subtitle: '혼란 속에서 지휘관을 제거하라',
     power: 25000,
     reward: 5000,
+    xp: 1750,
     color: Color(0xff733b3e),
     icon: Icons.gps_fixed,
   ),

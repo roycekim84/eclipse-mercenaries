@@ -32,6 +32,10 @@ class _BattleScreenState extends State<BattleScreen>
         weapon: widget.weapon,
         battlefield: widget.contract.battlefield,
         condition: widget.contract.condition,
+        contractId: widget.contract.id,
+        contractName: widget.contract.name,
+        contractGold: widget.contract.reward,
+        contractXp: widget.contract.xp,
       ),
       onVictory: widget.onVictory,
     );
