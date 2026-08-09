@@ -138,6 +138,8 @@ Flame은 `BattleReport`를 한 번만 발행한다. Flutter가 결과를 검증�
 11. Animation/VfxSystem
 12. BattleEndSystem
 
+M2.1 구현에서는 `gate_defense_system.dart`가 진영별 초기 배치, 공성 목표 이동/공격, 성문 피해, 전선 침투율, 종료 판정과 월드 렌더링을 소유한다. `GateDefenseRules`는 Flame과 분리된 도메인 규칙으로 승패와 보너스를 결정하며 단위 테스트에서 직접 검증한다.
+
 같은 프레임에서 순서가 바뀌어 결과가 달라지지 않도록 고정한다. 피해와 사망은 즉시 리스트를 변경하기보다 command buffer를 사용해 프레임 말에 반영한다.
 
 ## 8. 대량 유닛 구조

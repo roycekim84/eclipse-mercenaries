@@ -68,4 +68,38 @@ void main() {
 
     expect(ultimateNames, hasLength(content.mercenaries.length));
   });
+
+  test('gate defense outcome is resolved from time and gate durability', () {
+    expect(
+      GateDefenseRules.resolve(gateHp: 0, secondsLeft: 12),
+      BattleOutcome.defeat,
+    );
+    expect(
+      GateDefenseRules.resolve(gateHp: 1, secondsLeft: 0),
+      BattleOutcome.victory,
+    );
+    expect(
+      GateDefenseRules.resolve(gateHp: 800, secondsLeft: 20),
+      BattleOutcome.retreat,
+    );
+  });
+
+  test('gate defense bonuses use durability pressure and elite conditions', () {
+    expect(
+      GateDefenseRules.completedBonuses(
+        gateHpRatio: .8,
+        frontPressure: .2,
+        elitesCleared: true,
+      ),
+      ['gate_75', 'line_held', 'elite_clear'],
+    );
+    expect(
+      GateDefenseRules.completedBonuses(
+        gateHpRatio: .5,
+        frontPressure: .7,
+        elitesCleared: false,
+      ),
+      isEmpty,
+    );
+  });
 }

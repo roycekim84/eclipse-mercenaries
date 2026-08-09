@@ -10,6 +10,7 @@ import '../core/content/game_visuals.dart';
 import 'render/player_sprite_component.dart';
 
 part 'systems/ultimate_system.dart';
+part 'systems/gate_defense_system.dart';
 
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
@@ -25,6 +26,9 @@ class SurvivorGame extends FlameGame {
         weaponLevel: 1,
         ultimateCharge: 0,
         ultimateEnabled: config.weapon.id == config.mercenary.signatureWeaponId,
+        gateHp: GateDefenseRules.maxGateHp,
+        gateMaxHp: GateDefenseRules.maxGateHp,
+        frontPressure: 0,
       ),
     );
   }
@@ -44,6 +48,8 @@ class SurvivorGame extends FlameGame {
   Vector2? _moveTarget;
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
+  late Vector2 _gatePosition;
+  late double _defenseLineX;
   double _elapsed = 0;
   double _attackClock = 0;
   double _eventClock = 0;
@@ -53,9 +59,12 @@ class SurvivorGame extends FlameGame {
   double _ultimateClock = 0;
   bool _ultimateImpactApplied = false;
   int _ultimateActivation = 0;
+  double _gateHp = GateDefenseRules.maxGateHp;
+  double _frontPressure = 0;
   late double _speed;
   int _level = 1;
   int _kills = 0;
+  int _alliedKills = 0;
   int _weaponLevel = 1;
   bool _finished = false;
   bool _pausedForChoice = false;
@@ -66,6 +75,8 @@ class SurvivorGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     _player = size / 2;
+    _gatePosition = Vector2(78, size.y / 2);
+    _defenseLineX = math.max(190, size.x * .28);
     final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
     _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
       ..position = _player.clone();
@@ -81,22 +92,11 @@ class SurvivorGame extends FlameGame {
       weaponLevel: 1,
       ultimateCharge: 0,
       ultimateEnabled: _signatureWeaponActive,
+      gateHp: _gateHp,
+      gateMaxHp: GateDefenseRules.maxGateHp,
+      frontPressure: 0,
     );
-    for (var i = 0; i < 330; i++) {
-      final angle = _random.nextDouble() * math.pi * 2;
-      final radius =
-          120 + _random.nextDouble() * math.max(size.x, size.y) * .72;
-      _units.add(
-        BattleUnit(
-          position:
-              _player + Vector2(math.cos(angle), math.sin(angle)) * radius,
-          ally: i % 3 == 0,
-          elite: i % 83 == 0 && i % 3 != 0,
-          hp: i % 83 == 0 ? 8 : 2,
-          playerAggro: i % 5 == 0,
-        ),
-      );
-    }
+    _spawnBattleLines();
   }
 
   void setMoveTarget(Offset offset) =>
@@ -185,19 +185,13 @@ class SurvivorGame extends FlameGame {
         () => event.value = null,
       );
     }
-    if (_elapsed >= config.durationSeconds && !_finished) {
-      _finished = true;
-      final minutes = config.durationSeconds ~/ 60;
-      final seconds = config.durationSeconds % 60;
-      onVictory(
-        BattleReport(
-          time:
-              '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-          kills: _kills,
-          gold: 3240 + _kills * 8,
-          xp: 1200 + _kills * 3,
-        ),
-      );
+    _updateFrontPressure();
+    final objectiveOutcome = GateDefenseRules.resolve(
+      gateHp: _gateHp,
+      secondsLeft: (config.durationSeconds - _elapsed).ceil(),
+    );
+    if (objectiveOutcome != BattleOutcome.retreat) {
+      _finishBattle(objectiveOutcome);
     }
     _publishStats();
   }
@@ -214,10 +208,15 @@ class SurvivorGame extends FlameGame {
 
   void _updateUnits(double dt) {
     for (final unit in _units) {
+      if (_finished) break;
       if (unit.dead) continue;
       unit.attackClock -= dt;
       final playerDistance = _player.distanceTo(unit.position);
       if (playerDistance > size.x * .8) continue; // Off-screen AI throttling.
+      if (!unit.ally && unit.objectiveAggro && _updateSiegeUnit(unit, dt)) {
+        unit.phase += dt * (unit.elite ? 6 : 4);
+        continue;
+      }
       final opponent = _nearestOpponent(unit, 150);
       Vector2 direction;
       double targetDistance;
@@ -237,7 +236,10 @@ class SurvivorGame extends FlameGame {
               unit.ally ? CombatStyle.blades : CombatStyle.greatsword,
             ),
           );
-          if (opponent.hp <= 0) opponent.dead = true;
+          if (opponent.hp <= 0) {
+            opponent.dead = true;
+            if (unit.ally) _alliedKills++;
+          }
         }
       } else if (!unit.ally && unit.playerAggro) {
         final delta = _player - unit.position;
@@ -370,11 +372,16 @@ class SurvivorGame extends FlameGame {
       weaponLevel: _weaponLevel,
       ultimateCharge: _ultimateCharge,
       ultimateEnabled: _signatureWeaponActive,
+      gateHp: _gateHp,
+      gateMaxHp: GateDefenseRules.maxGateHp,
+      frontPressure: _frontPressure,
     );
     final old = stats.value;
     if (old.level != next.level ||
         old.kills != next.kills ||
         old.secondsLeft != next.secondsLeft ||
+        (old.gateHp - next.gateHp).abs() > .5 ||
+        (old.frontPressure - next.frontPressure).abs() > .01 ||
         (old.ultimateCharge - next.ultimateCharge).abs() > .005 ||
         (old.xp - next.xp).abs() > 1) {
       stats.value = next;
@@ -384,6 +391,7 @@ class SurvivorGame extends FlameGame {
   @override
   void render(Canvas canvas) {
     _drawTerrain(canvas);
+    _drawBattlefieldObjective(canvas);
     _drawUnits(canvas);
     _drawUltimateEffect(canvas);
     _drawPlayerMarker(canvas);
@@ -517,12 +525,14 @@ class BattleUnit {
     required this.elite,
     required this.hp,
     required this.playerAggro,
+    required this.objectiveAggro,
   });
   Vector2 position;
   bool ally;
   bool elite;
   int hp;
   bool playerAggro;
+  bool objectiveAggro;
   double phase = 0;
   double attackClock = 0;
   bool dead = false;

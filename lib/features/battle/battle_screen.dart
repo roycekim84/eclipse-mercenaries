@@ -181,6 +181,38 @@ class BattleHud extends StatelessWidget {
                     '성문 방어선 유지  ${stats.kills} / 120',
                     style: const TextStyle(fontSize: 11),
                   ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.castle_outlined,
+                        size: 13,
+                        color: Color(0xffd7bd7c),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          '북문  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                      Text(
+                        '전선 ${(stats.frontPressure * 100).round()}%',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: stats.frontPressure > .6
+                              ? const Color(0xffff756b)
+                              : Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Meter(
+                    value: stats.gateHp / stats.gateMaxHp,
+                    color: stats.gateHp / stats.gateMaxHp > .35
+                        ? const Color(0xff60b875)
+                        : const Color(0xffd2554e),
+                  ),
                 ],
               ),
             ),

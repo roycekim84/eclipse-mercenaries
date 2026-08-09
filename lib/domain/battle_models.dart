@@ -27,6 +27,9 @@ class BattleStats {
     required this.weaponLevel,
     required this.ultimateCharge,
     required this.ultimateEnabled,
+    required this.gateHp,
+    required this.gateMaxHp,
+    required this.frontPressure,
   });
 
   final double hp;
@@ -38,6 +41,9 @@ class BattleStats {
   final int weaponLevel;
   final double ultimateCharge;
   final bool ultimateEnabled;
+  final double gateHp;
+  final double gateMaxHp;
+  final double frontPressure;
 }
 
 class UltimateSequence {
@@ -61,6 +67,8 @@ class BattleReport {
     this.outcome = BattleOutcome.victory,
     this.alliedKills = 0,
     this.triggeredEventIds = const [],
+    this.objectiveHpRatio = 1,
+    this.completedBonusIds = const [],
   });
 
   final String time;
@@ -70,6 +78,31 @@ class BattleReport {
   final BattleOutcome outcome;
   final int alliedKills;
   final List<String> triggeredEventIds;
+  final double objectiveHpRatio;
+  final List<String> completedBonusIds;
+}
+
+abstract final class GateDefenseRules {
+  static const double maxGateHp = 1200;
+
+  static BattleOutcome resolve({
+    required double gateHp,
+    required int secondsLeft,
+  }) {
+    if (gateHp <= 0) return BattleOutcome.defeat;
+    if (secondsLeft <= 0) return BattleOutcome.victory;
+    return BattleOutcome.retreat;
+  }
+
+  static List<String> completedBonuses({
+    required double gateHpRatio,
+    required double frontPressure,
+    required bool elitesCleared,
+  }) => [
+    if (gateHpRatio >= .75) 'gate_75',
+    if (frontPressure <= .25) 'line_held',
+    if (elitesCleared) 'elite_clear',
+  ];
 }
 
 class UpgradeOption {
