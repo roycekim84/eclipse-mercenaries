@@ -206,7 +206,9 @@ extension RunGrowthSystem on SurvivorGame {
     }
     choice.value = null;
     _pausedForChoice = false;
-    if (!_pausedByUser && !_pausedByLifecycle) resumeEngine();
+    if (!_pausedByUser && !_pausedByLifecycle && !_pausedForEvent) {
+      resumeEngine();
+    }
     _publishStats();
   }
 }

@@ -1,5 +1,6 @@
 import 'game_data.dart';
 import 'run_growth.dart';
+import 'battlefield_events.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
@@ -156,6 +157,7 @@ class BattleReport {
     this.peakActiveUnits = 0,
     this.frameTimeP95Ms = 0,
     this.rareDropIds = const [],
+    this.eventRecords = const [],
   });
 
   final String time;
@@ -175,6 +177,7 @@ class BattleReport {
   final int peakActiveUnits;
   final double frameTimeP95Ms;
   final List<String> rareDropIds;
+  final List<BattlefieldEventRecord> eventRecords;
 }
 
 abstract final class EvacuationRules {

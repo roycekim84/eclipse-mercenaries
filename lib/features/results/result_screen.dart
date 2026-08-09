@@ -12,25 +12,30 @@ class ResultScreen extends StatelessWidget {
   final VoidCallback onReplay;
   @override
   Widget build(BuildContext context) {
-    final victory = report.outcome == BattleOutcome.victory;
-    final title = victory ? 'VICTORY' : 'DEFEAT';
+    final title = switch (report.outcome) {
+      BattleOutcome.victory => 'VICTORY',
+      BattleOutcome.retreat => 'RETREAT',
+      BattleOutcome.defeat => 'DEFEAT',
+    };
     final evacuation = report.battlefield == BattlefieldType.evacuation;
-    final subtitle = evacuation
-        ? victory
-              ? '계약 완수 · 철수 행렬 호위 성공'
-              : '계약 실패 · 철수 인원 손실'
-        : victory
-        ? '계약 완수 · 성문 방어선 사수'
-        : '계약 실패 · 북문 함락';
-    final titleColor = victory
-        ? const Color(0xffffd27c)
-        : const Color(0xffe37268);
+    final subtitle = switch ((report.outcome, evacuation)) {
+      (BattleOutcome.victory, true) => '계약 완수 · 철수 행렬 호위 성공',
+      (BattleOutcome.victory, false) => '계약 완수 · 성문 방어선 사수',
+      (BattleOutcome.retreat, _) => '전술적 철수 · 획득 보상의 50% 보존',
+      (BattleOutcome.defeat, true) => '계약 실패 · 철수 인원 손실',
+      (BattleOutcome.defeat, false) => '계약 실패 · 북문 함락',
+    };
+    final titleColor = switch (report.outcome) {
+      BattleOutcome.victory => const Color(0xffffd27c),
+      BattleOutcome.retreat => const Color(0xff8fc6d8),
+      BattleOutcome.defeat => const Color(0xffe37268),
+    };
     return DarkBackdrop(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
             child: GoldPanel(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -156,6 +161,24 @@ class ResultScreen extends StatelessWidget {
                         ],
                       ),
                     ],
+                    if (report.eventRecords.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      const Divider(color: Color(0xff665536)),
+                      const SizedBox(height: 10),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '전장 사건 기록',
+                          style: TextStyle(color: Color(0xffd6bd81)),
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      for (final record in report.eventRecords)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 7),
+                          child: _EventRecordRow(record: record),
+                        ),
+                    ],
                     const SizedBox(height: 16),
                     Row(
                       children: [
@@ -183,6 +206,53 @@ class ResultScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EventRecordRow extends StatelessWidget {
+  const _EventRecordRow({required this.record});
+
+  final BattlefieldEventRecord record;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (record.rarity) {
+      BattlefieldEventRarity.common => const Color(0xffb6bdc8),
+      BattlefieldEventRarity.special => const Color(0xff79b7d9),
+      BattlefieldEventRarity.rare => const Color(0xffb58be3),
+      BattlefieldEventRarity.legendary => const Color(0xffffc65e),
+    };
+    final rarity = switch (record.rarity) {
+      BattlefieldEventRarity.common => '일반',
+      BattlefieldEventRarity.special => '특수',
+      BattlefieldEventRarity.rare => '희귀',
+      BattlefieldEventRarity.legendary => '전설',
+    };
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x6610141b),
+        border: Border(left: BorderSide(color: color, width: 2)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$rarity · ${record.title}',
+            style: TextStyle(color: color, fontSize: 11),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '${record.choiceLabel} — ${record.resultText}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white60, fontSize: 10),
+            ),
+          ),
+        ],
       ),
     );
   }

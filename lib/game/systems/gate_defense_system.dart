@@ -133,6 +133,7 @@ extension GateDefenseSystem on SurvivorGame {
         _gateHp -
             UnitRoleRules.damage(unit.role) -
             (unit.archetype?.damageBonus ?? 0) -
+            _enemyDamageBonus -
             (unit.archetype?.ability == EnemyAbility.blast ? 5 : 0),
       );
       _emitSlash(_gatePosition, .2, CombatStyle.greatsword);
@@ -196,7 +197,11 @@ extension GateDefenseSystem on SurvivorGame {
               (unit) => !unit.dead && !unit.ally && unit.elite,
             ),
           );
-    final rewardRate = outcome == BattleOutcome.victory ? 1.0 : .35;
+    final rewardRate = switch (outcome) {
+      BattleOutcome.victory => 1.0,
+      BattleOutcome.retreat => .5,
+      BattleOutcome.defeat => .2,
+    };
     onVictory(
       BattleReport(
         time:
@@ -204,10 +209,18 @@ extension GateDefenseSystem on SurvivorGame {
         kills: _kills,
         alliedKills: _alliedKills,
         gold:
-            (((evacuation ? 4500 : 3240) + _kills * 8 + bonuses.length * 300) *
-                    rewardRate)
+            (((evacuation ? 4500 : 3240) +
+                        _kills * 8 +
+                        bonuses.length * 300 +
+                        _eventGoldBonus) *
+                    rewardRate *
+                    _eventRewardMultiplier)
                 .round(),
-        xp: (((evacuation ? 1450 : 1200) + _kills * 3) * rewardRate).round(),
+        xp:
+            (((evacuation ? 1450 : 1200) + _kills * 3 + _eventXpBonus) *
+                    rewardRate *
+                    _eventRewardMultiplier)
+                .round(),
         outcome: outcome,
         objectiveHpRatio: objectiveRatio,
         completedBonusIds: bonuses,
@@ -219,6 +232,8 @@ extension GateDefenseSystem on SurvivorGame {
         peakActiveUnits: _peakActiveUnits,
         frameTimeP95Ms: _frameTimeP95Ms,
         rareDropIds: List.unmodifiable(_rareDrops),
+        triggeredEventIds: List.unmodifiable(_triggeredEventIds),
+        eventRecords: List.unmodifiable(_eventRecords),
       ),
     );
   }

@@ -72,6 +72,7 @@ extension EvacuationSystem on SurvivorGame {
       final damage =
           (UnitRoleRules.damage(unit.role) +
                   (unit.archetype?.damageBonus ?? 0) +
+                  _enemyDamageBonus +
                   (unit.archetype?.ability == EnemyAbility.blast ? 3 : 0))
               .clamp(1, 6);
       target.hp -= damage;

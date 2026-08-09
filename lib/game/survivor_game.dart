@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
+import '../domain/battlefield_events.dart';
 import '../domain/combat_rules.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
@@ -15,6 +16,7 @@ import 'render/player_sprite_component.dart';
 part 'systems/ultimate_system.dart';
 part 'systems/gate_defense_system.dart';
 part 'systems/evacuation_system.dart';
+part 'systems/battlefield_event_system.dart';
 part 'systems/unit_ai_system.dart';
 part 'systems/damage_system.dart';
 part 'systems/weapon_system.dart';
@@ -24,7 +26,8 @@ part 'systems/run_growth_system.dart';
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
     : _random = math.Random(config.seed),
-      _upgradeRandom = math.Random(config.seed ^ 0x5f3759df) {
+      _upgradeRandom = math.Random(config.seed ^ 0x5f3759df),
+      _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
     stats = ValueNotifier(
       BattleStats(
         hp: config.mercenary.maxHp.toDouble(),
@@ -59,11 +62,13 @@ class SurvivorGame extends FlameGame {
   late final ValueNotifier<BattleStats> stats;
   final choice = ValueNotifier<BattleChoice?>(null);
   final event = ValueNotifier<BattleEvent?>(null);
+  final eventPrompt = ValueNotifier<BattlefieldEventSpec?>(null);
   final ultimate = ValueNotifier<UltimateSequence?>(null);
   final reducedEffects = ValueNotifier(false);
   final combatPaused = ValueNotifier(false);
   final math.Random _random;
   final math.Random _upgradeRandom;
+  final math.Random _eventRandom;
   final _units = <BattleUnit>[];
   final _slashes = List.generate(96, (_) => SlashFx.pooled());
   final _projectiles = List.generate(64, (_) => PooledProjectile());
@@ -71,6 +76,8 @@ class SurvivorGame extends FlameGame {
   final _runWeapons = <RunWeaponState>[];
   final _passiveLevels = <String, int>{};
   final _rareDrops = <String>[];
+  final _triggeredEventIds = <String>{};
+  final _eventRecords = <BattlefieldEventRecord>[];
   final _escorts = <EscortUnit>[];
   final _frameSamples = List<double>.filled(512, 0);
   final _spatialGrid = <int, List<int>>{};
@@ -84,6 +91,12 @@ class SurvivorGame extends FlameGame {
   late double _defenseLineX;
   double _elapsed = 0;
   double _eventClock = 0;
+  double _nextEventAt = 10;
+  double _eventRewardMultiplier = 1;
+  double _enemySpeedMultiplier = 1;
+  int _eventGoldBonus = 0;
+  int _eventXpBonus = 0;
+  int _enemyDamageBonus = 0;
   double _xp = 0;
   double _nextXp = 40;
   double _ultimateCharge = 0;
@@ -102,6 +115,7 @@ class SurvivorGame extends FlameGame {
   int _peakActiveUnits = 0;
   bool _finished = false;
   bool _pausedForChoice = false;
+  bool _pausedForEvent = false;
   bool _pausedByUser = false;
   bool _pausedByLifecycle = false;
 
@@ -166,7 +180,12 @@ class SurvivorGame extends FlameGame {
   void toggleReducedEffects() => reducedEffects.value = !reducedEffects.value;
 
   void toggleCombatPause() {
-    if (_finished || _pausedForChoice || _pausedByLifecycle) return;
+    if (_finished ||
+        _pausedForChoice ||
+        _pausedForEvent ||
+        _pausedByLifecycle) {
+      return;
+    }
     _pausedByUser = !_pausedByUser;
     combatPaused.value = _pausedByUser;
     if (_pausedByUser) {
@@ -187,7 +206,9 @@ class SurvivorGame extends FlameGame {
     if (!_pausedByLifecycle) return;
     _pausedByLifecycle = false;
     combatPaused.value = _pausedByUser;
-    if (!_pausedByUser && !_pausedForChoice && !_finished) resumeEngine();
+    if (!_pausedByUser && !_pausedForChoice && !_pausedForEvent && !_finished) {
+      resumeEngine();
+    }
   }
 
   void triggerUltimate() {
@@ -216,7 +237,7 @@ class SurvivorGame extends FlameGame {
     _recordPerformance(dt);
     final worldDt = _ultimateClock > 1.18 ? dt * .08 : dt;
     super.update(worldDt);
-    if (_finished || _pausedForChoice) {
+    if (_finished || _pausedForChoice || _pausedForEvent) {
       return;
     }
     _advanceUltimate(dt);
@@ -241,17 +262,8 @@ class SurvivorGame extends FlameGame {
     _updateUnits(worldDt);
     _updateCombatPools(worldDt);
     _updateRunWeapons(worldDt);
-    if (_eventClock > 14 && event.value == null) {
-      event.value = const BattleEvent(
-        '희귀 전장 사건',
-        '적군 증원',
-        '북동쪽 능선에서 적 증원부대가 도착했습니다. 전리품 획득량이 증가합니다.',
-      );
-      Future<void>.delayed(
-        const Duration(seconds: 4),
-        () => event.value = null,
-      );
-    }
+    if (_pausedForChoice) return;
+    _updateBattlefieldEvents();
     _updateFrontPressure();
     final secondsLeft = (config.durationSeconds - _elapsed).ceil();
     final objectiveOutcome = config.battlefield == BattlefieldType.evacuation

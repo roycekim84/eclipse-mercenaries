@@ -22,6 +22,7 @@
 - `domain/battle_models.dart`: BattleConfig, BattleStats, BattleReport와 전투 오버레이 모델
 - `domain/run_growth.dart`: 런 성장 상태, 선택 유효성, 가중치 비복원 추출 순수 규칙
 - `domain/enemy_catalog.dart`: 8 일반·2 정예·2 보스 원형, 세력·능력·드롭 데이터
+- `domain/battlefield_events.dart`: 8종 사건 정의, 선택 명세와 결정론적 가중치 추출 규칙
 - `game/survivor_game.dart`: 전투 세션 조합, 이동, 자동 공격, 경험치, 레벨업, 사건
 - `game/systems/run_growth_system.dart`: 다중 무기 타이머, 선택 적용과 HUD 빌드 스냅샷
 - `game/systems/gate_defense_system.dart`: 성문 목표, 진영 배치, 공성 피해, 승패/결과
@@ -30,6 +31,7 @@
 - `game/systems/damage_system.dart`: 공통 피해·치명타·상태이상·사망 반영
 - `game/systems/weapon_system.dart`: 8종 무기 대상 선정과 공격 패턴
 - `game/systems/pooled_effects_system.dart`: 투사체·VFX·대미지 숫자 풀과 렌더
+- `game/systems/battlefield_event_system.dart`: 사건 시계, 전투 정지, 선택 효과와 증원 생성
 
 앱/도메인/게임 런타임 경계와 기능별 화면 분리가 완료됐다. 화면 파일은 Dart library part로 묶어 현재 비공개 상태 경계를 유지하며, 기능이 커질 때 독립 public widget library로 전환한다.
 
@@ -273,6 +275,8 @@ AudioService가 BGM, SFX, UI, voice 채널을 관리한다. 동시 재생 상한
 - 시스템 시간을 직접 읽지 않고 GameClock 사용
 - 고정 timestep 또는 상한이 있는 dt 처리
 - 결과 보고서 snapshot 비교 가능
+- 런 성장 RNG와 사건 RNG를 각각 `seed ^ 0x5f3759df`, `seed ^ 0x6c8e9cf5`로 분리해 한 시스템의 추출 횟수가 다른 시스템의 결과를 바꾸지 않는다.
+- 발생 사건 ID와 선택 결과는 `BattleReport.eventRecords`로 Presentation에 전달하며 런타임이 계정 재화를 직접 수정하지 않는다.
 
 ## 16. 성능 예산
 

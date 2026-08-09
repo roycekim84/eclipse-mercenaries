@@ -8,6 +8,7 @@ import '../core/content/game_visuals.dart';
 import '../core/persistence/save_repository.dart';
 import '../core/theme/game_theme.dart';
 import '../domain/battle_models.dart';
+import '../domain/battlefield_events.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
 import '../domain/run_growth.dart';

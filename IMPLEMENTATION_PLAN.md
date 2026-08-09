@@ -218,6 +218,8 @@ M2.4 구현은 최대 4개 무기/무기 5단계/패시브 5단계/개인 특성
 
 ### E07. 전장 사건
 
+상태: M3.3에서 구현 완료. 정식 확률·계약 난이도 배율과 loot table 연계는 E09/M3.4에서 조정한다.
+
 작업:
 
 - event definition, trigger evaluator, weighted picker

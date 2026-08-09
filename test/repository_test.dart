@@ -4,6 +4,7 @@ import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
 import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
+import 'package:eclipse_mercenaries/domain/battlefield_events.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
@@ -58,6 +59,85 @@ void main() {
     expect(huntCaptain.ability, EnemyAbility.huntMark);
     expect(siegeMarshal.role, UnitRole.commander);
     expect(huntCaptain.role, UnitRole.commander);
+  });
+
+  test('battlefield event catalog contains eight complete unique events', () {
+    expect(alphaBattlefieldEvents, hasLength(8));
+    expect(
+      alphaBattlefieldEvents.map((event) => event.id).toSet(),
+      hasLength(8),
+    );
+    expect(
+      alphaBattlefieldEvents.map((event) => event.effect).toSet(),
+      hasLength(BattlefieldEventEffect.values.length),
+    );
+    for (final event in alphaBattlefieldEvents) {
+      expect(event.title, isNotEmpty);
+      expect(event.description, isNotEmpty);
+      expect(event.weight, isPositive);
+      expect(event.choices, isNotEmpty);
+      expect(
+        event.choices.map((choice) => choice.id).toSet(),
+        hasLength(event.choices.length),
+      );
+      for (final choice in event.choices) {
+        expect(choice.label, isNotEmpty);
+        expect(choice.description, isNotEmpty);
+        expect(choice.resultText, isNotEmpty);
+      }
+    }
+  });
+
+  test('battlefield event selection is reproducible for the same seed', () {
+    BattlefieldEventSpec? pick(int seed) => BattlefieldEventRules.pickNext(
+      definitions: alphaBattlefieldEvents,
+      triggeredIds: const {},
+      progress: 1,
+      random: math.Random(seed),
+    );
+
+    expect(pick(20260810)?.id, pick(20260810)?.id);
+  });
+
+  test('battlefield events respect progress and never repeat', () {
+    final early = BattlefieldEventRules.pickNext(
+      definitions: alphaBattlefieldEvents,
+      triggeredIds: const {},
+      progress: .1,
+      random: math.Random(1),
+    );
+    expect(early, isNull);
+
+    final triggered = <String>{};
+    for (var i = 0; i < alphaBattlefieldEvents.length; i++) {
+      final event = BattlefieldEventRules.pickNext(
+        definitions: alphaBattlefieldEvents,
+        triggeredIds: triggered,
+        progress: 1,
+        random: math.Random(i + 7),
+      );
+      expect(event, isNotNull);
+      expect(triggered.add(event!.id), isTrue);
+    }
+    expect(
+      BattlefieldEventRules.pickNext(
+        definitions: alphaBattlefieldEvents,
+        triggeredIds: triggered,
+        progress: 1,
+        random: math.Random(99),
+      ),
+      isNull,
+    );
+  });
+
+  test('retreat is an explicit option only for escalation events', () {
+    final retreatChoices = alphaBattlefieldEvents
+        .expand((event) => event.choices)
+        .where((choice) => choice.retreat)
+        .map((choice) => choice.id)
+        .toSet();
+
+    expect(retreatChoices, {'tactical_retreat', 'royal_retreat'});
   });
 
   test('every alpha content entry has presentation metadata', () {

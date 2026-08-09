@@ -130,6 +130,15 @@ class _BattleScreenState extends State<BattleScreen>
               ? const SizedBox.shrink()
               : EventBanner(event: event),
         ),
+        ValueListenableBuilder<BattlefieldEventSpec?>(
+          valueListenable: game.eventPrompt,
+          builder: (context, prompt, _) => prompt == null
+              ? const SizedBox.shrink()
+              : BattlefieldEventChoiceOverlay(
+                  event: prompt,
+                  onPick: game.selectBattlefieldEventChoice,
+                ),
+        ),
         ValueListenableBuilder<UltimateSequence?>(
           valueListenable: game.ultimate,
           builder: (context, sequence, _) => sequence == null
@@ -666,6 +675,151 @@ class LevelUpOverlay extends StatelessWidget {
                   }),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BattlefieldEventChoiceOverlay extends StatelessWidget {
+  const BattlefieldEventChoiceOverlay({
+    super.key,
+    required this.event,
+    required this.onPick,
+  });
+
+  final BattlefieldEventSpec event;
+  final ValueChanged<int> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final rarityColor = switch (event.rarity) {
+      BattlefieldEventRarity.common => const Color(0xffaab4bf),
+      BattlefieldEventRarity.special => const Color(0xff66b9da),
+      BattlefieldEventRarity.rare => const Color(0xffc28adc),
+      BattlefieldEventRarity.legendary => const Color(0xffffbd5d),
+    };
+    final rarityLabel = switch (event.rarity) {
+      BattlefieldEventRarity.common => 'COMMON',
+      BattlefieldEventRarity.special => 'SPECIAL',
+      BattlefieldEventRarity.rare => 'RARE',
+      BattlefieldEventRarity.legendary => 'LEGENDARY',
+    };
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0xdd05070c),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: GoldPanel(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(28, 22, 28, 26),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      rarityLabel,
+                      style: TextStyle(
+                        color: rarityColor,
+                        fontSize: 10,
+                        letterSpacing: 4,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      event.title,
+                      style: const TextStyle(
+                        fontFamily: 'serif',
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      event.description,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(event.choices.length, (index) {
+                        final choice = event.choices[index];
+                        final danger =
+                            choice.retreat ||
+                            choice.id == 'fight_company' ||
+                            choice.id == 'challenge_royal_guard';
+                        return Flexible(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 310),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              child: InkWell(
+                                onTap: () => onPick(index),
+                                child: Container(
+                                  height: 118,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: danger
+                                        ? const Color(0x663b1719)
+                                        : const Color(0x66203549),
+                                    border: Border.all(
+                                      color: danger
+                                          ? const Color(0xff9e554e)
+                                          : const Color(0xff668cac),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        choice.retreat
+                                            ? Icons.directions_run
+                                            : danger
+                                            ? Icons.gavel
+                                            : Icons.shield_outlined,
+                                        color: danger
+                                            ? const Color(0xffe28a78)
+                                            : const Color(0xff8fc4dd),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        choice.label,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        choice.description,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          color: Colors.white54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

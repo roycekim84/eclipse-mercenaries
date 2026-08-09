@@ -72,6 +72,7 @@ extension UnitAiSystem on SurvivorGame {
     var damage =
         UnitRoleRules.damage(attacker.role) +
         (attacker.archetype?.damageBonus ?? 0) +
+        (attacker.ally ? 0 : _enemyDamageBonus) +
         (attacker.elite ? 1 : 0) +
         (commandBuff && attacker.role != UnitRole.commander ? 1 : 0);
     if (ability == EnemyAbility.charge && attacker.abilityCounter == 1) {
@@ -192,9 +193,13 @@ extension UnitAiSystem on SurvivorGame {
         UnitRoleRules.speed(unit.role) *
         speedMultiplier *
         archetypeSpeed *
+        _enemySpeedMultiplierFor(unit) *
         bossCommandSpeed *
         commandSpeed *
         statusSpeed *
         dt;
   }
+
+  double _enemySpeedMultiplierFor(BattleUnit unit) =>
+      unit.ally ? 1 : _enemySpeedMultiplier;
 }
