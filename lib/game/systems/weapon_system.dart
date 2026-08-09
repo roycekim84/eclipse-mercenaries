@@ -1,8 +1,9 @@
 part of '../survivor_game.dart';
 
 extension WeaponSystem on SurvivorGame {
-  void _attackNearest() {
-    final range = switch (weapon.pattern) {
+  void _attackWithWeapon(RunWeaponState state) {
+    final activeWeapon = state.weapon;
+    final range = switch (activeWeapon.pattern) {
       WeaponPattern.twinSlash => 235.0,
       WeaponPattern.bloodCleave => 230.0,
       WeaponPattern.chainFlame => 365.0,
@@ -12,17 +13,26 @@ extension WeaponSystem on SurvivorGame {
       WeaponPattern.spearLine => 300.0,
       WeaponPattern.shadowPierce => 390.0,
     };
-    final target = weapon.pattern == WeaponPattern.longBow
+    final target = activeWeapon.pattern == WeaponPattern.longBow
         ? _farthestEnemyFrom(_player, range)
         : _nearestEnemyFrom(_player, range);
     if (target == null) return;
     _playerSprite.playAttack();
     final baseDamage =
-        mercenary.baseDamage + weapon.attack ~/ 650 + (_weaponLevel ~/ 2);
+        ((mercenary.baseDamage +
+                    activeWeapon.attack ~/ 650 +
+                    (state.level ~/ 2)) *
+                (1 +
+                    _passiveLevel('battle_instinct') * .1 +
+                    (mercenary.id == 'kael' ? _traitLevel * .08 : 0)))
+            .round();
     final criticalChance =
-        weapon.crit.toDouble() + (mercenary.id == 'luna' ? 15 : 0);
+        activeWeapon.crit.toDouble() +
+        _passiveLevel('keen_eye') * 5 +
+        (mercenary.id == 'luna' ? 15 + _traitLevel * 3 : 0);
+    final statusBonus = mercenary.id == 'sera' ? _traitLevel * .06 : 0.0;
 
-    switch (weapon.pattern) {
+    switch (activeWeapon.pattern) {
       case WeaponPattern.twinSlash:
         _damageEnemy(
           target,
@@ -46,7 +56,7 @@ extension WeaponSystem on SurvivorGame {
             baseDamage,
             criticalChance: criticalChance,
             status: StatusEffectType.bleed,
-            statusChance: .42,
+            statusChance: .42 + statusBonus,
             showFx: identical(unit, target),
           );
         }
@@ -54,7 +64,7 @@ extension WeaponSystem on SurvivorGame {
         _launchProjectile(
           origin: _player,
           target: target,
-          pattern: weapon.pattern,
+          pattern: activeWeapon.pattern,
           damage: baseDamage,
           speed: 330,
           criticalChance: criticalChance,
@@ -71,7 +81,7 @@ extension WeaponSystem on SurvivorGame {
         _launchProjectile(
           origin: _player,
           target: target,
-          pattern: weapon.pattern,
+          pattern: activeWeapon.pattern,
           damage: baseDamage + 1,
           speed: 440,
           criticalChance: criticalChance,
@@ -80,7 +90,7 @@ extension WeaponSystem on SurvivorGame {
         _launchProjectile(
           origin: _player,
           target: target,
-          pattern: weapon.pattern,
+          pattern: activeWeapon.pattern,
           damage: baseDamage,
           speed: 285,
           criticalChance: criticalChance,
@@ -104,12 +114,12 @@ extension WeaponSystem on SurvivorGame {
           damage: baseDamage,
           criticalChance: criticalChance,
           status: StatusEffectType.bleed,
-          statusChance: .28,
+          statusChance: .28 + statusBonus,
         );
         _launchProjectile(
           origin: _player,
           target: target,
-          pattern: weapon.pattern,
+          pattern: activeWeapon.pattern,
           damage: 0,
           speed: 560,
           criticalChance: 0,

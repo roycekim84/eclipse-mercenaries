@@ -76,6 +76,10 @@ extension WeaponVisualLookup on WeaponSpec {
 
 IconData gameIcon(String id) => switch (id) {
   'movement' => Icons.directions_run,
+  'battle_instinct' => Icons.local_fire_department,
+  'rapid_drill' => Icons.speed,
+  'swift_step' => Icons.directions_run,
+  'keen_eye' => Icons.visibility,
   'luna' => Icons.pets,
   'kael' => Icons.change_history,
   'sera' => Icons.auto_awesome,

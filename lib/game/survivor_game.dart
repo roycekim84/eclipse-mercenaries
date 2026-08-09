@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' show Offset, ValueNotifier;
 import '../domain/battle_models.dart';
 import '../domain/combat_rules.dart';
 import '../domain/game_data.dart';
+import '../domain/run_growth.dart';
 import '../core/content/game_visuals.dart';
 import 'render/player_sprite_component.dart';
 
@@ -16,10 +17,12 @@ part 'systems/unit_ai_system.dart';
 part 'systems/damage_system.dart';
 part 'systems/weapon_system.dart';
 part 'systems/pooled_effects_system.dart';
+part 'systems/run_growth_system.dart';
 
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
-    : _random = math.Random(config.seed) {
+    : _random = math.Random(config.seed),
+      _upgradeRandom = math.Random(config.seed ^ 0x5f3759df) {
     stats = ValueNotifier(
       BattleStats(
         hp: config.mercenary.maxHp.toDouble(),
@@ -36,6 +39,14 @@ class SurvivorGame extends FlameGame {
         frontPressure: 0,
         allyCommanderAlive: true,
         enemyCommanderAlive: true,
+        build: [
+          RunBuildEntry(
+            id: config.weapon.id,
+            kind: RunUpgradeKind.weapon,
+            level: 1,
+            maxLevel: 5,
+          ),
+        ],
       ),
     );
   }
@@ -50,10 +61,13 @@ class SurvivorGame extends FlameGame {
   final reducedEffects = ValueNotifier(false);
   final combatPaused = ValueNotifier(false);
   final math.Random _random;
+  final math.Random _upgradeRandom;
   final _units = <BattleUnit>[];
   final _slashes = List.generate(96, (_) => SlashFx.pooled());
   final _projectiles = List.generate(64, (_) => PooledProjectile());
   final _damageNumbers = List.generate(36, (_) => DamageNumberFx());
+  final _runWeapons = <RunWeaponState>[];
+  final _passiveLevels = <String, int>{};
   final _spatialGrid = <int, List<int>>{};
   Vector2? _moveTarget;
   late Vector2 _player;
@@ -64,7 +78,6 @@ class SurvivorGame extends FlameGame {
   late Vector2 _gatePosition;
   late double _defenseLineX;
   double _elapsed = 0;
-  double _attackClock = 0;
   double _eventClock = 0;
   double _xp = 0;
   double _nextXp = 40;
@@ -78,7 +91,7 @@ class SurvivorGame extends FlameGame {
   int _level = 1;
   int _kills = 0;
   int _alliedKills = 0;
-  int _weaponLevel = 1;
+  int _traitLevel = 0;
   bool _finished = false;
   bool _pausedForChoice = false;
   bool _pausedByUser = false;
@@ -98,6 +111,7 @@ class SurvivorGame extends FlameGame {
       ..position = _player.clone();
     await add(_playerSprite);
     _speed = mercenary.speed;
+    _runWeapons.add(RunWeaponState(weapon));
     stats.value = BattleStats(
       hp: mercenary.maxHp.toDouble(),
       level: 1,
@@ -113,6 +127,7 @@ class SurvivorGame extends FlameGame {
       frontPressure: 0,
       allyCommanderAlive: true,
       enemyCommanderAlive: true,
+      build: _currentBuildEntries,
     );
     _spawnBattleLines();
   }
@@ -121,7 +136,11 @@ class SurvivorGame extends FlameGame {
       _moveTarget = Vector2(offset.dx, offset.dy);
   void clearMoveTarget() => _moveTarget = null;
 
-  bool get _signatureWeaponActive => weapon.id == mercenary.signatureWeaponId;
+  bool get _signatureWeaponActive => _runWeapons.isEmpty
+      ? weapon.id == mercenary.signatureWeaponId
+      : _runWeapons.any(
+          (state) => state.weapon.id == mercenary.signatureWeaponId,
+        );
 
   void toggleReducedEffects() => reducedEffects.value = !reducedEffects.value;
 
@@ -171,15 +190,6 @@ class SurvivorGame extends FlameGame {
     _publishStats();
   }
 
-  void selectUpgrade(int index) {
-    if (index == 0) _weaponLevel++;
-    if (index == 1) _speed += 18;
-    choice.value = null;
-    _pausedForChoice = false;
-    if (!_pausedByUser && !_pausedByLifecycle) resumeEngine();
-    _publishStats();
-  }
-
   @override
   void update(double dt) {
     final worldDt = _ultimateClock > 1.18 ? dt * .08 : dt;
@@ -189,7 +199,6 @@ class SurvivorGame extends FlameGame {
     }
     _advanceUltimate(dt);
     _elapsed += worldDt;
-    _attackClock += worldDt;
     _eventClock += worldDt;
     var isMoving = false;
     if (_moveTarget != null) {
@@ -206,14 +215,7 @@ class SurvivorGame extends FlameGame {
     _rebuildGrid();
     _updateUnits(worldDt);
     _updateCombatPools(worldDt);
-    final attackInterval =
-        mercenary.attackInterval *
-        (100 / (100 + weapon.speed)) *
-        math.max(.55, 1 - _weaponLevel * .045);
-    if (_attackClock > attackInterval) {
-      _attackClock = 0;
-      _attackNearest();
-    }
+    _updateRunWeapons(worldDt);
     if (_eventClock > 14 && event.value == null) {
       event.value = const BattleEvent(
         '희귀 전장 사건',
@@ -281,19 +283,6 @@ class SurvivorGame extends FlameGame {
     return nearest;
   }
 
-  void _levelUp() {
-    _xp -= _nextXp;
-    _nextXp = (_nextXp * 1.32).roundToDouble();
-    _level++;
-    _pausedForChoice = true;
-    pauseEngine();
-    choice.value = BattleChoice([
-      UpgradeOption('${weapon.name} 강화', '공격 피해와 공격 속도가 증가합니다.', weapon.id),
-      UpgradeOption('${mercenary.race}의 발놀림', '이동속도가 12% 증가합니다.', 'movement'),
-      UpgradeOption(mercenary.trait, mercenary.traitDescription, mercenary.id),
-    ]);
-  }
-
   void _publishStats() {
     final next = BattleStats(
       hp: mercenary.maxHp.toDouble(),
@@ -302,7 +291,7 @@ class SurvivorGame extends FlameGame {
       nextXp: _nextXp,
       kills: _kills,
       secondsLeft: (config.durationSeconds - _elapsed).ceil(),
-      weaponLevel: _weaponLevel,
+      weaponLevel: _runWeapons.first.level,
       ultimateCharge: _ultimateCharge,
       ultimateEnabled: _signatureWeaponActive,
       gateHp: _gateHp,
@@ -310,6 +299,7 @@ class SurvivorGame extends FlameGame {
       frontPressure: _frontPressure,
       allyCommanderAlive: _allyCommander?.dead != true,
       enemyCommanderAlive: _enemyCommander?.dead != true,
+      build: _currentBuildEntries,
     );
     final old = stats.value;
     if (old.level != next.level ||
@@ -319,6 +309,7 @@ class SurvivorGame extends FlameGame {
         (old.frontPressure - next.frontPressure).abs() > .01 ||
         old.allyCommanderAlive != next.allyCommanderAlive ||
         old.enemyCommanderAlive != next.enemyCommanderAlive ||
+        !_sameBuild(old.build, next.build) ||
         (old.ultimateCharge - next.ultimateCharge).abs() > .005 ||
         (old.xp - next.xp).abs() > 1) {
       stats.value = next;
@@ -533,4 +524,12 @@ class DamageNumberFx {
   double life = 0;
   double maxLife = 0;
   Paragraph? paragraph;
+}
+
+class RunWeaponState {
+  RunWeaponState(this.weapon);
+
+  final WeaponSpec weapon;
+  int level = 1;
+  double attackClock = 0;
 }

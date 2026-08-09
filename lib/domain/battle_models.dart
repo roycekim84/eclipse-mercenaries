@@ -1,4 +1,5 @@
 import 'game_data.dart';
+import 'run_growth.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
@@ -88,6 +89,7 @@ class BattleStats {
     required this.frontPressure,
     required this.allyCommanderAlive,
     required this.enemyCommanderAlive,
+    required this.build,
   });
 
   final double hp;
@@ -104,6 +106,7 @@ class BattleStats {
   final double frontPressure;
   final bool allyCommanderAlive;
   final bool enemyCommanderAlive;
+  final List<RunBuildEntry> build;
 }
 
 class UltimateSequence {
@@ -170,11 +173,23 @@ abstract final class GateDefenseRules {
 }
 
 class UpgradeOption {
-  const UpgradeOption(this.title, this.description, this.iconId);
+  const UpgradeOption({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.description,
+    required this.iconId,
+    required this.currentLevel,
+    required this.maxLevel,
+  });
 
+  final String id;
+  final RunUpgradeKind kind;
   final String title;
   final String description;
   final String iconId;
+  final int currentLevel;
+  final int maxLevel;
 }
 
 class BattleChoice {

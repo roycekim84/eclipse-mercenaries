@@ -1,9 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
 import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
+import 'package:eclipse_mercenaries/domain/run_growth.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -205,5 +208,108 @@ void main() {
       content.weapons.map((weapon) => weapon.pattern).toSet(),
       hasLength(WeaponPattern.values.length),
     );
+  });
+
+  test('run upgrade choices are reproducible for the same seed', () {
+    const definitions = [
+      RunUpgradeDefinition(
+        id: 'weapon_a',
+        kind: RunUpgradeKind.weapon,
+        maxLevel: 5,
+        baseWeight: 70,
+      ),
+      RunUpgradeDefinition(
+        id: 'weapon_b',
+        kind: RunUpgradeKind.weapon,
+        maxLevel: 5,
+        baseWeight: 60,
+      ),
+      ...alphaPassiveDefinitions,
+      RunUpgradeDefinition(
+        id: 'trait',
+        kind: RunUpgradeKind.trait,
+        maxLevel: 3,
+        baseWeight: 55,
+      ),
+    ];
+    const state = RunGrowthState(
+      weaponLevels: {'weapon_a': 1},
+      passiveLevels: {},
+      traitLevel: 0,
+    );
+
+    final first = RunGrowthRules.generateChoices(
+      definitions: definitions,
+      state: state,
+      random: math.Random(20260810),
+    );
+    final second = RunGrowthRules.generateChoices(
+      definitions: definitions,
+      state: state,
+      random: math.Random(20260810),
+    );
+
+    expect(first.map((choice) => choice.id), second.map((choice) => choice.id));
+    expect(first.map((choice) => choice.id).toSet(), hasLength(first.length));
+  });
+
+  test('run growth excludes maxed upgrades and blocked weapon slots', () {
+    const definitions = [
+      RunUpgradeDefinition(
+        id: 'owned',
+        kind: RunUpgradeKind.weapon,
+        maxLevel: 5,
+        baseWeight: 70,
+      ),
+      RunUpgradeDefinition(
+        id: 'new_weapon',
+        kind: RunUpgradeKind.weapon,
+        maxLevel: 5,
+        baseWeight: 70,
+      ),
+      RunUpgradeDefinition(
+        id: 'passive',
+        kind: RunUpgradeKind.passive,
+        maxLevel: 5,
+        baseWeight: 70,
+      ),
+      RunUpgradeDefinition(
+        id: 'trait',
+        kind: RunUpgradeKind.trait,
+        maxLevel: 3,
+        baseWeight: 70,
+      ),
+    ];
+    const state = RunGrowthState(
+      weaponLevels: {'owned': 5},
+      passiveLevels: {'passive': 5},
+      traitLevel: 3,
+      maxWeaponSlots: 1,
+    );
+
+    final choices = RunGrowthRules.generateChoices(
+      definitions: definitions,
+      state: state,
+      random: math.Random(1),
+    );
+
+    expect(choices, isEmpty);
+  });
+
+  test('owned weapons remain upgradeable when weapon slots are full', () {
+    const definition = RunUpgradeDefinition(
+      id: 'owned',
+      kind: RunUpgradeKind.weapon,
+      maxLevel: 5,
+      baseWeight: 70,
+    );
+    const state = RunGrowthState(
+      weaponLevels: {'owned': 2},
+      passiveLevels: {},
+      traitLevel: 0,
+      maxWeaponSlots: 1,
+    );
+
+    expect(state.canOffer(definition), isTrue);
   });
 }

@@ -353,11 +353,15 @@ class BattleHud extends StatelessWidget {
           bottom: 10,
           child: Row(
             children: [
-              SkillOrb(
-                icon: weapon.visual.icon,
-                label: 'LV.${stats.weaponLevel}',
-              ),
-              const SkillOrb(icon: Icons.blur_circular, label: 'LV.1'),
+              for (final entry in stats.build.take(6))
+                SkillOrb(
+                  icon: entry.kind == RunUpgradeKind.weapon
+                      ? gameContent.weaponById(entry.id).visual.icon
+                      : gameIcon(entry.id),
+                  label: entry.level >= entry.maxLevel
+                      ? 'MAX'
+                      : 'LV.${entry.level}',
+                ),
               UltimateOrb(
                 charge: stats.ultimateCharge,
                 enabled: stats.ultimateEnabled,
@@ -464,6 +468,35 @@ class LevelUpOverlay extends StatelessWidget {
                                     option.title,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: option.currentLevel == 0
+                                          ? const Color(0x554d8fb8)
+                                          : const Color(0x553f2852),
+                                      border: Border.all(
+                                        color: option.currentLevel == 0
+                                            ? const Color(0xff6eafd0)
+                                            : const Color(0xff8c6aa0),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      option.currentLevel == 0
+                                          ? 'NEW'
+                                          : option.currentLevel + 1 >=
+                                                option.maxLevel
+                                          ? 'LV.${option.currentLevel} → MAX'
+                                          : 'LV.${option.currentLevel} → ${option.currentLevel + 1}',
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        color: Color(0xffffd889),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 5),

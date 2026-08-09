@@ -115,7 +115,7 @@ extension PooledEffectsSystem on SurvivorGame {
           kind: DamageKind.magical,
           criticalChance: projectile.criticalChance,
           status: StatusEffectType.burn,
-          statusChance: .32,
+          statusChance: .32 + (mercenary.id == 'sera' ? _traitLevel * .06 : 0),
         );
         if (projectile.chainRemaining > 0) {
           final next = _nearestEnemyFrom(
