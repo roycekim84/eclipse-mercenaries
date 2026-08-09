@@ -108,6 +108,50 @@ void main() {
     expect(restored.inventory['war_scrap'], 3);
   });
 
+  testWidgets('recruitment reveals a mercenary and persists duplicate tokens', (
+    tester,
+  ) async {
+    final repository = InMemorySaveRepository();
+    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('용병 모집'));
+    await tester.pumpAndSettle();
+    expect(find.text('특별 용병 계약'), findsOneWidget);
+    await tester.tap(find.textContaining('1회 계약'));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+
+    expect(find.text('용병 계약 완료'), findsOneWidget);
+    expect(find.textContaining('전용 증표 +10'), findsOneWidget);
+    final restored = await repository.load();
+    expect(restored.crystals, 2950);
+    expect(restored.recruitmentCount, 1);
+    expect(restored.inventory['sera_token'], 10);
+  });
+
+  testWidgets('general shop confirms purchase and persists inventory', (
+    tester,
+  ) async {
+    final repository = InMemorySaveRepository();
+    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('상점'));
+    await tester.pumpAndSettle();
+    expect(find.text('용병단 상점'), findsOneWidget);
+    await tester.tap(find.text('골드 800').first);
+    await tester.pumpAndSettle();
+    expect(find.text('야전 식량 꾸러미 구매'), findsOneWidget);
+    await tester.tap(find.text('구매 확정'));
+    await tester.pumpAndSettle();
+
+    final restored = await repository.load();
+    expect(restored.gold, 44878);
+    expect(restored.inventory['field_ration'], 2);
+    expect(restored.shopPurchaseCounts['ration_pack'], 1);
+  });
+
   testWidgets('result screen exposes reward loot and MVP details', (
     tester,
   ) async {

@@ -10,6 +10,7 @@ import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
 import 'package:eclipse_mercenaries/domain/camp_meta.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
+import 'package:eclipse_mercenaries/domain/economy.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:eclipse_mercenaries/domain/run_growth.dart';
@@ -265,12 +266,14 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 3);
+      expect(migrated.schemaVersion, 4);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
       expect(migrated.inventory, isEmpty);
       expect(migrated.claimedMissionIds, isEmpty);
+      expect(migrated.mercenaryCopies['luna'], 1);
+      expect(migrated.warSeals, 120);
     },
   );
 
@@ -357,6 +360,9 @@ void main() {
       },
       inventory: {'red_moon_shard': 1, 'war_scrap': 4},
       claimedMissionIds: {'camp_arrival'},
+      recruitmentCount: 11,
+      mercenaryCopies: {'luna': 4, 'kael': 5, 'sera': 5},
+      shopPurchaseCounts: {'ration_pack': 2},
     );
 
     await repository.save(updated);
@@ -367,6 +373,49 @@ void main() {
     expect(restored.weaponProgress['moon_blades']?.stage, 2);
     expect(restored.inventory['war_scrap'], 4);
     expect(restored.claimedMissionIds, contains('camp_arrival'));
+    expect(restored.recruitmentCount, 11);
+    expect(restored.mercenaryCopies['kael'], 5);
+    expect(restored.shopPurchaseCounts['ration_pack'], 2);
+  });
+
+  test('recruitment rolls are deterministic and respect currency gates', () {
+    expect(RecruitmentRules.roll(startIndex: 0, count: 3), [
+      'sera',
+      'luna',
+      'kael',
+    ]);
+    expect(
+      RecruitmentRules.canRecruit(count: 1, crystals: 0, tickets: 1),
+      isTrue,
+    );
+    expect(
+      RecruitmentRules.canRecruit(count: 10, crystals: 2699, tickets: 10),
+      isFalse,
+    );
+    expect(
+      RecruitmentRules.canRecruit(count: 10, crystals: 2700, tickets: 0),
+      isTrue,
+    );
+  });
+
+  test('shop rules enforce balance and per-refresh purchase limits', () {
+    final product = alphaShopProducts.first;
+    expect(
+      ShopRules.canPurchase(product: product, balance: 800, purchased: 0),
+      isTrue,
+    );
+    expect(
+      ShopRules.canPurchase(product: product, balance: 799, purchased: 0),
+      isFalse,
+    );
+    expect(
+      ShopRules.canPurchase(
+        product: product,
+        balance: 9999,
+        purchased: product.purchaseLimit,
+      ),
+      isFalse,
+    );
   });
 
   test('camp mission rules connect inventory and weapon growth', () {

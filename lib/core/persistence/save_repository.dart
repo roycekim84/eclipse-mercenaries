@@ -17,6 +17,12 @@ class AccountSave {
     required this.weaponProgress,
     required this.inventory,
     required this.claimedMissionIds,
+    required this.warSeals,
+    required this.honor,
+    required this.recruitmentCount,
+    required this.mercenaryCopies,
+    required this.shopPurchaseCounts,
+    required this.shopRefreshCount,
   });
 
   factory AccountSave.initial() => const AccountSave(
@@ -46,9 +52,15 @@ class AccountSave {
     },
     inventory: {},
     claimedMissionIds: {},
+    warSeals: 120,
+    honor: 80,
+    recruitmentCount: 0,
+    mercenaryCopies: {'luna': 1, 'kael': 1, 'sera': 1},
+    shopPurchaseCounts: {},
+    shopRefreshCount: 0,
   );
 
-  static const currentSchemaVersion = 3;
+  static const currentSchemaVersion = 4;
 
   final int schemaVersion;
   final int gold;
@@ -59,6 +71,12 @@ class AccountSave {
   final Map<String, WeaponProgress> weaponProgress;
   final Map<String, int> inventory;
   final Set<String> claimedMissionIds;
+  final int warSeals;
+  final int honor;
+  final int recruitmentCount;
+  final Map<String, int> mercenaryCopies;
+  final Map<String, int> shopPurchaseCounts;
+  final int shopRefreshCount;
 
   AccountSave copyWith({
     int? gold,
@@ -69,6 +87,12 @@ class AccountSave {
     Map<String, WeaponProgress>? weaponProgress,
     Map<String, int>? inventory,
     Set<String>? claimedMissionIds,
+    int? warSeals,
+    int? honor,
+    int? recruitmentCount,
+    Map<String, int>? mercenaryCopies,
+    Map<String, int>? shopPurchaseCounts,
+    int? shopRefreshCount,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
     gold: gold ?? this.gold,
@@ -80,6 +104,12 @@ class AccountSave {
     weaponProgress: weaponProgress ?? this.weaponProgress,
     inventory: inventory ?? this.inventory,
     claimedMissionIds: claimedMissionIds ?? this.claimedMissionIds,
+    warSeals: warSeals ?? this.warSeals,
+    honor: honor ?? this.honor,
+    recruitmentCount: recruitmentCount ?? this.recruitmentCount,
+    mercenaryCopies: mercenaryCopies ?? this.mercenaryCopies,
+    shopPurchaseCounts: shopPurchaseCounts ?? this.shopPurchaseCounts,
+    shopRefreshCount: shopRefreshCount ?? this.shopRefreshCount,
   );
 
   Map<String, Object> toJson() => {
@@ -98,6 +128,12 @@ class AccountSave {
     },
     'inventory': inventory,
     'claimedMissionIds': claimedMissionIds.toList(),
+    'warSeals': warSeals,
+    'honor': honor,
+    'recruitmentCount': recruitmentCount,
+    'mercenaryCopies': mercenaryCopies,
+    'shopPurchaseCounts': shopPurchaseCounts,
+    'shopRefreshCount': shopRefreshCount,
   };
 
   factory AccountSave.fromJson(Map<String, Object?> raw) {
@@ -126,6 +162,15 @@ class AccountSave {
       ),
       inventory: _intMap(migrated['inventory']),
       claimedMissionIds: _stringSet(migrated['claimedMissionIds']),
+      warSeals: (migrated['warSeals'] as num?)?.toInt() ?? defaults.warSeals,
+      honor: (migrated['honor'] as num?)?.toInt() ?? defaults.honor,
+      recruitmentCount: (migrated['recruitmentCount'] as num?)?.toInt() ?? 0,
+      mercenaryCopies: _intMap(
+        migrated['mercenaryCopies'],
+        defaults.mercenaryCopies,
+      ),
+      shopPurchaseCounts: _intMap(migrated['shopPurchaseCounts']),
+      shopRefreshCount: (migrated['shopRefreshCount'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -145,9 +190,13 @@ class AccountSave {
     };
   }
 
-  static Map<String, int> _intMap(Object? value) {
-    if (value is! Map) return {};
+  static Map<String, int> _intMap(
+    Object? value, [
+    Map<String, int> fallback = const {},
+  ]) {
+    if (value is! Map) return Map.of(fallback);
     return {
+      ...fallback,
       for (final entry in value.entries)
         if (entry.key is String && entry.value is num)
           entry.key as String: (entry.value as num).toInt(),
@@ -200,6 +249,20 @@ abstract final class SaveMigration {
         'claimedMissionIds': <String>[],
       };
       version = 3;
+    }
+    if (version < 4) {
+      final defaults = AccountSave.initial();
+      current = {
+        ...current,
+        'schemaVersion': 4,
+        'warSeals': defaults.warSeals,
+        'honor': defaults.honor,
+        'recruitmentCount': 0,
+        'mercenaryCopies': defaults.mercenaryCopies,
+        'shopPurchaseCounts': <String, int>{},
+        'shopRefreshCount': 0,
+      };
+      version = 4;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

@@ -13,6 +13,7 @@ import '../domain/battlefield_events.dart';
 import '../domain/battle_rewards.dart';
 import '../domain/camp_meta.dart';
 import '../domain/enemy_catalog.dart';
+import '../domain/economy.dart';
 import '../domain/game_data.dart';
 import '../domain/progression.dart';
 import '../domain/run_growth.dart';
@@ -32,6 +33,8 @@ part '../features/equipment/equipment_screen.dart';
 part '../features/codex/enemy_codex_screen.dart';
 part '../features/mercenaries/mercenary_screens.dart';
 part '../features/results/result_screen.dart';
+part '../features/recruitment/recruitment_screen.dart';
+part '../features/shop/shop_screen.dart';
 
 const gameContent = StaticGameContentRepository();
 
@@ -63,6 +66,8 @@ enum AppScene {
   enemyCodex,
   forge,
   missions,
+  recruitment,
+  shop,
 }
 
 class GameShell extends StatefulWidget {
@@ -315,6 +320,123 @@ class _GameShellState extends State<GameShell> {
     );
   }
 
+  RecruitmentReceipt? recruitMercenaries(int count) {
+    final tickets = account.inventory['contract_ticket'] ?? 0;
+    if (!RecruitmentRules.canRecruit(
+      count: count,
+      crystals: crystals,
+      tickets: tickets,
+    )) {
+      setState(
+        () => actionNotice = count == 1
+            ? '계약서 또는 크리스탈이 부족합니다.'
+            : '10회 모집에는 크리스탈 2,700개가 필요합니다.',
+      );
+      return null;
+    }
+    final ticketSpent = count == 1 && tickets > 0 ? 1 : 0;
+    final crystalSpent = ticketSpent > 0
+        ? 0
+        : count == 1
+        ? RecruitmentRules.singleCrystalCost
+        : RecruitmentRules.tenCrystalCost;
+    final results = RecruitmentRules.roll(
+      startIndex: account.recruitmentCount,
+      count: count,
+    );
+    final copies = Map<String, int>.of(account.mercenaryCopies);
+    final duplicateTokens = <String, int>{};
+    final inventory = Map<String, int>.of(account.inventory);
+    for (final id in results) {
+      final duplicate = (copies[id] ?? 0) > 0;
+      copies[id] = (copies[id] ?? 0) + 1;
+      if (duplicate) {
+        duplicateTokens[id] =
+            (duplicateTokens[id] ?? 0) + RecruitmentRules.duplicateTokenReward;
+        final tokenId = '${id}_token';
+        inventory[tokenId] =
+            (inventory[tokenId] ?? 0) + RecruitmentRules.duplicateTokenReward;
+      }
+    }
+    if (ticketSpent > 0) inventory['contract_ticket'] = tickets - ticketSpent;
+    final receipt = RecruitmentReceipt(
+      mercenaryIds: results,
+      duplicateTokens: duplicateTokens,
+      crystalsSpent: crystalSpent,
+      ticketsSpent: ticketSpent,
+    );
+    _updateAccount(
+      account.copyWith(
+        crystals: crystals - crystalSpent,
+        recruitmentCount: account.recruitmentCount + count,
+        mercenaryCopies: copies,
+        inventory: inventory,
+      ),
+      '$count명과 용병 계약을 체결했습니다.',
+    );
+    return receipt;
+  }
+
+  void purchaseShopProduct(ShopProductSpec product) {
+    final purchased = account.shopPurchaseCounts[product.id] ?? 0;
+    final balance = ShopRules.balanceFor(
+      product.currency,
+      gold: gold,
+      warSeals: account.warSeals,
+      honor: account.honor,
+    );
+    if (!ShopRules.canPurchase(
+      product: product,
+      balance: balance,
+      purchased: purchased,
+    )) {
+      setState(
+        () => actionNotice = purchased >= product.purchaseLimit
+            ? '이번 갱신의 구매 한도에 도달했습니다.'
+            : '${shopCurrencyName(product.currency)}이 부족합니다.',
+      );
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        gold: product.currency == ShopCurrency.gold
+            ? gold - product.price
+            : gold,
+        warSeals: product.currency == ShopCurrency.warSeal
+            ? account.warSeals - product.price
+            : account.warSeals,
+        honor: product.currency == ShopCurrency.honor
+            ? account.honor - product.price
+            : account.honor,
+        inventory: {
+          ...account.inventory,
+          product.itemId:
+              (account.inventory[product.itemId] ?? 0) + product.quantity,
+        },
+        shopPurchaseCounts: {
+          ...account.shopPurchaseCounts,
+          product.id: purchased + 1,
+        },
+      ),
+      '${product.name} ×${product.quantity} 구매 완료',
+    );
+  }
+
+  void refreshShop() {
+    if (crystals < ShopRules.refreshCrystalCost) {
+      setState(() => actionNotice = '상점 갱신에 필요한 크리스탈이 부족합니다.');
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        crystals: crystals - ShopRules.refreshCrystalCost,
+        shopPurchaseCounts: {},
+        shopRefreshCount: account.shopRefreshCount + 1,
+      ),
+      '상점 목록을 갱신했습니다. 구매 한도가 초기화됩니다.',
+    );
+  }
+
   int get claimableMissionCount => alphaMissions
       .where(
         (mission) =>
@@ -418,6 +540,8 @@ class _GameShellState extends State<GameShell> {
             onForge: () => go(AppScene.forge),
             onMissions: () => go(AppScene.missions),
             missionBadge: claimableMissionCount,
+            onRecruitment: () => go(AppScene.recruitment),
+            onShop: () => go(AppScene.shop),
           ),
           AppScene.contracts => ContractScreen(
             key: const ValueKey('contracts'),
@@ -542,6 +666,30 @@ class _GameShellState extends State<GameShell> {
             claimedMissionIds: account.claimedMissionIds,
             notice: actionNotice,
             onClaim: claimMission,
+            onBack: () => go(AppScene.camp),
+          ),
+          AppScene.recruitment => RecruitmentScreen(
+            key: const ValueKey('recruitment'),
+            crystals: crystals,
+            tickets: account.inventory['contract_ticket'] ?? 0,
+            mercenaryCopies: account.mercenaryCopies,
+            notice: actionNotice,
+            onRecruit: recruitMercenaries,
+            onRoster: () => go(AppScene.roster),
+            onBack: () => go(AppScene.camp),
+          ),
+          AppScene.shop => ShopScreen(
+            key: const ValueKey('shop'),
+            gold: gold,
+            crystals: crystals,
+            warSeals: account.warSeals,
+            honor: account.honor,
+            inventory: account.inventory,
+            purchaseCounts: account.shopPurchaseCounts,
+            refreshCount: account.shopRefreshCount,
+            notice: actionNotice,
+            onPurchase: purchaseShopProduct,
+            onRefresh: refreshShop,
             onBack: () => go(AppScene.camp),
           ),
         },

@@ -249,7 +249,7 @@ SaveGame
 └── settings
 ```
 
-현재 schema v3의 실제 저장 필드는 `gold`, `crystals`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2→v3 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
+현재 schema v4의 실제 저장 필드는 `gold`, `crystals`, `warSeals`, `honor`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`, `recruitmentCount`, `mercenaryCopies`, `shopPurchaseCounts`, `shopRefreshCount`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2→v3→v4 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
 
 원칙:
 
@@ -263,6 +263,8 @@ SaveGame
 저장 순서는 기존 primary를 backup으로 복사한 뒤 새 primary를 기록한다. load는 primary→backup→initial 순서로 복구하며 backup을 사용한 경우 primary를 즉시 복원한다. UI와 테스트에서는 `MemoryKeyValueStore`를 주입해 플랫폼 plugin 없이 같은 repository 계약을 검증한다.
 
 캠프 메타 동작은 `CampMetaRules`의 순수 조건/비용 계산을 거친 뒤 앱 셸에서 계정 스냅샷을 한 번 교체하고 자동 저장한다. 훈련은 골드·야전 식량을 용병 XP로, 담금질은 골드·전장 고철을 무기 XP로 변환한다. 제작/분해는 재료 수량을 원자적으로 교체하며 임무 수령 ID는 `claimedMissionIds`로 중복 지급을 막는다.
+
+모집 순서와 상점 가격/한도는 `RecruitmentRules`, `ShopRules`에서 결정한다. 모집 결과 적용은 크리스탈/계약서 차감, 보유 사본 증가, 중복 증표 지급을 하나의 계정 스냅샷으로 저장한다. 상점 구매도 재화 차감, inventory 지급, 갱신별 구매 횟수 증가를 동시에 반영한다. 알파 로컬 빌드에는 결제 SDK와 실제 화폐 상품을 포함하지 않는다.
 
 ## 13. 자산 로딩
 

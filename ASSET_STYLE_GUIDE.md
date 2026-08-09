@@ -1,5 +1,17 @@
 # 이미지 에셋 스타일 기획서
 
+## 구현 자산 기록 — 특별 용병 계약 배너
+
+- 파일: `assets/images/recruitment_luna_banner.png`
+- 규격: 1672×941 PNG, 16:9 가로 배너
+- 제작: built-in image generation, 기존 `luna_belhardt.png`를 캐릭터 정체성 레퍼런스로 사용
+- 레이아웃: 루나는 우측 55%, 좌측 40%는 Flutter 제목·재화·모집 버튼용 저명도 여백
+- 핵심 유지 요소: 긴 검은 머리, 검은 고양이 귀와 꼬리, 보라·검정 암살자 갑주, 월광쌍검
+- 배경: 밤의 용병 길드 계약실, 거대한 보라색 월광 결정, 계약서와 금색 불씨
+- 금지 요소: 이미지 내 텍스트, 로고, 워터마크, 추가 인물, 동물형 얼굴/전신 털
+
+최종 생성 프롬프트 요약: `premium mobile JRPG mercenary recruitment banner, Luna identity locked to the reference, right-weighted 16:9 composition, dark medieval contract hall, violet moon crystal, purple/black/antique gold palette, no text or UI`.
+
 ## 1. 시각 목표
 
 첨부된 10화면 합성 이미지를 프로젝트의 최우선 시각 기준으로 사용한다. 메뉴는 고급 다크 판타지 JRPG, 전투는 다수 유닛이 명확히 읽히는 탑다운 픽셀 아트로 구성한다.

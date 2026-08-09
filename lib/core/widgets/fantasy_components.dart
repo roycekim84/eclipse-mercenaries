@@ -198,19 +198,27 @@ class FantasyButton extends StatelessWidget {
           ),
           boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 7)],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: const Color(0xffd8bd7b), size: 20),
-            const SizedBox(width: 9),
-            Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: const Color(0xffd8bd7b), size: 20),
+              const SizedBox(width: 9),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),

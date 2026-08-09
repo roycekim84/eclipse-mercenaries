@@ -12,6 +12,8 @@ class CampScreen extends StatelessWidget {
     required this.onForge,
     required this.onMissions,
     required this.missionBadge,
+    required this.onRecruitment,
+    required this.onShop,
   });
   final int gold;
   final int crystals;
@@ -22,6 +24,8 @@ class CampScreen extends StatelessWidget {
   final VoidCallback onForge;
   final VoidCallback onMissions;
   final int missionBadge;
+  final VoidCallback onRecruitment;
+  final VoidCallback onShop;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +60,7 @@ class CampScreen extends StatelessWidget {
                           NavButton(
                             icon: Icons.storefront_outlined,
                             label: '상점',
-                            onTap: () {},
+                            onTap: onShop,
                           ),
                           NavButton(
                             icon: Icons.menu_book_outlined,
@@ -91,7 +95,7 @@ class CampScreen extends StatelessWidget {
                           FantasyButton(
                             label: '용병 모집',
                             icon: Icons.description_outlined,
-                            onTap: () {},
+                            onTap: onRecruitment,
                           ),
                           const SizedBox(height: 9),
                           FantasyButton(
