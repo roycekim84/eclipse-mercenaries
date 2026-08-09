@@ -7,6 +7,7 @@ import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battlefield_events.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
+import 'package:eclipse_mercenaries/domain/camp_meta.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
@@ -249,7 +250,7 @@ void main() {
   });
 
   test(
-    'version one save migrates progression and inventory to schema two',
+    'version one save migrates progression, inventory, and missions',
     () async {
       final store = MemoryKeyValueStore({
         JsonSaveRepository.primaryKey: jsonEncode({
@@ -264,11 +265,12 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 2);
+      expect(migrated.schemaVersion, 3);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
       expect(migrated.inventory, isEmpty);
+      expect(migrated.claimedMissionIds, isEmpty);
     },
   );
 
@@ -354,6 +356,7 @@ void main() {
         'moon_blades': const WeaponProgress(level: 6, xp: 80, stage: 2),
       },
       inventory: {'red_moon_shard': 1, 'war_scrap': 4},
+      claimedMissionIds: {'camp_arrival'},
     );
 
     await repository.save(updated);
@@ -363,6 +366,53 @@ void main() {
     expect(restored.mercenaryProgress['luna']?.ascension, 1);
     expect(restored.weaponProgress['moon_blades']?.stage, 2);
     expect(restored.inventory['war_scrap'], 4);
+    expect(restored.claimedMissionIds, contains('camp_arrival'));
+  });
+
+  test('camp mission rules connect inventory and weapon growth', () {
+    expect(
+      CampMetaRules.missionComplete(
+        'camp_arrival',
+        inventory: const {},
+        weaponProgress: const {},
+      ),
+      isTrue,
+    );
+    expect(
+      CampMetaRules.missionComplete(
+        'field_scavenger',
+        inventory: const {'war_scrap': 2, 'field_ration': 1},
+        weaponProgress: const {},
+      ),
+      isTrue,
+    );
+    expect(
+      CampMetaRules.missionComplete(
+        'tempered_edge',
+        inventory: const {},
+        weaponProgress: const {
+          'moon_blades': WeaponProgress(level: 2, xp: 0, stage: 1),
+        },
+      ),
+      isTrue,
+    );
+    expect(CampMetaRules.missionInventoryReward('tempered_edge'), {
+      'contract_seal': 2,
+    });
+  });
+
+  test('camp costs reject incomplete resource sets', () {
+    const mercenary = MercenaryProgress(level: 45, xp: 0, ascension: 0);
+    expect(
+      CampMetaRules.canTrain(gold: 1000, rations: 1, progress: mercenary),
+      isTrue,
+    );
+    expect(
+      CampMetaRules.canTrain(gold: 999, rations: 1, progress: mercenary),
+      isFalse,
+    );
+    expect(CampMetaRules.canForge(gold: 700, scrap: 2), isTrue);
+    expect(CampMetaRules.canForge(gold: 700, scrap: 1), isFalse);
   });
 
   test('battle config is an immutable session boundary', () {

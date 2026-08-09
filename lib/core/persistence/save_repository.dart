@@ -16,6 +16,7 @@ class AccountSave {
     required this.mercenaryProgress,
     required this.weaponProgress,
     required this.inventory,
+    required this.claimedMissionIds,
   });
 
   factory AccountSave.initial() => const AccountSave(
@@ -44,9 +45,10 @@ class AccountSave {
       'shadow_knife': WeaponProgress(level: 1, xp: 0, stage: 1),
     },
     inventory: {},
+    claimedMissionIds: {},
   );
 
-  static const currentSchemaVersion = 2;
+  static const currentSchemaVersion = 3;
 
   final int schemaVersion;
   final int gold;
@@ -56,6 +58,7 @@ class AccountSave {
   final Map<String, MercenaryProgress> mercenaryProgress;
   final Map<String, WeaponProgress> weaponProgress;
   final Map<String, int> inventory;
+  final Set<String> claimedMissionIds;
 
   AccountSave copyWith({
     int? gold,
@@ -65,6 +68,7 @@ class AccountSave {
     Map<String, MercenaryProgress>? mercenaryProgress,
     Map<String, WeaponProgress>? weaponProgress,
     Map<String, int>? inventory,
+    Set<String>? claimedMissionIds,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
     gold: gold ?? this.gold,
@@ -75,6 +79,7 @@ class AccountSave {
     mercenaryProgress: mercenaryProgress ?? this.mercenaryProgress,
     weaponProgress: weaponProgress ?? this.weaponProgress,
     inventory: inventory ?? this.inventory,
+    claimedMissionIds: claimedMissionIds ?? this.claimedMissionIds,
   );
 
   Map<String, Object> toJson() => {
@@ -92,6 +97,7 @@ class AccountSave {
         entry.key: entry.value.toJson(),
     },
     'inventory': inventory,
+    'claimedMissionIds': claimedMissionIds.toList(),
   };
 
   factory AccountSave.fromJson(Map<String, Object?> raw) {
@@ -119,8 +125,12 @@ class AccountSave {
         WeaponProgress.fromJson,
       ),
       inventory: _intMap(migrated['inventory']),
+      claimedMissionIds: _stringSet(migrated['claimedMissionIds']),
     );
   }
+
+  static Set<String> _stringSet(Object? value) =>
+      value is List ? value.whereType<String>().toSet() : <String>{};
 
   static Map<String, String> _stringMap(
     Object? value,
@@ -182,6 +192,14 @@ abstract final class SaveMigration {
         'inventory': <String, int>{},
       };
       version = 2;
+    }
+    if (version < 3) {
+      current = {
+        ...current,
+        'schemaVersion': 3,
+        'claimedMissionIds': <String>[],
+      };
+      version = 3;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

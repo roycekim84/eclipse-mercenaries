@@ -249,7 +249,7 @@ SaveGame
 └── settings
 ```
 
-현재 schema v2의 실제 저장 필드는 `gold`, `crystals`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
+현재 schema v3의 실제 저장 필드는 `gold`, `crystals`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2→v3 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
 
 원칙:
 
@@ -261,6 +261,8 @@ SaveGame
 - 저장 실패 시 사용자에게 알리고 메모리 상태를 유지한 채 재시도
 
 저장 순서는 기존 primary를 backup으로 복사한 뒤 새 primary를 기록한다. load는 primary→backup→initial 순서로 복구하며 backup을 사용한 경우 primary를 즉시 복원한다. UI와 테스트에서는 `MemoryKeyValueStore`를 주입해 플랫폼 plugin 없이 같은 repository 계약을 검증한다.
+
+캠프 메타 동작은 `CampMetaRules`의 순수 조건/비용 계산을 거친 뒤 앱 셸에서 계정 스냅샷을 한 번 교체하고 자동 저장한다. 훈련은 골드·야전 식량을 용병 XP로, 담금질은 골드·전장 고철을 무기 XP로 변환한다. 제작/분해는 재료 수량을 원자적으로 교체하며 임무 수령 ID는 `claimedMissionIds`로 중복 지급을 막는다.
 
 ## 13. 자산 로딩
 

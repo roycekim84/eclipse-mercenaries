@@ -11,6 +11,7 @@ import '../core/theme/game_theme.dart';
 import '../domain/battle_models.dart';
 import '../domain/battlefield_events.dart';
 import '../domain/battle_rewards.dart';
+import '../domain/camp_meta.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
 import '../domain/progression.dart';
@@ -24,6 +25,8 @@ part '../core/widgets/map_painter.dart';
 part '../features/battle/battle_screen.dart';
 part '../features/battle/ultimate_overlay.dart';
 part '../features/camp/camp_screen.dart';
+part '../features/camp/forge_screen.dart';
+part '../features/camp/mission_screen.dart';
 part '../features/contracts/contract_screens.dart';
 part '../features/equipment/equipment_screen.dart';
 part '../features/codex/enemy_codex_screen.dart';
@@ -58,6 +61,8 @@ enum AppScene {
   battle,
   result,
   enemyCodex,
+  forge,
+  missions,
 }
 
 class GameShell extends StatefulWidget {
@@ -81,6 +86,7 @@ class _GameShellState extends State<GameShell> {
   GrowthReceipt? growthReceipt;
   bool _rewardApplied = false;
   String? saveNotice;
+  String? actionNotice;
 
   AccountSave get account => _account!;
   int get gold => account.gold;
@@ -153,6 +159,173 @@ class _GameShellState extends State<GameShell> {
       scene = AppScene.equipment;
     });
   }
+
+  void _updateAccount(AccountSave next, String notice) {
+    setState(() {
+      _account = next;
+      actionNotice = notice;
+    });
+    unawaited(_persistAccount());
+  }
+
+  void trainMercenary(MercenarySpec mercenary) {
+    final progress = account.mercenaryProgress[mercenary.id]!;
+    final rations = account.inventory['field_ration'] ?? 0;
+    if (!CampMetaRules.canTrain(
+      gold: gold,
+      rations: rations,
+      progress: progress,
+    )) {
+      setState(
+        () => actionNotice = progress.level >= progress.levelCap
+            ? '현재 승급 단계의 레벨 한계입니다.'
+            : '골드 또는 야전 식량이 부족합니다.',
+      );
+      return;
+    }
+    final nextProgress = ProgressionRules.addMercenaryXp(
+      progress,
+      CampMetaRules.trainingXp,
+    );
+    _updateAccount(
+      account.copyWith(
+        gold: gold - CampMetaRules.trainingGoldCost,
+        inventory: {...account.inventory, 'field_ration': rations - 1},
+        mercenaryProgress: {
+          ...account.mercenaryProgress,
+          mercenary.id: nextProgress,
+        },
+      ),
+      '${mercenary.name} 훈련 완료 · 경험치 +${CampMetaRules.trainingXp}',
+    );
+  }
+
+  void ascendMercenary(MercenarySpec mercenary) {
+    final progress = account.mercenaryProgress[mercenary.id]!;
+    final seals = account.inventory['contract_seal'] ?? 0;
+    final cost = ProgressionRules.ascensionCost(progress.ascension);
+    if (!ProgressionRules.canAscend(progress, seals)) {
+      setState(
+        () => actionNotice = progress.level < progress.levelCap
+            ? 'Lv.${progress.levelCap} 달성 후 승급할 수 있습니다.'
+            : '피 묻은 계약 인장이 $cost개 필요합니다.',
+      );
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        inventory: {...account.inventory, 'contract_seal': seals - cost},
+        mercenaryProgress: {
+          ...account.mercenaryProgress,
+          mercenary.id: ProgressionRules.ascend(
+            progress,
+            availableSigils: seals,
+          ),
+        },
+      ),
+      '${mercenary.name} 승급 완료 · 레벨 상한 +5',
+    );
+  }
+
+  void forgeWeapon(WeaponSpec weapon) {
+    final scrap = account.inventory['war_scrap'] ?? 0;
+    if (!CampMetaRules.canForge(gold: gold, scrap: scrap)) {
+      setState(() => actionNotice = '강화에는 700 골드와 전장 고철 2개가 필요합니다.');
+      return;
+    }
+    final progress = account.weaponProgress[weapon.id]!;
+    if (progress.level >= 20) {
+      setState(() => actionNotice = '이미 최대 강화 단계입니다.');
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        gold: gold - CampMetaRules.forgeGoldCost,
+        inventory: {...account.inventory, 'war_scrap': scrap - 2},
+        weaponProgress: {
+          ...account.weaponProgress,
+          weapon.id: ProgressionRules.addWeaponXp(
+            progress,
+            CampMetaRules.forgeXp,
+          ),
+        },
+      ),
+      '${weapon.name} 강화 완료 · 무기 경험치 +${CampMetaRules.forgeXp}',
+    );
+  }
+
+  void craftTemperedIron() {
+    final scrap = account.inventory['war_scrap'] ?? 0;
+    if (scrap < 3) {
+      setState(() => actionNotice = '제작에는 전장 고철 3개가 필요합니다.');
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        inventory: {
+          ...account.inventory,
+          'war_scrap': scrap - 3,
+          'tempered_iron': (account.inventory['tempered_iron'] ?? 0) + 1,
+        },
+      ),
+      '단련된 흑철을 제작했습니다.',
+    );
+  }
+
+  void dismantleTemperedIron() {
+    final iron = account.inventory['tempered_iron'] ?? 0;
+    if (iron < 1) {
+      setState(() => actionNotice = '분해할 단련된 흑철이 없습니다.');
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        inventory: {
+          ...account.inventory,
+          'tempered_iron': iron - 1,
+          'war_scrap': (account.inventory['war_scrap'] ?? 0) + 2,
+        },
+      ),
+      '흑철을 분해해 전장 고철 2개를 회수했습니다.',
+    );
+  }
+
+  void claimMission(MissionSpec mission) {
+    if (account.claimedMissionIds.contains(mission.id) ||
+        !CampMetaRules.missionComplete(
+          mission.id,
+          inventory: account.inventory,
+          weaponProgress: account.weaponProgress,
+        )) {
+      return;
+    }
+    final inventory = Map<String, int>.of(account.inventory);
+    for (final entry in CampMetaRules.missionInventoryReward(
+      mission.id,
+    ).entries) {
+      inventory[entry.key] = (inventory[entry.key] ?? 0) + entry.value;
+    }
+    _updateAccount(
+      account.copyWith(
+        gold: gold + CampMetaRules.missionGoldReward(mission.id),
+        inventory: inventory,
+        claimedMissionIds: {...account.claimedMissionIds, mission.id},
+      ),
+      '${mission.title} 보상을 수령했습니다.',
+    );
+  }
+
+  int get claimableMissionCount => alphaMissions
+      .where(
+        (mission) =>
+            !account.claimedMissionIds.contains(mission.id) &&
+            CampMetaRules.missionComplete(
+              mission.id,
+              inventory: account.inventory,
+              weaponProgress: account.weaponProgress,
+            ),
+      )
+      .length;
 
   Future<void> finishBattle(BattleReport value) async {
     if (_rewardApplied) return;
@@ -242,6 +415,9 @@ class _GameShellState extends State<GameShell> {
             onRoster: () => go(AppScene.roster),
             onEquipment: () => openEquipment(AppScene.camp),
             onCodex: () => go(AppScene.enemyCodex),
+            onForge: () => go(AppScene.forge),
+            onMissions: () => go(AppScene.missions),
+            missionBadge: claimableMissionCount,
           ),
           AppScene.contracts => ContractScreen(
             key: const ValueKey('contracts'),
@@ -292,10 +468,29 @@ class _GameShellState extends State<GameShell> {
           AppScene.roster => RosterScreen(
             key: const ValueKey('roster'),
             onBack: () => go(AppScene.camp),
-            onSelect: () => go(AppScene.detail),
+            mercenaryProgress: account.mercenaryProgress,
+            onSelect: (mercenary) {
+              setState(() {
+                selectedMercenary = mercenary;
+                scene = AppScene.detail;
+              });
+            },
           ),
           AppScene.detail => MercenaryDetailScreen(
             key: const ValueKey('detail'),
+            mercenary: selectedMercenary,
+            progress: account.mercenaryProgress[selectedMercenary.id]!,
+            equippedWeapon: gameContent.weaponById(
+              account.equippedWeaponByMercenary[selectedMercenary.id] ??
+                  selectedMercenary.signatureWeaponId,
+            ),
+            weaponProgress: account.weaponProgress,
+            inventory: account.inventory,
+            gold: gold,
+            notice: actionNotice,
+            onTrain: () => trainMercenary(selectedMercenary),
+            onAscend: () => ascendMercenary(selectedMercenary),
+            onEquipment: () => openEquipment(AppScene.detail),
             onBack: () => go(AppScene.roster),
           ),
           AppScene.battle => BattleScreen(
@@ -326,6 +521,27 @@ class _GameShellState extends State<GameShell> {
           ),
           AppScene.enemyCodex => EnemyCodexScreen(
             key: const ValueKey('enemy-codex'),
+            onBack: () => go(AppScene.camp),
+          ),
+          AppScene.forge => ForgeScreen(
+            key: const ValueKey('forge'),
+            weapons: gameContent.weapons,
+            progress: account.weaponProgress,
+            inventory: account.inventory,
+            gold: gold,
+            notice: actionNotice,
+            onEnhance: forgeWeapon,
+            onCraft: craftTemperedIron,
+            onDismantle: dismantleTemperedIron,
+            onBack: () => go(AppScene.camp),
+          ),
+          AppScene.missions => MissionScreen(
+            key: const ValueKey('missions'),
+            inventory: account.inventory,
+            weaponProgress: account.weaponProgress,
+            claimedMissionIds: account.claimedMissionIds,
+            notice: actionNotice,
+            onClaim: claimMission,
             onBack: () => go(AppScene.camp),
           ),
         },

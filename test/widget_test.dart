@@ -67,6 +67,47 @@ void main() {
     expect(find.text('바르가르 징집병'), findsWidgets);
   });
 
+  testWidgets('mercenary detail exposes five growth tabs', (tester) async {
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('용병'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('루나 벨하르트'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('정보'), findsOneWidget);
+    expect(find.text('레벨업'), findsOneWidget);
+    expect(find.text('장비'), findsOneWidget);
+    expect(find.text('스킬'), findsOneWidget);
+    expect(find.text('스토리'), findsOneWidget);
+    await tester.tap(find.text('레벨업'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('전술 훈련'), findsOneWidget);
+    expect(find.textContaining('승급 · 상한'), findsOneWidget);
+  });
+
+  testWidgets('mission reward persists and unlocks forge resources', (
+    tester,
+  ) async {
+    final repository = InMemorySaveRepository();
+    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('임무'));
+    await tester.pumpAndSettle();
+    expect(find.text('용병단 임무'), findsOneWidget);
+    await tester.tap(find.text('보상 수령').first);
+    await tester.pumpAndSettle();
+
+    final restored = await repository.load();
+    expect(restored.claimedMissionIds, contains('camp_arrival'));
+    expect(restored.inventory['field_ration'], 2);
+    expect(restored.inventory['war_scrap'], 3);
+  });
+
   testWidgets('result screen exposes reward loot and MVP details', (
     tester,
   ) async {

@@ -1,5 +1,15 @@
 # 변경 기록
 
+## Camp meta progression — 2026-08-10
+
+- 루나·카일·세라 실제 저장 레벨을 사용하는 용병 명부와 5개 상세 탭 구현
+- 골드·야전 식량 기반 전술 훈련과 계약 인장 승급 조건/피드백 추가
+- 무기 8종 담금질, 흑철 제작/분해, 13종 전리품 획득처 대장간 구현
+- 완료 조건과 일회성 보상을 갖춘 알파 임무 3종 및 캠프 알림 배지 연결
+- save schema v3와 `claimedMissionIds`, v1/v2 자동 migration 추가
+- 캠프 성장 규칙/저장/화면 위젯 테스트와 Web 새로고침 복구 검증
+- M4.2 캠프 화면 완료
+
 ## Persistent progression and save migration — 2026-08-10
 
 - `shared_preferences` 2.5.5 기반 Web/iOS/Android 비동기 저장 adapter 추가
