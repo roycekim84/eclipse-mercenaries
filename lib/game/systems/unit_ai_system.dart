@@ -12,7 +12,11 @@ extension UnitAiSystem on SurvivorGame {
       return;
     }
     if (!unit.ally && unit.objectiveAggro) {
-      _updateSiegeUnit(unit, dt);
+      if (config.battlefield == BattlefieldType.evacuation) {
+        _updatePursuer(unit, dt);
+      } else {
+        _updateSiegeUnit(unit, dt);
+      }
       return;
     }
 
@@ -80,7 +84,9 @@ extension UnitAiSystem on SurvivorGame {
 
   void _moveRetreatingUnit(BattleUnit unit, double dt) {
     final destination = unit.ally
-        ? Vector2(_gatePosition.x + 45, _gatePosition.y)
+        ? config.battlefield == BattlefieldType.evacuation
+              ? Vector2(size.x - 45, unit.position.y)
+              : Vector2(_gatePosition.x + 45, _gatePosition.y)
         : Vector2(size.x + 55, unit.position.y);
     _moveToward(unit, destination, dt, speedMultiplier: 1.22);
   }
@@ -90,7 +96,9 @@ extension UnitAiSystem on SurvivorGame {
     if (unit.role == UnitRole.commander) {
       unit.stance = UnitStance.support;
       final anchor = Vector2(
-        unit.ally ? _defenseLineX - 48 : _defenseLineX + 190,
+        config.battlefield == BattlefieldType.evacuation
+            ? (unit.ally ? size.x * .42 : size.x * .7)
+            : (unit.ally ? _defenseLineX - 48 : _defenseLineX + 190),
         size.y / 2,
       );
       _moveToward(unit, anchor, dt, stopDistance: 18);
@@ -112,7 +120,9 @@ extension UnitAiSystem on SurvivorGame {
       return;
     }
     final fallback = Vector2(
-      unit.ally ? _defenseLineX - 10 : _defenseLineX + 90,
+      config.battlefield == BattlefieldType.evacuation
+          ? (unit.ally ? size.x * .48 : size.x * .68)
+          : (unit.ally ? _defenseLineX - 10 : _defenseLineX + 90),
       unit.position.y,
     );
     _moveToward(unit, fallback, dt, stopDistance: 24);

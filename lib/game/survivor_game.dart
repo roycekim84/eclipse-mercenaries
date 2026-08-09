@@ -13,6 +13,7 @@ import 'render/player_sprite_component.dart';
 
 part 'systems/ultimate_system.dart';
 part 'systems/gate_defense_system.dart';
+part 'systems/evacuation_system.dart';
 part 'systems/unit_ai_system.dart';
 part 'systems/damage_system.dart';
 part 'systems/weapon_system.dart';
@@ -68,6 +69,8 @@ class SurvivorGame extends FlameGame {
   final _damageNumbers = List.generate(36, (_) => DamageNumberFx());
   final _runWeapons = <RunWeaponState>[];
   final _passiveLevels = <String, int>{};
+  final _escorts = <EscortUnit>[];
+  final _frameSamples = List<double>.filled(512, 0);
   final _spatialGrid = <int, List<int>>{};
   Vector2? _moveTarget;
   late Vector2 _player;
@@ -92,6 +95,9 @@ class SurvivorGame extends FlameGame {
   int _kills = 0;
   int _alliedKills = 0;
   int _traitLevel = 0;
+  int _frameSampleCount = 0;
+  int _frameSampleIndex = 0;
+  int _peakActiveUnits = 0;
   bool _finished = false;
   bool _pausedForChoice = false;
   bool _pausedByUser = false;
@@ -102,7 +108,9 @@ class SurvivorGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    _player = size / 2;
+    _player = config.battlefield == BattlefieldType.evacuation
+        ? Vector2(size.x * .34, size.y / 2)
+        : size / 2;
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
     _unitAtlas = await images.load('battlefield/unit_role_atlas.png');
@@ -110,7 +118,9 @@ class SurvivorGame extends FlameGame {
     _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
       ..position = _player.clone();
     await add(_playerSprite);
-    _speed = mercenary.speed;
+    _speed =
+        mercenary.speed *
+        (config.condition == BattlefieldCondition.ashWind ? .94 : 1);
     _runWeapons.add(RunWeaponState(weapon));
     stats.value = BattleStats(
       hp: mercenary.maxHp.toDouble(),
@@ -128,8 +138,17 @@ class SurvivorGame extends FlameGame {
       allyCommanderAlive: true,
       enemyCommanderAlive: true,
       build: _currentBuildEntries,
+      escortTotal: config.battlefield == BattlefieldType.evacuation
+          ? EvacuationRules.totalEscorts
+          : 0,
+      escortAlive: config.battlefield == BattlefieldType.evacuation
+          ? EvacuationRules.totalEscorts
+          : 0,
     );
     _spawnBattleLines();
+    if (config.battlefield == BattlefieldType.evacuation) {
+      _spawnEvacuationConvoy();
+    }
   }
 
   void setMoveTarget(Offset offset) =>
@@ -192,6 +211,7 @@ class SurvivorGame extends FlameGame {
 
   @override
   void update(double dt) {
+    _recordPerformance(dt);
     final worldDt = _ultimateClock > 1.18 ? dt * .08 : dt;
     super.update(worldDt);
     if (_finished || _pausedForChoice) {
@@ -212,6 +232,9 @@ class SurvivorGame extends FlameGame {
     _playerSprite
       ..position = _player
       ..setMoving(isMoving);
+    if (config.battlefield == BattlefieldType.evacuation) {
+      _updateEvacuation(worldDt);
+    }
     _rebuildGrid();
     _updateUnits(worldDt);
     _updateCombatPools(worldDt);
@@ -228,10 +251,14 @@ class SurvivorGame extends FlameGame {
       );
     }
     _updateFrontPressure();
-    final objectiveOutcome = GateDefenseRules.resolve(
-      gateHp: _gateHp,
-      secondsLeft: (config.durationSeconds - _elapsed).ceil(),
-    );
+    final secondsLeft = (config.durationSeconds - _elapsed).ceil();
+    final objectiveOutcome = config.battlefield == BattlefieldType.evacuation
+        ? EvacuationRules.resolve(
+            alive: _escortAlive,
+            escaped: _escortEscaped,
+            secondsLeft: secondsLeft,
+          )
+        : GateDefenseRules.resolve(gateHp: _gateHp, secondsLeft: secondsLeft);
     if (objectiveOutcome != BattleOutcome.retreat) {
       _finishBattle(objectiveOutcome);
     }
@@ -300,6 +327,9 @@ class SurvivorGame extends FlameGame {
       allyCommanderAlive: _allyCommander?.dead != true,
       enemyCommanderAlive: _enemyCommander?.dead != true,
       build: _currentBuildEntries,
+      escortTotal: _escorts.length,
+      escortAlive: _escortAlive,
+      escortEscaped: _escortEscaped,
     );
     final old = stats.value;
     if (old.level != next.level ||
@@ -309,11 +339,28 @@ class SurvivorGame extends FlameGame {
         (old.frontPressure - next.frontPressure).abs() > .01 ||
         old.allyCommanderAlive != next.allyCommanderAlive ||
         old.enemyCommanderAlive != next.enemyCommanderAlive ||
+        old.escortAlive != next.escortAlive ||
+        old.escortEscaped != next.escortEscaped ||
         !_sameBuild(old.build, next.build) ||
         (old.ultimateCharge - next.ultimateCharge).abs() > .005 ||
         (old.xp - next.xp).abs() > 1) {
       stats.value = next;
     }
+  }
+
+  void _recordPerformance(double dt) {
+    if (_elapsed < 2 || dt <= 0 || dt > .25) return;
+    _frameSamples[_frameSampleIndex] = dt * 1000;
+    _frameSampleIndex = (_frameSampleIndex + 1) % _frameSamples.length;
+    _frameSampleCount = math.min(_frameSampleCount + 1, _frameSamples.length);
+    final active = _units.where((unit) => !unit.dead).length + _escortAlive;
+    _peakActiveUnits = math.max(_peakActiveUnits, active);
+  }
+
+  double get _frameTimeP95Ms {
+    if (_frameSampleCount == 0) return 0;
+    final values = _frameSamples.take(_frameSampleCount).toList()..sort();
+    return values[((values.length - 1) * .95).round()];
   }
 
   @override

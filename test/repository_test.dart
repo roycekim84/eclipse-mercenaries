@@ -52,14 +52,20 @@ void main() {
     final config = BattleConfig(
       mercenary: content.mercenaryById('sera'),
       weapon: content.weaponById('glass_flame'),
+      battlefield: BattlefieldType.evacuation,
+      condition: BattlefieldCondition.ashWind,
       durationSeconds: 300,
       seed: 20260809,
+      unitCount: 500,
     );
 
     expect(config.mercenary.style.name, 'magic');
     expect(config.weapon.name, '유리불꽃 지팡이');
     expect(config.durationSeconds, 300);
     expect(config.seed, 20260809);
+    expect(config.battlefield, BattlefieldType.evacuation);
+    expect(config.condition, BattlefieldCondition.ashWind);
+    expect(config.unitCount, 500);
   });
 
   test('every mercenary has one resolvable signature ultimate pairing', () {
@@ -105,6 +111,37 @@ void main() {
         elitesCleared: false,
       ),
       isEmpty,
+    );
+  });
+
+  test('evacuation requires eight escorts to escape', () {
+    expect(
+      EvacuationRules.resolve(alive: 4, escaped: 8, secondsLeft: 12),
+      BattleOutcome.victory,
+    );
+    expect(
+      EvacuationRules.resolve(alive: 7, escaped: 0, secondsLeft: 20),
+      BattleOutcome.defeat,
+    );
+    expect(
+      EvacuationRules.resolve(alive: 10, escaped: 2, secondsLeft: 20),
+      BattleOutcome.retreat,
+    );
+    expect(
+      EvacuationRules.resolve(alive: 10, escaped: 2, secondsLeft: 0),
+      BattleOutcome.defeat,
+    );
+  });
+
+  test('evacuation bonuses reward survival commander and speed', () {
+    expect(
+      EvacuationRules.completedBonuses(
+        escaped: 11,
+        total: 12,
+        enemyCommanderDefeated: true,
+        secondsLeft: 9,
+      ),
+      ['convoy_90', 'pursuer_commander', 'swift_exit'],
     );
   });
 

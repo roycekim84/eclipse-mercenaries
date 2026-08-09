@@ -14,7 +14,14 @@ class ResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final victory = report.outcome == BattleOutcome.victory;
     final title = victory ? 'VICTORY' : 'DEFEAT';
-    final subtitle = victory ? '계약 완수 · 성문 방어선 사수' : '계약 실패 · 북문 함락';
+    final evacuation = report.battlefield == BattlefieldType.evacuation;
+    final subtitle = evacuation
+        ? victory
+              ? '계약 완수 · 철수 행렬 호위 성공'
+              : '계약 실패 · 철수 인원 손실'
+        : victory
+        ? '계약 완수 · 성문 방어선 사수'
+        : '계약 실패 · 북문 함락';
     final titleColor = victory
         ? const Color(0xffffd27c)
         : const Color(0xffe37268);
@@ -54,14 +61,18 @@ class ResultScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.castle_outlined,
+                        Icon(
+                          evacuation
+                              ? Icons.local_shipping_outlined
+                              : Icons.castle_outlined,
                           size: 16,
                           color: Color(0xffd6bd81),
                         ),
                         const SizedBox(width: 7),
                         Text(
-                          '성문 내구도 ${(report.objectiveHpRatio * 100).round()}%',
+                          evacuation
+                              ? '호위 탈출 ${report.escortEscaped} / ${report.escortTotal}'
+                              : '성문 내구도 ${(report.objectiveHpRatio * 100).round()}%',
                           style: const TextStyle(color: Colors.white70),
                         ),
                         if (report.completedBonusIds.isNotEmpty) ...[
@@ -92,6 +103,12 @@ class ResultScreen extends StatelessWidget {
                               ? '적 지휘관 격퇴'
                               : '적 지휘관 이탈',
                           positive: report.enemyCommanderDefeated,
+                        ),
+                        ResultTag(
+                          icon: Icons.speed,
+                          label:
+                              '최대 ${report.peakActiveUnits} 유닛 · P95 ${report.frameTimeP95Ms.toStringAsFixed(1)}ms',
+                          positive: report.frameTimeP95Ms <= 20,
                         ),
                       ],
                     ),

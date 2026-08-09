@@ -26,10 +26,13 @@ extension WeaponSystem on SurvivorGame {
                     _passiveLevel('battle_instinct') * .1 +
                     (mercenary.id == 'kael' ? _traitLevel * .08 : 0)))
             .round();
+    final nocturnal =
+        mercenary.id == 'luna' &&
+        config.condition == BattlefieldCondition.moonlitNight;
     final criticalChance =
         activeWeapon.crit.toDouble() +
         _passiveLevel('keen_eye') * 5 +
-        (mercenary.id == 'luna' ? 15 + _traitLevel * 3 : 0);
+        (nocturnal ? 15 + _traitLevel * 3 : 0);
     final statusBonus = mercenary.id == 'sera' ? _traitLevel * .06 : 0.0;
 
     switch (activeWeapon.pattern) {

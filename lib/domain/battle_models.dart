@@ -3,6 +3,10 @@ import 'run_growth.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
+enum BattlefieldType { gateDefense, evacuation }
+
+enum BattlefieldCondition { moonlitNight, ashWind }
+
 enum UnitRole { infantry, shield, archer, cavalry, mage, siege, commander }
 
 enum UnitStance { advance, support, retreat }
@@ -63,14 +67,20 @@ class BattleConfig {
   const BattleConfig({
     required this.mercenary,
     required this.weapon,
+    this.battlefield = BattlefieldType.gateDefense,
+    this.condition = BattlefieldCondition.moonlitNight,
     this.durationSeconds = 45,
     this.seed = 19,
+    this.unitCount = 500,
   });
 
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
+  final BattlefieldType battlefield;
+  final BattlefieldCondition condition;
   final int durationSeconds;
   final int seed;
+  final int unitCount;
 }
 
 class BattleStats {
@@ -90,6 +100,9 @@ class BattleStats {
     required this.allyCommanderAlive,
     required this.enemyCommanderAlive,
     required this.build,
+    this.escortTotal = 0,
+    this.escortAlive = 0,
+    this.escortEscaped = 0,
   });
 
   final double hp;
@@ -107,6 +120,9 @@ class BattleStats {
   final bool allyCommanderAlive;
   final bool enemyCommanderAlive;
   final List<RunBuildEntry> build;
+  final int escortTotal;
+  final int escortAlive;
+  final int escortEscaped;
 }
 
 class UltimateSequence {
@@ -134,6 +150,11 @@ class BattleReport {
     this.completedBonusIds = const [],
     this.commanderSurvived = true,
     this.enemyCommanderDefeated = false,
+    this.battlefield = BattlefieldType.gateDefense,
+    this.escortEscaped = 0,
+    this.escortTotal = 0,
+    this.peakActiveUnits = 0,
+    this.frameTimeP95Ms = 0,
   });
 
   final String time;
@@ -147,6 +168,39 @@ class BattleReport {
   final List<String> completedBonusIds;
   final bool commanderSurvived;
   final bool enemyCommanderDefeated;
+  final BattlefieldType battlefield;
+  final int escortEscaped;
+  final int escortTotal;
+  final int peakActiveUnits;
+  final double frameTimeP95Ms;
+}
+
+abstract final class EvacuationRules {
+  static const int totalEscorts = 12;
+  static const int requiredEscaped = 8;
+
+  static BattleOutcome resolve({
+    required int alive,
+    required int escaped,
+    required int secondsLeft,
+  }) {
+    if (escaped >= requiredEscaped) return BattleOutcome.victory;
+    if (alive + escaped < requiredEscaped || secondsLeft <= 0) {
+      return BattleOutcome.defeat;
+    }
+    return BattleOutcome.retreat;
+  }
+
+  static List<String> completedBonuses({
+    required int escaped,
+    required int total,
+    required bool enemyCommanderDefeated,
+    required int secondsLeft,
+  }) => [
+    if (total > 0 && escaped / total >= .9) 'convoy_90',
+    if (enemyCommanderDefeated) 'pursuer_commander',
+    if (secondsLeft >= 8) 'swift_exit',
+  ];
 }
 
 abstract final class GateDefenseRules {

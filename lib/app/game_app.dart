@@ -189,6 +189,8 @@ class _GameShellState extends State<GameShell> {
 
 class BattlefieldContract {
   const BattlefieldContract({
+    required this.battlefield,
+    required this.condition,
     required this.name,
     required this.subtitle,
     required this.power,
@@ -196,6 +198,8 @@ class BattlefieldContract {
     required this.color,
     required this.icon,
   });
+  final BattlefieldType battlefield;
+  final BattlefieldCondition condition;
   final String name;
   final String subtitle;
   final int power;
@@ -206,6 +210,8 @@ class BattlefieldContract {
 
 const contracts = [
   BattlefieldContract(
+    battlefield: BattlefieldType.gateDefense,
+    condition: BattlefieldCondition.moonlitNight,
     name: '성문 방어전',
     subtitle: '새벽까지 북문을 사수하라',
     power: 18000,
@@ -214,6 +220,8 @@ const contracts = [
     icon: Icons.shield_outlined,
   ),
   BattlefieldContract(
+    battlefield: BattlefieldType.evacuation,
+    condition: BattlefieldCondition.ashWind,
     name: '철수전',
     subtitle: '부상병과 보급대를 호위하라',
     power: 22000,
@@ -222,6 +230,8 @@ const contracts = [
     icon: Icons.directions_run,
   ),
   BattlefieldContract(
+    battlefield: BattlefieldType.gateDefense,
+    condition: BattlefieldCondition.moonlitNight,
     name: '적 지휘관 암살',
     subtitle: '혼란 속에서 지휘관을 제거하라',
     power: 25000,

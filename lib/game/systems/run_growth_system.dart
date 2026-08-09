@@ -76,11 +76,17 @@ extension RunGrowthSystem on SurvivorGame {
     );
     for (final state in _runWeapons) {
       state.attackClock += dt;
+      final nocturnalSpeed =
+          mercenary.id == 'luna' &&
+              config.condition == BattlefieldCondition.moonlitNight
+          ? .8
+          : 1.0;
       final interval =
           mercenary.attackInterval *
           (100 / (100 + state.weapon.speed)) *
           math.max(.55, 1 - state.level * .045) *
-          speedMultiplier;
+          speedMultiplier *
+          nocturnalSpeed;
       if (state.attackClock < interval) continue;
       state.attackClock = 0;
       _attackWithWeapon(state);
@@ -190,7 +196,10 @@ extension RunGrowthSystem on SurvivorGame {
           _passiveLevel(selected.id) + 1,
         );
         if (selected.id == 'swift_step') {
-          _speed = mercenary.speed * (1 + _passiveLevel('swift_step') * .08);
+          _speed =
+              mercenary.speed *
+              (config.condition == BattlefieldCondition.ashWind ? .94 : 1) *
+              (1 + _passiveLevel('swift_step') * .08);
         }
       case RunUpgradeKind.trait:
         _traitLevel = math.min(_maxTraitLevel, _traitLevel + 1);

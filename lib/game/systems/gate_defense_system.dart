@@ -4,20 +4,31 @@ extension GateDefenseSystem on SurvivorGame {
   void _spawnBattleLines() {
     var allyIndex = 0;
     var enemyIndex = 0;
-    for (var i = 0; i < 330; i++) {
+    for (var i = 0; i < config.unitCount; i++) {
       final ally = i % 3 == 0;
       final factionIndex = ally ? allyIndex++ : enemyIndex++;
       final role = _roleForFactionIndex(factionIndex);
       final elite = !ally && role != UnitRole.commander && i % 83 == 0;
       final objectiveAggro =
           !ally &&
+          role != UnitRole.commander &&
           (role == UnitRole.siege ||
-              (role != UnitRole.commander && _random.nextDouble() < .4));
+              _random.nextDouble() <
+                  (config.battlefield == BattlefieldType.evacuation
+                      ? .28
+                      : .4));
       final maxHp =
           UnitRoleRules.maxHp(role) +
           (elite ? 6 : 0) +
           (objectiveAggro ? 4 : 0);
-      final defaultPosition = !ally && role == UnitRole.siege
+      final defaultPosition = config.battlefield == BattlefieldType.evacuation
+          ? Vector2(
+              ally
+                  ? size.x * .2 + _random.nextDouble() * size.x * .3
+                  : size.x * .48 + _random.nextDouble() * size.x * .55,
+              24 + _random.nextDouble() * math.max(80, size.y - 48),
+            )
+          : !ally && role == UnitRole.siege
           ? Vector2(
               size.x * .42 + _random.nextDouble() * size.x * .24,
               40 + _random.nextDouble() * math.max(80, size.y - 80),
@@ -56,6 +67,7 @@ extension GateDefenseSystem on SurvivorGame {
         }
       }
     }
+    _peakActiveUnits = math.max(_peakActiveUnits, _units.length);
   }
 
   UnitRole _roleForFactionIndex(int index) {
@@ -104,6 +116,28 @@ extension GateDefenseSystem on SurvivorGame {
   }
 
   void _updateFrontPressure() {
+    if (config.battlefield == BattlefieldType.evacuation) {
+      final livingEscorts = _escorts.where(
+        (escort) => !escort.dead && !escort.escaped,
+      );
+      if (livingEscorts.isEmpty) {
+        _frontPressure = 0;
+        return;
+      }
+      var threatened = 0;
+      for (final escort in livingEscorts) {
+        if (_units.any(
+          (unit) =>
+              !unit.dead &&
+              !unit.ally &&
+              unit.position.distanceTo(escort.position) < 105,
+        )) {
+          threatened++;
+        }
+      }
+      _frontPressure = (threatened / livingEscorts.length).clamp(0, 1);
+      return;
+    }
     final livingEnemies = _units.where((unit) => !unit.dead && !unit.ally);
     final breached = livingEnemies.where(
       (unit) => unit.position.x < _defenseLineX,
@@ -117,16 +151,26 @@ extension GateDefenseSystem on SurvivorGame {
     final elapsedSeconds = _elapsed.floor().clamp(0, config.durationSeconds);
     final minutes = elapsedSeconds ~/ 60;
     final seconds = elapsedSeconds % 60;
-    final gateRatio = (_gateHp / GateDefenseRules.maxGateHp).clamp(0.0, 1.0);
-    final bonuses = outcome == BattleOutcome.victory
-        ? GateDefenseRules.completedBonuses(
-            gateHpRatio: gateRatio,
+    final evacuation = config.battlefield == BattlefieldType.evacuation;
+    final objectiveRatio = evacuation
+        ? (_escortEscaped / math.max(1, _escorts.length)).clamp(0.0, 1.0)
+        : (_gateHp / GateDefenseRules.maxGateHp).clamp(0.0, 1.0);
+    final bonuses = outcome != BattleOutcome.victory
+        ? const <String>[]
+        : evacuation
+        ? EvacuationRules.completedBonuses(
+            escaped: _escortEscaped,
+            total: _escorts.length,
+            enemyCommanderDefeated: _enemyCommander?.dead == true,
+            secondsLeft: (config.durationSeconds - _elapsed).ceil(),
+          )
+        : GateDefenseRules.completedBonuses(
+            gateHpRatio: objectiveRatio,
             frontPressure: _frontPressure,
             elitesCleared: !_units.any(
               (unit) => !unit.dead && !unit.ally && unit.elite,
             ),
-          )
-        : const <String>[];
+          );
     final rewardRate = outcome == BattleOutcome.victory ? 1.0 : .35;
     onVictory(
       BattleReport(
@@ -134,18 +178,30 @@ extension GateDefenseSystem on SurvivorGame {
             '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
         kills: _kills,
         alliedKills: _alliedKills,
-        gold: ((3240 + _kills * 8 + bonuses.length * 300) * rewardRate).round(),
-        xp: ((1200 + _kills * 3) * rewardRate).round(),
+        gold:
+            (((evacuation ? 4500 : 3240) + _kills * 8 + bonuses.length * 300) *
+                    rewardRate)
+                .round(),
+        xp: (((evacuation ? 1450 : 1200) + _kills * 3) * rewardRate).round(),
         outcome: outcome,
-        objectiveHpRatio: gateRatio,
+        objectiveHpRatio: objectiveRatio,
         completedBonusIds: bonuses,
         commanderSurvived: _allyCommander?.dead != true,
         enemyCommanderDefeated: _enemyCommander?.dead == true,
+        battlefield: config.battlefield,
+        escortEscaped: _escortEscaped,
+        escortTotal: _escorts.length,
+        peakActiveUnits: _peakActiveUnits,
+        frameTimeP95Ms: _frameTimeP95Ms,
       ),
     );
   }
 
   void _drawBattlefieldObjective(Canvas canvas) {
+    if (config.battlefield == BattlefieldType.evacuation) {
+      _drawEvacuationObjective(canvas);
+      return;
+    }
     final defensePaint = Paint()..color = const Color(0x182a6a8d);
     final attackPaint = Paint()..color = const Color(0x126e2f2d);
     canvas.drawRect(Rect.fromLTRB(0, 0, _defenseLineX, size.y), defensePaint);

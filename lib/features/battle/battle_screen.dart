@@ -27,7 +27,12 @@ class _BattleScreenState extends State<BattleScreen>
   void initState() {
     super.initState();
     game = SurvivorGame(
-      config: BattleConfig(mercenary: widget.mercenary, weapon: widget.weapon),
+      config: BattleConfig(
+        mercenary: widget.mercenary,
+        weapon: widget.weapon,
+        battlefield: widget.contract.battlefield,
+        condition: widget.contract.condition,
+      ),
       onVictory: widget.onVictory,
     );
     WidgetsBinding.instance.addObserver(this);
@@ -99,6 +104,17 @@ class _BattleScreenState extends State<BattleScreen>
                 const SizedBox(width: 6),
                 SmallIconButton(icon: Icons.close, onTap: widget.onExit),
               ],
+            ),
+          ),
+        ),
+        Positioned(
+          right: 12,
+          top: 66,
+          child: SafeArea(
+            child: ValueListenableBuilder<BattleStats>(
+              valueListenable: game.stats,
+              builder: (context, stats, _) =>
+                  BattleMiniMap(contract: widget.contract, stats: stats),
             ),
           ),
         ),
@@ -265,26 +281,34 @@ class BattleHud extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '성문 방어선 유지  ${stats.kills} / 120',
+                    contract.battlefield == BattlefieldType.evacuation
+                        ? '호위 대상 ${EvacuationRules.requiredEscaped}명 탈출'
+                        : '성문 방어선 유지  ${stats.kills} / 120',
                     style: const TextStyle(fontSize: 11),
                   ),
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.castle_outlined,
+                      Icon(
+                        contract.battlefield == BattlefieldType.evacuation
+                            ? Icons.local_shipping_outlined
+                            : Icons.castle_outlined,
                         size: 13,
-                        color: Color(0xffd7bd7c),
+                        color: const Color(0xffd7bd7c),
                       ),
                       const SizedBox(width: 5),
                       Expanded(
                         child: Text(
-                          '북문  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
+                          contract.battlefield == BattlefieldType.evacuation
+                              ? '탈출 ${stats.escortEscaped} / ${stats.escortTotal}'
+                              : '북문  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
                           style: const TextStyle(fontSize: 10),
                         ),
                       ),
                       Text(
-                        '전선 ${(stats.frontPressure * 100).round()}%',
+                        contract.battlefield == BattlefieldType.evacuation
+                            ? '생존 ${stats.escortAlive}'
+                            : '전선 ${(stats.frontPressure * 100).round()}%',
                         style: TextStyle(
                           fontSize: 9,
                           color: stats.frontPressure > .6
@@ -295,8 +319,14 @@ class BattleHud extends StatelessWidget {
                     ],
                   ),
                   Meter(
-                    value: stats.gateHp / stats.gateMaxHp,
-                    color: stats.gateHp / stats.gateMaxHp > .35
+                    value: contract.battlefield == BattlefieldType.evacuation
+                        ? stats.escortEscaped / EvacuationRules.requiredEscaped
+                        : stats.gateHp / stats.gateMaxHp,
+                    color:
+                        (contract.battlefield == BattlefieldType.evacuation
+                            ? stats.escortAlive + stats.escortEscaped >=
+                                  EvacuationRules.requiredEscaped
+                            : stats.gateHp / stats.gateMaxHp > .35)
                         ? const Color(0xff60b875)
                         : const Color(0xffd2554e),
                   ),
@@ -374,6 +404,124 @@ class BattleHud extends StatelessWidget {
       ],
     );
   }
+}
+
+class BattleMiniMap extends StatelessWidget {
+  const BattleMiniMap({super.key, required this.contract, required this.stats});
+
+  final BattlefieldContract contract;
+  final BattleStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final conditionLabel = contract.condition == BattlefieldCondition.ashWind
+        ? '잿바람 · 이동 -6%'
+        : '월광 야전 · 야행성';
+    return Container(
+      width: 150,
+      height: 86,
+      decoration: BoxDecoration(
+        color: const Color(0xcc0b0e13),
+        border: Border.all(color: const Color(0xff6b5b3d)),
+        boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 8)],
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: BattleMiniMapPainter(
+                battlefield: contract.battlefield,
+                pressure: stats.frontPressure,
+                escortProgress:
+                    stats.escortEscaped /
+                    (stats.escortTotal == 0 ? 1 : stats.escortTotal),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 6,
+            right: 6,
+            bottom: 4,
+            child: Text(
+              conditionLabel,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 8,
+                color: Color(0xffd7bd7c),
+                shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class BattleMiniMapPainter extends CustomPainter {
+  const BattleMiniMapPainter({
+    required this.battlefield,
+    required this.pressure,
+    required this.escortProgress,
+  });
+
+  final BattlefieldType battlefield;
+  final double pressure;
+  final double escortProgress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final field = Rect.fromLTWH(6, 6, size.width - 12, size.height - 24);
+    canvas.drawRect(field, Paint()..color = const Color(0xff272922));
+    if (battlefield == BattlefieldType.gateDefense) {
+      final lineX = field.left + field.width * .28;
+      canvas.drawRect(
+        Rect.fromLTWH(field.left, field.top, field.width * .28, field.height),
+        Paint()..color = const Color(0x553f7895),
+      );
+      canvas.drawLine(
+        Offset(lineX, field.top),
+        Offset(lineX, field.bottom),
+        Paint()
+          ..color = const Color(0xffd6b968)
+          ..strokeWidth = 2,
+      );
+      canvas.drawCircle(
+        Offset(field.left + 8, field.center.dy),
+        5,
+        Paint()..color = const Color(0xff68a9c8),
+      );
+      canvas.drawCircle(
+        Offset(field.right - field.width * pressure, field.center.dy),
+        4,
+        Paint()..color = const Color(0xffd15f57),
+      );
+    } else {
+      canvas.drawLine(
+        Offset(field.left + 7, field.center.dy),
+        Offset(field.right - 7, field.center.dy),
+        Paint()
+          ..color = const Color(0xff8d7650)
+          ..strokeWidth = 9,
+      );
+      final convoyX = field.left + 7 + (field.width - 14) * escortProgress;
+      canvas.drawCircle(
+        Offset(convoyX, field.center.dy),
+        5,
+        Paint()..color = const Color(0xff71adc8),
+      );
+      canvas.drawRect(
+        Rect.fromLTWH(field.right - 9, field.top, 9, field.height),
+        Paint()..color = const Color(0x8866a7b8),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant BattleMiniMapPainter oldDelegate) =>
+      oldDelegate.battlefield != battlefield ||
+      oldDelegate.pressure != pressure ||
+      oldDelegate.escortProgress != escortProgress;
 }
 
 class CommanderStatus extends StatelessWidget {
