@@ -17,9 +17,14 @@
 - 쌍검, 광역 대검, 장거리 마법의 서로 다른 공격 표현
 - 전체 제품 기획, 구현 작업, 에셋 스타일, UI/UX 상세 문서 체계
 - 마일스톤·산출물·종료 조건 기반 로드맵과 문서 인덱스
+- 9줄 앱 진입점과 `app/domain/game/core` 1차 폴더 경계
+- BattleConfig/BattleReport 전투 세션 경계
+- 콘텐츠 Repository와 versioned SaveRepository 인터페이스
+- 공통 게임 팔레트와 ThemeData 분리
 
 ## 다음 작업
 
+- `game_app.dart`의 화면과 공통 UI 컴포넌트 분리
 - 실제 픽셀 스프라이트 애니메이션
 - 성문 방어 목표와 지휘관 AI
 - 영구 성장 저장

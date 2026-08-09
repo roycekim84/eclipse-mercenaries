@@ -41,13 +41,16 @@
 - [x] 장비 변경과 궁극기 활성 표시
 - [x] 용병별 공격 속도/범위/이펙트 반영
 
-### M1.2 구조 분리 — 다음 작업
+### M1.2 구조 분리 — 진행 중
 
-- [ ] `main.dart` 기능 화면 분리
-- [ ] 공통 테마/컴포넌트 분리
-- [ ] 도메인 모델의 Flutter 의존성 축소
-- [ ] BattleConfig/BattleReport 경계 확정
-- [ ] repository와 save interface 도입
+- [x] 앱 진입점을 10줄 이하로 분리
+- [ ] `game_app.dart` 기능 화면 분리
+- [x] 공통 테마 분리
+- [ ] 공통 UI 컴포넌트 분리
+- [x] 전투 세션 모델을 Flame 구현에서 분리
+- [x] BattleConfig/BattleReport 경계 확정
+- [x] content repository와 save interface 도입
+- [ ] 도메인 모델의 Flutter 의존성 제거
 
 종료 기준:
 

@@ -2,85 +2,34 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/game.dart';
-import 'package:flutter/material.dart'
-    show IconData, Icons, Offset, ValueNotifier;
+import 'package:flutter/material.dart' show Icons, Offset, ValueNotifier;
 
-import 'game_data.dart';
-
-class BattleStats {
-  const BattleStats({
-    required this.hp,
-    required this.level,
-    required this.xp,
-    required this.nextXp,
-    required this.kills,
-    required this.secondsLeft,
-    required this.weaponLevel,
-  });
-  final double hp;
-  final int level;
-  final double xp;
-  final double nextXp;
-  final int kills;
-  final int secondsLeft;
-  final int weaponLevel;
-}
-
-class BattleReport {
-  const BattleReport({
-    required this.time,
-    required this.kills,
-    required this.gold,
-    required this.xp,
-  });
-  final String time;
-  final int kills;
-  final int gold;
-  final int xp;
-}
-
-class UpgradeOption {
-  const UpgradeOption(this.title, this.description, this.icon);
-  final String title;
-  final String description;
-  final IconData icon;
-}
-
-class BattleChoice {
-  const BattleChoice(this.options);
-  final List<UpgradeOption> options;
-}
-
-class BattleEvent {
-  const BattleEvent(this.grade, this.title, this.description);
-  final String grade;
-  final String title;
-  final String description;
-}
+import '../domain/battle_models.dart';
+import '../domain/game_data.dart';
 
 class SurvivorGame extends FlameGame {
-  SurvivorGame({
-    required this.mercenary,
-    required this.weapon,
-    required this.onVictory,
-  });
-  final MercenarySpec mercenary;
-  final WeaponSpec weapon;
+  SurvivorGame({required this.config, required this.onVictory})
+    : _random = math.Random(config.seed) {
+    stats = ValueNotifier(
+      BattleStats(
+        hp: config.mercenary.maxHp.toDouble(),
+        level: 1,
+        xp: 0,
+        nextXp: 40,
+        kills: 0,
+        secondsLeft: config.durationSeconds,
+        weaponLevel: 1,
+      ),
+    );
+  }
+  final BattleConfig config;
+  MercenarySpec get mercenary => config.mercenary;
+  WeaponSpec get weapon => config.weapon;
   final void Function(BattleReport) onVictory;
-  final stats = ValueNotifier(
-    const BattleStats(
-      hp: 1320,
-      level: 1,
-      xp: 0,
-      nextXp: 40,
-      kills: 0,
-      secondsLeft: 45,
-      weaponLevel: 1,
-    ),
-  );
+  late final ValueNotifier<BattleStats> stats;
   final choice = ValueNotifier<BattleChoice?>(null);
   final event = ValueNotifier<BattleEvent?>(null);
-  final _random = math.Random(19);
+  final math.Random _random;
   final _units = <BattleUnit>[];
   final _slashes = <SlashFx>[];
   final _spatialGrid = <int, List<int>>{};
@@ -111,7 +60,7 @@ class SurvivorGame extends FlameGame {
       xp: 0,
       nextXp: 40,
       kills: 0,
-      secondsLeft: 45,
+      secondsLeft: config.durationSeconds,
       weaponLevel: 1,
     );
     for (var i = 0; i < 330; i++) {
@@ -184,11 +133,14 @@ class SurvivorGame extends FlameGame {
         () => event.value = null,
       );
     }
-    if (_elapsed >= 45 && !_finished) {
+    if (_elapsed >= config.durationSeconds && !_finished) {
       _finished = true;
+      final minutes = config.durationSeconds ~/ 60;
+      final seconds = config.durationSeconds % 60;
       onVictory(
         BattleReport(
-          time: '00:45',
+          time:
+              '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
           kills: _kills,
           gold: 3240 + _kills * 8,
           xp: 1200 + _kills * 3,
@@ -352,7 +304,7 @@ class SurvivorGame extends FlameGame {
       xp: _xp,
       nextXp: _nextXp,
       kills: _kills,
-      secondsLeft: (45 - _elapsed).ceil(),
+      secondsLeft: (config.durationSeconds - _elapsed).ceil(),
       weaponLevel: _weaponLevel,
     );
     final old = stats.value;

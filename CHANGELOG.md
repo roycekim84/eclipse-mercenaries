@@ -1,5 +1,14 @@
 # 변경 기록
 
+## Architecture foundation — 2026-08-09
+
+- 앱 진입점을 UI 구현에서 분리하고 `app/domain/game/core` 폴더 도입
+- 용병/무기 콘텐츠를 Repository 인터페이스로 조회하도록 변경
+- versioned AccountSave와 SaveRepository 인터페이스 추가
+- BattleConfig와 BattleReport를 Flame 구현에서 분리
+- 전투 시간과 난수 시드를 BattleConfig에서 주입하도록 변경
+- 콘텐츠, 저장, 전투 설정 Repository 단위 테스트 추가
+
 ## Documentation baseline — 2026-08-09
 
 - 제품 비전, 핵심 시스템, 콘텐츠, 경제, 알파 범위를 전체 기획서로 정리

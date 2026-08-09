@@ -10,11 +10,16 @@
 
 ## 2. 현재 상태
 
-- `main.dart`: 화면 상태, 캠프, 계약, 출전 선택, 장비, 명부, 상세, HUD, 결과
-- `battle_game.dart`: 이동, 유닛, 진영 교전, 자동 공격, 경험치, 레벨업, 사건, 승리
-- `game_data.dart`: 용병과 무기 정적 데이터
+- `main.dart`: 앱 부팅만 담당하는 9줄 진입점
+- `app/game_app.dart`: 화면 상태, 캠프, 계약, 출전 선택, 장비, 명부, 상세, HUD, 결과
+- `core/theme/game_theme.dart`: 공통 팔레트와 Flutter 테마
+- `core/content/game_content_repository.dart`: 콘텐츠 조회 인터페이스와 알파 정적 구현
+- `core/persistence/save_repository.dart`: versioned 계정 저장 모델과 저장 인터페이스
+- `domain/game_data.dart`: 용병과 무기 정의
+- `domain/battle_models.dart`: BattleConfig, BattleStats, BattleReport와 전투 오버레이 모델
+- `game/survivor_game.dart`: 이동, 유닛, 진영 교전, 자동 공격, 경험치, 레벨업, 사건, 승리
 
-현재 수직 슬라이스는 동작하지만 파일 책임이 크다. 다음 구조 분리를 선행 작업으로 수행한다.
+앱/도메인/게임 런타임의 1차 경계는 만들어졌으며, 다음 구조 작업은 `game_app.dart`의 화면과 공통 컴포넌트를 기능 폴더로 분리하는 것이다.
 
 ## 3. 목표 레이어
 

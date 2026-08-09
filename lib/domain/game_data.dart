@@ -74,7 +74,7 @@ class WeaponSpec {
   final String? ownerId;
 }
 
-const mercenaries = <MercenarySpec>[
+const alphaMercenaries = <MercenarySpec>[
   MercenarySpec(
     id: 'luna',
     name: '루나 벨하르트',
@@ -143,7 +143,7 @@ const mercenaries = <MercenarySpec>[
   ),
 ];
 
-const weapons = <WeaponSpec>[
+const alphaWeapons = <WeaponSpec>[
   WeaponSpec(
     id: 'moon_blades',
     name: '월광쌍검',
@@ -236,6 +236,3 @@ const weapons = <WeaponSpec>[
     color: Color(0xff55466f),
   ),
 ];
-
-WeaponSpec weaponById(String id) =>
-    weapons.firstWhere((weapon) => weapon.id == id);
