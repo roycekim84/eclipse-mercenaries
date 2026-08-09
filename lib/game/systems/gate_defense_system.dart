@@ -2,11 +2,27 @@ part of '../survivor_game.dart';
 
 extension GateDefenseSystem on SurvivorGame {
   void _spawnBattleLines() {
+    var allyIndex = 0;
+    var enemyIndex = 0;
     for (var i = 0; i < 330; i++) {
       final ally = i % 3 == 0;
-      final elite = !ally && i % 83 == 0;
-      final objectiveAggro = !ally && _random.nextDouble() < .6;
-      final position = ally
+      final factionIndex = ally ? allyIndex++ : enemyIndex++;
+      final role = _roleForFactionIndex(factionIndex);
+      final elite = !ally && role != UnitRole.commander && i % 83 == 0;
+      final objectiveAggro =
+          !ally &&
+          (role == UnitRole.siege ||
+              (role != UnitRole.commander && _random.nextDouble() < .4));
+      final maxHp =
+          UnitRoleRules.maxHp(role) +
+          (elite ? 6 : 0) +
+          (objectiveAggro ? 4 : 0);
+      final defaultPosition = !ally && role == UnitRole.siege
+          ? Vector2(
+              size.x * .42 + _random.nextDouble() * size.x * .24,
+              40 + _random.nextDouble() * math.max(80, size.y - 80),
+            )
+          : ally
           ? Vector2(
               _defenseLineX - 80 + _random.nextDouble() * 250,
               30 + _random.nextDouble() * math.max(80, size.y - 60),
@@ -15,30 +31,73 @@ extension GateDefenseSystem on SurvivorGame {
               size.x * .48 + _random.nextDouble() * size.x * .72,
               20 + _random.nextDouble() * math.max(80, size.y - 40),
             );
-      _units.add(
-        BattleUnit(
-          position: position,
-          ally: ally,
-          elite: elite,
-          hp: elite ? 14 : (objectiveAggro ? 8 : 2),
-          playerAggro: !ally && i % 5 == 0,
-          objectiveAggro: objectiveAggro,
-        ),
+      final unit = BattleUnit(
+        position: role == UnitRole.commander
+            ? Vector2(ally ? _defenseLineX - 55 : size.x - 125, size.y / 2)
+            : defaultPosition,
+        ally: ally,
+        elite: elite,
+        hp: maxHp,
+        maxHp: maxHp,
+        playerAggro: !ally && (role == UnitRole.cavalry || i % 7 == 0),
+        objectiveAggro: objectiveAggro,
+        role: role,
+        stance: role == UnitRole.commander
+            ? UnitStance.support
+            : UnitStance.advance,
+        squadId: factionIndex ~/ 8,
       );
+      _units.add(unit);
+      if (role == UnitRole.commander) {
+        if (ally) {
+          _allyCommander = unit;
+        } else {
+          _enemyCommander = unit;
+        }
+      }
     }
+  }
+
+  UnitRole _roleForFactionIndex(int index) {
+    if (index == 0) return UnitRole.commander;
+    const formation = [
+      UnitRole.infantry,
+      UnitRole.shield,
+      UnitRole.archer,
+      UnitRole.infantry,
+      UnitRole.cavalry,
+      UnitRole.mage,
+      UnitRole.infantry,
+      UnitRole.shield,
+      UnitRole.infantry,
+      UnitRole.archer,
+      UnitRole.infantry,
+      UnitRole.cavalry,
+      UnitRole.mage,
+      UnitRole.infantry,
+      UnitRole.shield,
+      UnitRole.siege,
+    ];
+    return formation[(index - 1) % formation.length];
   }
 
   bool _updateSiegeUnit(BattleUnit unit, double dt) {
     final delta = _gatePosition - unit.position;
     final distance = delta.length;
-    if (distance > 34) {
-      unit.position +=
-          (delta / math.max(distance, 1)) * (unit.elite ? 48 : 42) * dt;
+    final attackRange = UnitRoleRules.attackRange(unit.role);
+    if (distance > attackRange) {
+      final objectiveSpeed =
+          UnitRoleRules.speed(unit.role) *
+          (unit.role == UnitRole.siege ? 1.8 : 1.45);
+      unit.position += (delta / math.max(distance, 1)) * objectiveSpeed * dt;
       return true;
     }
     if (unit.attackClock <= 0) {
-      unit.attackClock = unit.elite ? .72 : 1.05;
-      _gateHp = math.max(0, _gateHp - (unit.elite ? 12 : 4));
+      unit.attackClock = unit.role == UnitRole.siege ? 1.65 : 1.05;
+      _gateHp = math.max(
+        0,
+        _gateHp - UnitRoleRules.damage(unit.role) - (unit.elite ? 4 : 0),
+      );
       _slashes.add(SlashFx(_gatePosition.clone(), .2, CombatStyle.greatsword));
     }
     return true;
@@ -80,6 +139,8 @@ extension GateDefenseSystem on SurvivorGame {
         outcome: outcome,
         objectiveHpRatio: gateRatio,
         completedBonusIds: bonuses,
+        commanderSurvived: _allyCommander?.dead != true,
+        enemyCommanderDefeated: _enemyCommander?.dead == true,
       ),
     );
   }

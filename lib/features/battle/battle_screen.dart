@@ -213,6 +213,20 @@ class BattleHud extends StatelessWidget {
                         ? const Color(0xff60b875)
                         : const Color(0xffd2554e),
                   ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      CommanderStatus(
+                        ally: true,
+                        alive: stats.allyCommanderAlive,
+                      ),
+                      const SizedBox(width: 8),
+                      CommanderStatus(
+                        ally: false,
+                        alive: stats.enemyCommanderAlive,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -267,6 +281,44 @@ class BattleHud extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class CommanderStatus extends StatelessWidget {
+  const CommanderStatus({super.key, required this.ally, required this.alive});
+
+  final bool ally;
+  final bool alive;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = ally
+        ? const Color(0xff75abd0)
+        : const Color(0xffd67268);
+    return Expanded(
+      child: Row(
+        children: [
+          Icon(
+            alive ? Icons.shield_outlined : Icons.close,
+            size: 11,
+            color: alive ? activeColor : Colors.white30,
+          ),
+          const SizedBox(width: 3),
+          Flexible(
+            child: Text(
+              ally
+                  ? (alive ? '아군 지휘 유지' : '아군 지휘 붕괴')
+                  : (alive ? '적 지휘관 활동' : '적 지휘관 격퇴'),
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 8,
+                color: alive ? Colors.white60 : const Color(0xffffd27c),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

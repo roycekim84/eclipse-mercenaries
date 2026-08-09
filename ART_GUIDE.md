@@ -27,7 +27,10 @@
 - `assets/images/characters/luna_battle_sheet.png`: 루나 8×5 전투 애니메이션 시트
 - `assets/images/characters/kael_battle_sheet.png`: 카일 8×5 전투 애니메이션 시트
 - `assets/images/characters/sera_battle_sheet.png`: 세라 8×5 전투 애니메이션 시트
+- `assets/images/battlefield/unit_role_atlas.png`: 아군/적군 7병과 전투 아틀라스
 
 생성 이미지에 글자를 굽지 않고 Flutter 레이어에서 접근성과 현지화를 처리한다.
 
 전투 시트 행 순서는 `Idle → Walk → Attack → Hit → Dead`, 각 행은 8프레임이다. 런타임은 nearest-neighbor 필터를 사용하며, 현재 방향은 첨부 레퍼런스의 전투 시점에 맞춘 down-right 3/4 방향이다.
+
+진영 병과 아틀라스는 7열×2행이며 열은 `보병 → 방패병 → 궁병 → 기병 → 마법병 → 공성병기 → 지휘관`, 행은 `아군 회청색 → 적군 적갈색` 순서다. 각 병과는 무기와 체형만으로 식별하고 지휘관은 망토/깃발, 공성병기는 가로로 긴 파성추 실루엣을 사용한다.

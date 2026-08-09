@@ -20,7 +20,9 @@
 - `features`: 캠프, 계약/출전, 장비, 전투 HUD, 용병, 결과 화면
 - `domain/game_data.dart`: Flutter 의존성이 없는 용병과 무기 규칙 데이터
 - `domain/battle_models.dart`: BattleConfig, BattleStats, BattleReport와 전투 오버레이 모델
-- `game/survivor_game.dart`: 이동, 유닛, 진영 교전, 자동 공격, 경험치, 레벨업, 사건, 승리
+- `game/survivor_game.dart`: 전투 세션 조합, 이동, 자동 공격, 경험치, 레벨업, 사건
+- `game/systems/gate_defense_system.dart`: 성문 목표, 진영 배치, 공성 피해, 승패/결과
+- `game/systems/unit_ai_system.dart`: 병과별 탐색·공격·대형·지원·후퇴 AI
 
 앱/도메인/게임 런타임 경계와 기능별 화면 분리가 완료됐다. 화면 파일은 Dart library part로 묶어 현재 비공개 상태 경계를 유지하며, 기능이 커질 때 독립 public widget library로 전환한다.
 
@@ -139,6 +141,8 @@ Flame은 `BattleReport`를 한 번만 발행한다. Flutter가 결과를 검증�
 12. BattleEndSystem
 
 M2.1 구현에서는 `gate_defense_system.dart`가 진영별 초기 배치, 공성 목표 이동/공격, 성문 피해, 전선 침투율, 종료 판정과 월드 렌더링을 소유한다. `GateDefenseRules`는 Flame과 분리된 도메인 규칙으로 승패와 보너스를 결정하며 단위 테스트에서 직접 검증한다.
+
+M2.2 구현에서는 `UnitRoleRules`가 7병과의 HP·속도·사거리·피해를 순수 도메인 규칙으로 제공한다. `unit_ai_system.dart`는 공간 그리드의 근접 상대 질의만 사용해 역할 공격, 원거리 거리 확보, 8인 분대 대형, 180px 지휘 오라와 저체력 후퇴를 처리한다. `BattleUnit`은 Component를 만들지 않는 경량 데이터이며 동일 7×2 아틀라스를 `drawImageRect`로 렌더링한다. `BattleStats`와 `BattleReport`에는 지휘관 생존 상태만 전달해 Flutter HUD가 AI 내부 객체를 참조하지 않게 한다.
 
 같은 프레임에서 순서가 바뀌어 결과가 달라지지 않도록 고정한다. 피해와 사망은 즉시 리스트를 변경하기보다 command buffer를 사용해 프레임 말에 반영한다.
 

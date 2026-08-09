@@ -102,4 +102,36 @@ void main() {
       isEmpty,
     );
   });
+
+  test('every battlefield role has valid combat rules', () {
+    for (final role in UnitRole.values) {
+      expect(UnitRoleRules.maxHp(role), isPositive);
+      expect(UnitRoleRules.speed(role), isPositive);
+      expect(UnitRoleRules.attackRange(role), isPositive);
+      expect(UnitRoleRules.damage(role), isPositive);
+    }
+  });
+
+  test('battlefield roles preserve their tactical strengths', () {
+    expect(
+      UnitRoleRules.speed(UnitRole.cavalry),
+      greaterThan(UnitRoleRules.speed(UnitRole.infantry)),
+    );
+    expect(
+      UnitRoleRules.maxHp(UnitRole.shield),
+      greaterThan(UnitRoleRules.maxHp(UnitRole.infantry)),
+    );
+    expect(
+      UnitRoleRules.attackRange(UnitRole.archer),
+      greaterThan(UnitRoleRules.attackRange(UnitRole.infantry)),
+    );
+    expect(
+      UnitRoleRules.damage(UnitRole.siege),
+      greaterThan(UnitRoleRules.damage(UnitRole.cavalry)),
+    );
+    expect(
+      UnitRoleRules.maxHp(UnitRole.commander),
+      greaterThan(UnitRoleRules.maxHp(UnitRole.siege)),
+    );
+  });
 }

@@ -2,6 +2,52 @@ import 'game_data.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
+enum UnitRole { infantry, shield, archer, cavalry, mage, siege, commander }
+
+enum UnitStance { advance, support, retreat }
+
+abstract final class UnitRoleRules {
+  static int maxHp(UnitRole role) => switch (role) {
+    UnitRole.infantry => 4,
+    UnitRole.shield => 9,
+    UnitRole.archer => 3,
+    UnitRole.cavalry => 7,
+    UnitRole.mage => 4,
+    UnitRole.siege => 16,
+    UnitRole.commander => 24,
+  };
+
+  static double speed(UnitRole role) => switch (role) {
+    UnitRole.infantry => 28,
+    UnitRole.shield => 21,
+    UnitRole.archer => 25,
+    UnitRole.cavalry => 52,
+    UnitRole.mage => 23,
+    UnitRole.siege => 18,
+    UnitRole.commander => 31,
+  };
+
+  static double attackRange(UnitRole role) => switch (role) {
+    UnitRole.infantry => 19,
+    UnitRole.shield => 18,
+    UnitRole.archer => 145,
+    UnitRole.cavalry => 28,
+    UnitRole.mage => 175,
+    UnitRole.siege => 38,
+    UnitRole.commander => 34,
+  };
+
+  static int damage(UnitRole role) => switch (role) {
+    UnitRole.infantry => 1,
+    UnitRole.shield => 1,
+    UnitRole.archer => 1,
+    UnitRole.cavalry => 3,
+    UnitRole.mage => 2,
+    UnitRole.siege => 18,
+    UnitRole.commander => 3,
+  };
+}
+
 class BattleConfig {
   const BattleConfig({
     required this.mercenary,
@@ -30,6 +76,8 @@ class BattleStats {
     required this.gateHp,
     required this.gateMaxHp,
     required this.frontPressure,
+    required this.allyCommanderAlive,
+    required this.enemyCommanderAlive,
   });
 
   final double hp;
@@ -44,6 +92,8 @@ class BattleStats {
   final double gateHp;
   final double gateMaxHp;
   final double frontPressure;
+  final bool allyCommanderAlive;
+  final bool enemyCommanderAlive;
 }
 
 class UltimateSequence {
@@ -69,6 +119,8 @@ class BattleReport {
     this.triggeredEventIds = const [],
     this.objectiveHpRatio = 1,
     this.completedBonusIds = const [],
+    this.commanderSurvived = true,
+    this.enemyCommanderDefeated = false,
   });
 
   final String time;
@@ -80,6 +132,8 @@ class BattleReport {
   final List<String> triggeredEventIds;
   final double objectiveHpRatio;
   final List<String> completedBonusIds;
+  final bool commanderSurvived;
+  final bool enemyCommanderDefeated;
 }
 
 abstract final class GateDefenseRules {

@@ -73,6 +73,28 @@ class ResultScreen extends StatelessWidget {
                         ],
                       ],
                     ),
+                    const SizedBox(height: 9),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        ResultTag(
+                          icon: Icons.shield_outlined,
+                          label: report.commanderSurvived
+                              ? '아군 지휘관 생존'
+                              : '아군 지휘관 전사',
+                          positive: report.commanderSurvived,
+                        ),
+                        ResultTag(
+                          icon: Icons.flag_outlined,
+                          label: report.enemyCommanderDefeated
+                              ? '적 지휘관 격퇴'
+                              : '적 지휘관 이탈',
+                          positive: report.enemyCommanderDefeated,
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 18),
                     const Divider(color: Color(0xff665536)),
                     const SizedBox(height: 12),
@@ -128,6 +150,40 @@ class ResultScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ResultTag extends StatelessWidget {
+  const ResultTag({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.positive,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool positive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = positive ? const Color(0xffffd27c) : const Color(0xffad9087);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0x6610141b),
+        border: Border.all(color: color.withValues(alpha: .45)),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(label, style: TextStyle(fontSize: 10, color: color)),
+        ],
       ),
     );
   }

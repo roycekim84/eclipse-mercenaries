@@ -11,6 +11,7 @@ import 'render/player_sprite_component.dart';
 
 part 'systems/ultimate_system.dart';
 part 'systems/gate_defense_system.dart';
+part 'systems/unit_ai_system.dart';
 
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
@@ -29,6 +30,8 @@ class SurvivorGame extends FlameGame {
         gateHp: GateDefenseRules.maxGateHp,
         gateMaxHp: GateDefenseRules.maxGateHp,
         frontPressure: 0,
+        allyCommanderAlive: true,
+        enemyCommanderAlive: true,
       ),
     );
   }
@@ -48,6 +51,9 @@ class SurvivorGame extends FlameGame {
   Vector2? _moveTarget;
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
+  late final Image _unitAtlas;
+  BattleUnit? _allyCommander;
+  BattleUnit? _enemyCommander;
   late Vector2 _gatePosition;
   late double _defenseLineX;
   double _elapsed = 0;
@@ -77,6 +83,7 @@ class SurvivorGame extends FlameGame {
     _player = size / 2;
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
+    _unitAtlas = await images.load('battlefield/unit_role_atlas.png');
     final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
     _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
       ..position = _player.clone();
@@ -95,6 +102,8 @@ class SurvivorGame extends FlameGame {
       gateHp: _gateHp,
       gateMaxHp: GateDefenseRules.maxGateHp,
       frontPressure: 0,
+      allyCommanderAlive: true,
+      enemyCommanderAlive: true,
     );
     _spawnBattleLines();
   }
@@ -213,51 +222,7 @@ class SurvivorGame extends FlameGame {
       unit.attackClock -= dt;
       final playerDistance = _player.distanceTo(unit.position);
       if (playerDistance > size.x * .8) continue; // Off-screen AI throttling.
-      if (!unit.ally && unit.objectiveAggro && _updateSiegeUnit(unit, dt)) {
-        unit.phase += dt * (unit.elite ? 6 : 4);
-        continue;
-      }
-      final opponent = _nearestOpponent(unit, 150);
-      Vector2 direction;
-      double targetDistance;
-      if (opponent != null) {
-        final delta = opponent.position - unit.position;
-        targetDistance = delta.length;
-        direction = targetDistance > 1
-            ? delta / targetDistance
-            : Vector2.zero();
-        if (targetDistance < (unit.elite ? 24 : 18) && unit.attackClock <= 0) {
-          unit.attackClock = unit.elite ? .72 : 1.05;
-          opponent.hp -= unit.elite ? 2 : 1;
-          _slashes.add(
-            SlashFx(
-              opponent.position.clone(),
-              .15,
-              unit.ally ? CombatStyle.blades : CombatStyle.greatsword,
-            ),
-          );
-          if (opponent.hp <= 0) {
-            opponent.dead = true;
-            if (unit.ally) _alliedKills++;
-          }
-        }
-      } else if (!unit.ally && unit.playerAggro) {
-        final delta = _player - unit.position;
-        targetDistance = delta.length;
-        direction = targetDistance > 1
-            ? delta / targetDistance
-            : Vector2.zero();
-      } else {
-        targetDistance = 999;
-        direction = Vector2(
-          math.sin(_elapsed * .4 + unit.position.x),
-          math.cos(_elapsed * .4 + unit.position.y),
-        );
-      }
-      if (targetDistance > 15) {
-        unit.position +=
-            direction * (unit.ally ? 26 : (unit.elite ? 34 : 25)) * dt;
-      }
+      _updateRoleUnit(unit, dt);
       unit.phase += dt * (unit.elite ? 6 : 4);
     }
   }
@@ -375,6 +340,8 @@ class SurvivorGame extends FlameGame {
       gateHp: _gateHp,
       gateMaxHp: GateDefenseRules.maxGateHp,
       frontPressure: _frontPressure,
+      allyCommanderAlive: _allyCommander?.dead != true,
+      enemyCommanderAlive: _enemyCommander?.dead != true,
     );
     final old = stats.value;
     if (old.level != next.level ||
@@ -382,6 +349,8 @@ class SurvivorGame extends FlameGame {
         old.secondsLeft != next.secondsLeft ||
         (old.gateHp - next.gateHp).abs() > .5 ||
         (old.frontPressure - next.frontPressure).abs() > .01 ||
+        old.allyCommanderAlive != next.allyCommanderAlive ||
+        old.enemyCommanderAlive != next.enemyCommanderAlive ||
         (old.ultimateCharge - next.ultimateCharge).abs() > .005 ||
         (old.xp - next.xp).abs() > 1) {
       stats.value = next;
@@ -431,37 +400,61 @@ class SurvivorGame extends FlameGame {
           unit.position.y > size.y + 20) {
         continue;
       }
-      final bob = math.sin(unit.phase) * 1.5;
-      final color = unit.ally
-          ? const Color(0xff6484a9)
-          : (unit.elite ? const Color(0xffd19b49) : const Color(0xff8f3f3b));
+      final bob = math.sin(unit.phase) * 1.2;
+      final displaySize = switch (unit.role) {
+        UnitRole.cavalry => const Size(68, 74),
+        UnitRole.siege => const Size(74, 66),
+        UnitRole.commander => const Size(54, 72),
+        _ => const Size(44, 62),
+      };
       canvas.drawOval(
         Rect.fromCenter(
           center: Offset(unit.position.x, unit.position.y + 7),
-          width: unit.elite ? 18 : 12,
-          height: 6,
+          width: displaySize.width * .56,
+          height: 8,
         ),
         Paint()..color = const Color(0x66000000),
       );
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(unit.position.x, unit.position.y + bob),
-          width: unit.elite ? 11 : 8,
-          height: unit.elite ? 16 : 12,
+      final cellWidth = _unitAtlas.width / UnitRole.values.length;
+      final cellHeight = _unitAtlas.height / 2;
+      canvas.drawImageRect(
+        _unitAtlas,
+        Rect.fromLTWH(
+          unit.role.index * cellWidth,
+          unit.ally ? 0 : cellHeight,
+          cellWidth,
+          cellHeight,
         ),
-        Paint()..color = color,
+        Rect.fromCenter(
+          center: Offset(unit.position.x, unit.position.y - 14 + bob),
+          width: displaySize.width,
+          height: displaySize.height,
+        ),
+        Paint()..filterQuality = FilterQuality.none,
       );
-      canvas.drawCircle(
-        Offset(unit.position.x, unit.position.y - 7 + bob),
-        unit.elite ? 5 : 3.5,
-        Paint()..color = const Color(0xffd0ad8d),
-      );
-      if (unit.elite) {
+      if (unit.elite || unit.role == UnitRole.commander) {
         canvas.drawCircle(
           Offset(unit.position.x, unit.position.y),
-          13,
+          unit.role == UnitRole.commander ? 22 : 15,
           Paint()
-            ..color = const Color(0x55e3b75d)
+            ..color = unit.role == UnitRole.commander
+                ? const Color(0x99f0c96c)
+                : const Color(0x55e3b75d)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2,
+        );
+      }
+      if (unit.stance == UnitStance.retreat) {
+        canvas.drawArc(
+          Rect.fromCircle(
+            center: Offset(unit.position.x, unit.position.y),
+            radius: 18,
+          ),
+          0,
+          math.pi * 1.4,
+          false,
+          Paint()
+            ..color = const Color(0xffe1b75e)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2,
         );
@@ -526,6 +519,10 @@ class BattleUnit {
     required this.hp,
     required this.playerAggro,
     required this.objectiveAggro,
+    required this.role,
+    required this.stance,
+    required this.squadId,
+    required this.maxHp,
   });
   Vector2 position;
   bool ally;
@@ -533,6 +530,10 @@ class BattleUnit {
   int hp;
   bool playerAggro;
   bool objectiveAggro;
+  UnitRole role;
+  UnitStance stance;
+  int squadId;
+  int maxHp;
   double phase = 0;
   double attackClock = 0;
   bool dead = false;
