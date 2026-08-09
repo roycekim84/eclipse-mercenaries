@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'battle_game.dart';
+import 'game_data.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,16 @@ class EclipseMercenariesApp extends StatelessWidget {
   }
 }
 
-enum AppScene { camp, contracts, roster, detail, battle, result }
+enum AppScene {
+  camp,
+  contracts,
+  mercenarySelect,
+  equipment,
+  roster,
+  detail,
+  battle,
+  result,
+}
 
 class GameShell extends StatefulWidget {
   const GameShell({super.key});
@@ -50,11 +60,23 @@ class GameShell extends StatefulWidget {
 class _GameShellState extends State<GameShell> {
   AppScene scene = AppScene.camp;
   BattlefieldContract selected = contracts.first;
+  MercenarySpec selectedMercenary = mercenaries.first;
+  late WeaponSpec equippedWeapon = weaponById(
+    selectedMercenary.signatureWeaponId,
+  );
+  AppScene equipmentReturn = AppScene.camp;
   BattleReport? report;
   int gold = 45678;
   int crystals = 3250;
 
   void go(AppScene next) => setState(() => scene = next);
+
+  void openEquipment(AppScene returnTo) {
+    setState(() {
+      equipmentReturn = returnTo;
+      scene = AppScene.equipment;
+    });
+  }
 
   void finishBattle(BattleReport value) {
     setState(() {
@@ -76,13 +98,35 @@ class _GameShellState extends State<GameShell> {
             crystals: crystals,
             onDeploy: () => go(AppScene.contracts),
             onRoster: () => go(AppScene.roster),
+            onEquipment: () => openEquipment(AppScene.camp),
           ),
           AppScene.contracts => ContractScreen(
             key: const ValueKey('contracts'),
             selected: selected,
             onSelect: (value) => setState(() => selected = value),
             onBack: () => go(AppScene.camp),
+            onDeploy: () => go(AppScene.mercenarySelect),
+          ),
+          AppScene.mercenarySelect => MercenarySelectScreen(
+            key: const ValueKey('mercenary-select'),
+            selected: selectedMercenary,
+            equippedWeapon: equippedWeapon,
+            onSelect: (mercenary) {
+              setState(() {
+                selectedMercenary = mercenary;
+                equippedWeapon = weaponById(mercenary.signatureWeaponId);
+              });
+            },
+            onBack: () => go(AppScene.contracts),
+            onEquipment: () => openEquipment(AppScene.mercenarySelect),
             onDeploy: () => go(AppScene.battle),
+          ),
+          AppScene.equipment => EquipmentScreen(
+            key: const ValueKey('equipment'),
+            mercenary: selectedMercenary,
+            equipped: equippedWeapon,
+            onEquip: (weapon) => setState(() => equippedWeapon = weapon),
+            onBack: () => go(equipmentReturn),
           ),
           AppScene.roster => RosterScreen(
             key: const ValueKey('roster'),
@@ -96,6 +140,8 @@ class _GameShellState extends State<GameShell> {
           AppScene.battle => BattleScreen(
             key: ValueKey('battle-${DateTime.now().millisecondsSinceEpoch}'),
             contract: selected,
+            mercenary: selectedMercenary,
+            weapon: equippedWeapon,
             onExit: () => go(AppScene.camp),
             onVictory: finishBattle,
           ),
@@ -162,11 +208,13 @@ class CampScreen extends StatelessWidget {
     required this.crystals,
     required this.onDeploy,
     required this.onRoster,
+    required this.onEquipment,
   });
   final int gold;
   final int crystals;
   final VoidCallback onDeploy;
   final VoidCallback onRoster;
+  final VoidCallback onEquipment;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +244,7 @@ class CampScreen extends StatelessWidget {
                           NavButton(
                             icon: Icons.auto_awesome_mosaic_outlined,
                             label: '장비',
-                            onTap: () {},
+                            onTap: onEquipment,
                           ),
                           NavButton(
                             icon: Icons.storefront_outlined,
@@ -347,14 +395,520 @@ class ContractScreen extends StatelessWidget {
   }
 }
 
+class MercenarySelectScreen extends StatelessWidget {
+  const MercenarySelectScreen({
+    super.key,
+    required this.selected,
+    required this.equippedWeapon,
+    required this.onSelect,
+    required this.onBack,
+    required this.onEquipment,
+    required this.onDeploy,
+  });
+
+  final MercenarySpec selected;
+  final WeaponSpec equippedWeapon;
+  final ValueChanged<MercenarySpec> onSelect;
+  final VoidCallback onBack;
+  final VoidCallback onEquipment;
+  final VoidCallback onDeploy;
+
+  @override
+  Widget build(BuildContext context) => DarkBackdrop(
+    child: SafeArea(
+      child: Column(
+        children: [
+          TitleBar(
+            title: '출전 용병 선택',
+            subtitle: '이번 계약에 파견할 용병을 선택하십시오',
+            onBack: onBack,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 760;
+                final cards = ListView.separated(
+                  scrollDirection: compact ? Axis.horizontal : Axis.vertical,
+                  padding: const EdgeInsets.all(12),
+                  itemCount: mercenaries.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: 10, height: 10),
+                  itemBuilder: (_, index) {
+                    final mercenary = mercenaries[index];
+                    return SizedBox(
+                      width: compact ? 210 : double.infinity,
+                      height: compact ? double.infinity : 128,
+                      child: DeploymentMercenaryCard(
+                        mercenary: mercenary,
+                        selected: selected.id == mercenary.id,
+                        onTap: () => onSelect(mercenary),
+                      ),
+                    );
+                  },
+                );
+                final detail = DeploymentSummary(
+                  mercenary: selected,
+                  weapon: equippedWeapon,
+                  onEquipment: onEquipment,
+                  onDeploy: onDeploy,
+                );
+                return compact
+                    ? Column(
+                        children: [
+                          Expanded(child: cards),
+                          SizedBox(height: 205, child: detail),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          SizedBox(width: 330, child: cards),
+                          Expanded(child: detail),
+                        ],
+                      );
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class DeploymentMercenaryCard extends StatelessWidget {
+  const DeploymentMercenaryCard({
+    super.key,
+    required this.mercenary,
+    required this.selected,
+    required this.onTap,
+  });
+  final MercenarySpec mercenary;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: const Color(0xff11131a),
+          border: Border.all(
+            color: selected ? const Color(0xffffcf70) : const Color(0xff5d5038),
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? const [BoxShadow(color: Color(0x557957a0), blurRadius: 16)]
+              : null,
+        ),
+        child: Row(
+          children: [
+            AspectRatio(
+              aspectRatio: .72,
+              child: Image.asset(
+                mercenary.portraitAsset!,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      mercenary.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      '${mercenary.race} / ${mercenary.job}',
+                      style: TextStyle(color: mercenary.accent, fontSize: 11),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '전투력 ${mercenary.power}',
+                      style: const TextStyle(
+                        color: Color(0xffd7bd7d),
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'Lv.${mercenary.level}  ★★★★★',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class DeploymentSummary extends StatelessWidget {
+  const DeploymentSummary({
+    super.key,
+    required this.mercenary,
+    required this.weapon,
+    required this.onEquipment,
+    required this.onDeploy,
+  });
+  final MercenarySpec mercenary;
+  final WeaponSpec weapon;
+  final VoidCallback onEquipment;
+  final VoidCallback onDeploy;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(14),
+    child: GoldPanel(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 300,
+            child: Opacity(
+              opacity: .42,
+              child: Image.asset(
+                mercenary.portraitAsset!,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+            ),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xff11141b),
+                  Color(0xdd11141b),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  mercenary.epithet,
+                  style: TextStyle(
+                    color: mercenary.accent,
+                    fontSize: 11,
+                    letterSpacing: 2,
+                  ),
+                ),
+                Text(
+                  mercenary.name,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${mercenary.race} · ${mercenary.job}   전투력 ${mercenary.power}',
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  '개인 특성 · ${mercenary.trait}',
+                  style: const TextStyle(
+                    color: Color(0xffffd27c),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  mercenary.traitDescription,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xaa0b0d12),
+                    border: Border.all(color: weapon.color),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(weapon.icon, color: weapon.color),
+                      const SizedBox(width: 9),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            weapon.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${weapon.grade} · 공격력 ${weapon.attack}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '궁극기  ${mercenary.ultimate}',
+                  style: TextStyle(
+                    color: weapon.ownerId == mercenary.id
+                        ? const Color(0xffc7a6df)
+                        : Colors.white38,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FantasyButton(
+                        label: '장비 변경',
+                        icon: Icons.auto_awesome_mosaic_outlined,
+                        onTap: onEquipment,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FantasyButton(
+                        label: '이 용병으로 출전',
+                        icon: Icons.gavel,
+                        prominent: true,
+                        onTap: onDeploy,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class EquipmentScreen extends StatelessWidget {
+  const EquipmentScreen({
+    super.key,
+    required this.mercenary,
+    required this.equipped,
+    required this.onEquip,
+    required this.onBack,
+  });
+  final MercenarySpec mercenary;
+  final WeaponSpec equipped;
+  final ValueChanged<WeaponSpec> onEquip;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) => DarkBackdrop(
+    child: SafeArea(
+      child: Column(
+        children: [
+          TitleBar(
+            title: '장비 / 무기',
+            subtitle: '${mercenary.name}의 출전 장비',
+            onBack: onBack,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (_, constraints) => Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(12),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: constraints.maxWidth < 760 ? 2 : 3,
+                        childAspectRatio: 1.05,
+                        crossAxisSpacing: 9,
+                        mainAxisSpacing: 9,
+                      ),
+                      itemCount: weapons.length,
+                      itemBuilder: (_, index) {
+                        final weapon = weapons[index];
+                        final active = weapon.id == equipped.id;
+                        return InkWell(
+                          onTap: () => onEquip(weapon),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  weapon.color.withValues(alpha: .35),
+                                  const Color(0xff0d0f14),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: active
+                                    ? const Color(0xffffcf70)
+                                    : const Color(0xff584b35),
+                                width: active ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  weapon.icon,
+                                  color: weapon.color,
+                                  size: 28,
+                                ),
+                                const Spacer(),
+                                Text(
+                                  weapon.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  '${weapon.grade} · ATK ${weapon.attack}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white54,
+                                  ),
+                                ),
+                                if (weapon.ownerId != null)
+                                  const Text(
+                                    '고유 장비',
+                                    style: TextStyle(
+                                      color: Color(0xffffc66d),
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: WeaponDetailPanel(
+                      mercenary: mercenary,
+                      weapon: equipped,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class WeaponDetailPanel extends StatelessWidget {
+  const WeaponDetailPanel({
+    super.key,
+    required this.mercenary,
+    required this.weapon,
+  });
+  final MercenarySpec mercenary;
+  final WeaponSpec weapon;
+
+  @override
+  Widget build(BuildContext context) {
+    final signature = weapon.ownerId == mercenary.id;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+      child: GoldPanel(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Icon(weapon.icon, size: 84, color: weapon.color)),
+              const SizedBox(height: 14),
+              Text(
+                weapon.name,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text('${weapon.grade} 등급', style: TextStyle(color: weapon.color)),
+              const Divider(color: Color(0xff665536)),
+              StatRow('공격력', '${weapon.attack}'),
+              StatRow('치명타', '${weapon.crit}%'),
+              StatRow(
+                '공격속도',
+                '${weapon.speed >= 0 ? '+' : ''}${weapon.speed}%',
+              ),
+              const SizedBox(height: 10),
+              const Text('무기 특성', style: TextStyle(color: Color(0xffffd27c))),
+              Text(
+                weapon.description,
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const Spacer(),
+              if (weapon.ownerId != null) const ChipLabel('고유 장비'),
+              if (signature)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: const Color(0x553f2852),
+                    border: Border.all(color: const Color(0xff9069a5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, color: Color(0xffcaa6df)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '궁극기 활성화\n${mercenary.ultimate}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class BattleScreen extends StatefulWidget {
   const BattleScreen({
     super.key,
     required this.contract,
+    required this.mercenary,
+    required this.weapon,
     required this.onVictory,
     required this.onExit,
   });
   final BattlefieldContract contract;
+  final MercenarySpec mercenary;
+  final WeaponSpec weapon;
   final ValueChanged<BattleReport> onVictory;
   final VoidCallback onExit;
 
@@ -368,7 +922,11 @@ class _BattleScreenState extends State<BattleScreen> {
   @override
   void initState() {
     super.initState();
-    game = SurvivorGame(onVictory: widget.onVictory);
+    game = SurvivorGame(
+      mercenary: widget.mercenary,
+      weapon: widget.weapon,
+      onVictory: widget.onVictory,
+    );
   }
 
   @override
@@ -390,7 +948,12 @@ class _BattleScreenState extends State<BattleScreen> {
           child: ValueListenableBuilder<BattleStats>(
             valueListenable: game.stats,
             builder: (context, value, _) => IgnorePointer(
-              child: BattleHud(contract: widget.contract, stats: value),
+              child: BattleHud(
+                contract: widget.contract,
+                mercenary: widget.mercenary,
+                weapon: widget.weapon,
+                stats: value,
+              ),
             ),
           ),
         ),
@@ -419,8 +982,16 @@ class _BattleScreenState extends State<BattleScreen> {
 }
 
 class BattleHud extends StatelessWidget {
-  const BattleHud({super.key, required this.contract, required this.stats});
+  const BattleHud({
+    super.key,
+    required this.contract,
+    required this.mercenary,
+    required this.weapon,
+    required this.stats,
+  });
   final BattlefieldContract contract;
+  final MercenarySpec mercenary;
+  final WeaponSpec weapon;
   final BattleStats stats;
 
   @override
@@ -439,12 +1010,12 @@ class BattleHud extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 18,
-                        backgroundColor: Color(0xff33233f),
+                        backgroundColor: mercenary.color,
                         child: Icon(
-                          Icons.pets,
-                          color: Color(0xffd2b5e8),
+                          mercenary.icon,
+                          color: mercenary.accent,
                           size: 20,
                         ),
                       ),
@@ -454,14 +1025,14 @@ class BattleHud extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'LV.${stats.level}  루나 벨하르트',
+                              'LV.${stats.level}  ${mercenary.name}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 12,
                               ),
                             ),
                             Meter(
-                              value: stats.hp / 1320,
+                              value: stats.hp / mercenary.maxHp,
                               color: const Color(0xff55b16d),
                             ),
                             Meter(
@@ -524,7 +1095,7 @@ class BattleHud extends StatelessWidget {
           bottom: 10,
           child: Row(
             children: [
-              SkillOrb(icon: Icons.flash_on, label: 'LV.${stats.weaponLevel}'),
+              SkillOrb(icon: weapon.icon, label: 'LV.${stats.weaponLevel}'),
               const SkillOrb(icon: Icons.blur_circular, label: 'LV.1'),
               const SkillOrb(icon: Icons.auto_awesome, label: 'ULT'),
             ],
@@ -1512,10 +2083,14 @@ class MercenaryCard extends StatelessWidget {
               ),
             ),
             Positioned.fill(
-              child: Icon(
-                index == 0
-                    ? Icons.pets
-                    : [
+              child: index < mercenaries.length
+                  ? Image.asset(
+                      mercenaries[index].portraitAsset!,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    )
+                  : Icon(
+                      [
                         Icons.shield,
                         Icons.auto_awesome,
                         Icons.bolt,
@@ -1524,8 +2099,20 @@ class MercenaryCard extends StatelessWidget {
                         Icons.local_fire_department,
                         Icons.air,
                       ][index - 1],
-                color: Colors.white12,
-                size: 88,
+                      color: Colors.white12,
+                      size: 88,
+                    ),
+            ),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Color(0xee07080b)],
+                    stops: [.42, 1],
+                  ),
+                ),
               ),
             ),
             Positioned(

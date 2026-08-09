@@ -5,6 +5,8 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart'
     show IconData, Icons, Offset, ValueNotifier;
 
+import 'game_data.dart';
+
 class BattleStats {
   const BattleStats({
     required this.hp,
@@ -57,7 +59,13 @@ class BattleEvent {
 }
 
 class SurvivorGame extends FlameGame {
-  SurvivorGame({required this.onVictory});
+  SurvivorGame({
+    required this.mercenary,
+    required this.weapon,
+    required this.onVictory,
+  });
+  final MercenarySpec mercenary;
+  final WeaponSpec weapon;
   final void Function(BattleReport) onVictory;
   final stats = ValueNotifier(
     const BattleStats(
@@ -83,7 +91,7 @@ class SurvivorGame extends FlameGame {
   double _eventClock = 0;
   double _xp = 0;
   double _nextXp = 40;
-  double _speed = 150;
+  late double _speed;
   int _level = 1;
   int _kills = 0;
   int _weaponLevel = 1;
@@ -96,6 +104,16 @@ class SurvivorGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     _player = size / 2;
+    _speed = mercenary.speed;
+    stats.value = BattleStats(
+      hp: mercenary.maxHp.toDouble(),
+      level: 1,
+      xp: 0,
+      nextXp: 40,
+      kills: 0,
+      secondsLeft: 45,
+      weaponLevel: 1,
+    );
     for (var i = 0; i < 330; i++) {
       final angle = _random.nextDouble() * math.pi * 2;
       final radius =
@@ -104,9 +122,10 @@ class SurvivorGame extends FlameGame {
         BattleUnit(
           position:
               _player + Vector2(math.cos(angle), math.sin(angle)) * radius,
-          ally: i % 7 == 0,
-          elite: i % 83 == 0,
+          ally: i % 3 == 0,
+          elite: i % 83 == 0 && i % 3 != 0,
           hp: i % 83 == 0 ? 8 : 2,
+          playerAggro: i % 5 == 0,
         ),
       );
     }
@@ -142,7 +161,11 @@ class SurvivorGame extends FlameGame {
     }
     _rebuildGrid();
     _updateUnits(dt);
-    if (_attackClock > math.max(.16, .46 - _weaponLevel * .035)) {
+    final attackInterval =
+        mercenary.attackInterval *
+        (100 / (100 + weapon.speed)) *
+        math.max(.55, 1 - _weaponLevel * .045);
+    if (_attackClock > attackInterval) {
       _attackClock = 0;
       _attackNearest();
     }
@@ -188,25 +211,75 @@ class SurvivorGame extends FlameGame {
   void _updateUnits(double dt) {
     for (final unit in _units) {
       if (unit.dead) continue;
-      final delta = _player - unit.position;
-      final distance = delta.length;
-      if (distance > size.x * .8) continue; // Off-screen AI throttling.
-      final targetDirection = unit.ally
-          ? Vector2(
-              math.sin(_elapsed + unit.position.x),
-              math.cos(_elapsed + unit.position.y),
-            )
-          : (distance > 1 ? delta / distance : Vector2.zero());
-      unit.position +=
-          targetDirection * (unit.ally ? 18 : (unit.elite ? 31 : 23)) * dt;
+      unit.attackClock -= dt;
+      final playerDistance = _player.distanceTo(unit.position);
+      if (playerDistance > size.x * .8) continue; // Off-screen AI throttling.
+      final opponent = _nearestOpponent(unit, 150);
+      Vector2 direction;
+      double targetDistance;
+      if (opponent != null) {
+        final delta = opponent.position - unit.position;
+        targetDistance = delta.length;
+        direction = targetDistance > 1
+            ? delta / targetDistance
+            : Vector2.zero();
+        if (targetDistance < (unit.elite ? 24 : 18) && unit.attackClock <= 0) {
+          unit.attackClock = unit.elite ? .72 : 1.05;
+          opponent.hp -= unit.elite ? 2 : 1;
+          _slashes.add(
+            SlashFx(
+              opponent.position.clone(),
+              .15,
+              unit.ally ? CombatStyle.blades : CombatStyle.greatsword,
+            ),
+          );
+          if (opponent.hp <= 0) opponent.dead = true;
+        }
+      } else if (!unit.ally && unit.playerAggro) {
+        final delta = _player - unit.position;
+        targetDistance = delta.length;
+        direction = targetDistance > 1
+            ? delta / targetDistance
+            : Vector2.zero();
+      } else {
+        targetDistance = 999;
+        direction = Vector2(
+          math.sin(_elapsed * .4 + unit.position.x),
+          math.cos(_elapsed * .4 + unit.position.y),
+        );
+      }
+      if (targetDistance > 15) {
+        unit.position +=
+            direction * (unit.ally ? 26 : (unit.elite ? 34 : 25)) * dt;
+      }
       unit.phase += dt * (unit.elite ? 6 : 4);
-      if (!unit.ally && distance < 25) unit.position -= targetDirection * 28;
     }
+  }
+
+  BattleUnit? _nearestOpponent(BattleUnit source, double range) {
+    BattleUnit? nearest;
+    var best = range;
+    final cx = source.position.x ~/ 96;
+    final cy = source.position.y ~/ 96;
+    for (var gx = cx - 2; gx <= cx + 2; gx++) {
+      for (var gy = cy - 2; gy <= cy + 2; gy++) {
+        for (final index in _spatialGrid[gx * 10000 + gy] ?? const <int>[]) {
+          final candidate = _units[index];
+          if (candidate.dead || candidate.ally == source.ally) continue;
+          final distance = candidate.position.distanceTo(source.position);
+          if (distance < best) {
+            best = distance;
+            nearest = candidate;
+          }
+        }
+      }
+    }
+    return nearest;
   }
 
   void _attackNearest() {
     BattleUnit? nearest;
-    var best = 230.0;
+    var best = mercenary.style == CombatStyle.magic ? 330.0 : 230.0;
     final cx = _player.x ~/ 96;
     final cy = _player.y ~/ 96;
     for (var gx = cx - 3; gx <= cx + 3; gx++) {
@@ -223,14 +296,31 @@ class SurvivorGame extends FlameGame {
       }
     }
     if (nearest == null) return;
-    final damage = 1 + (_weaponLevel ~/ 2);
-    nearest.hp -= damage;
-    _slashes.add(SlashFx(nearest.position.clone(), .24));
-    if (nearest.hp <= 0) {
-      nearest.dead = true;
-      _kills++;
-      _xp += nearest.elite ? 16 : 5;
-      if (_xp >= _nextXp) _levelUp();
+    final impact = nearest.position.clone();
+    final damage =
+        mercenary.baseDamage + weapon.attack ~/ 650 + (_weaponLevel ~/ 2);
+    final Iterable<BattleUnit> targets =
+        mercenary.style == CombatStyle.greatsword
+        ? _units
+              .where(
+                (unit) =>
+                    !unit.dead &&
+                    !unit.ally &&
+                    unit.position.distanceTo(impact) < 55,
+              )
+              .take(5)
+        : <BattleUnit>[nearest];
+    for (final target in targets) {
+      target.hp -= damage;
+      _slashes.add(SlashFx(target.position.clone(), .24, mercenary.style));
+      if (target.hp <= 0) {
+        target.dead = true;
+        _kills++;
+        _xp += target.elite ? 16 : 5;
+      }
+    }
+    if (_xp >= _nextXp) {
+      _levelUp();
     }
   }
 
@@ -240,16 +330,24 @@ class SurvivorGame extends FlameGame {
     _level++;
     _pausedForChoice = true;
     pauseEngine();
-    choice.value = const BattleChoice([
-      UpgradeOption('월광쌍검 강화', '공격 피해와 참격 속도가 증가합니다.', Icons.auto_fix_high),
-      UpgradeOption('묘족의 발놀림', '이동속도가 12% 증가합니다.', Icons.directions_run),
-      UpgradeOption('야행성', '치명타 확률과 회피가 증가합니다.', Icons.dark_mode),
+    choice.value = BattleChoice([
+      UpgradeOption('${weapon.name} 강화', '공격 피해와 공격 속도가 증가합니다.', weapon.icon),
+      UpgradeOption(
+        '${mercenary.race}의 발놀림',
+        '이동속도가 12% 증가합니다.',
+        Icons.directions_run,
+      ),
+      UpgradeOption(
+        mercenary.trait,
+        mercenary.traitDescription,
+        mercenary.icon,
+      ),
     ]);
   }
 
   void _publishStats() {
     final next = BattleStats(
-      hp: 1320,
+      hp: mercenary.maxHp.toDouble(),
       level: _level,
       xp: _xp,
       nextXp: _nextXp,
@@ -345,21 +443,34 @@ class SurvivorGame extends FlameGame {
     }
     for (final fx in _slashes) {
       final alpha = (255 * (fx.life / .24)).clamp(0, 255).toInt();
+      final fxColor = switch (fx.style) {
+        CombatStyle.blades => mercenary.accent,
+        CombatStyle.greatsword => const Color(0xffd2675b),
+        CombatStyle.magic => const Color(0xff71d4e7),
+      };
       final paint = Paint()
-        ..color = Color.fromARGB(alpha, 210, 205, 255)
+        ..color = fxColor.withAlpha(alpha)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 4;
-      canvas.drawArc(
-        Rect.fromCenter(
-          center: Offset(fx.position.x, fx.position.y),
-          width: 50,
-          height: 32,
-        ),
-        -.8,
-        2.2,
-        false,
-        paint,
-      );
+        ..strokeWidth = fx.style == CombatStyle.greatsword ? 7 : 4;
+      if (fx.style == CombatStyle.magic) {
+        canvas.drawCircle(
+          Offset(fx.position.x, fx.position.y),
+          18 + (1 - fx.life / .24) * 18,
+          paint,
+        );
+      } else {
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: Offset(fx.position.x, fx.position.y),
+            width: fx.style == CombatStyle.greatsword ? 72 : 50,
+            height: fx.style == CombatStyle.greatsword ? 48 : 32,
+          ),
+          -.8,
+          2.2,
+          false,
+          paint,
+        );
+      }
     }
   }
 
@@ -373,7 +484,7 @@ class SurvivorGame extends FlameGame {
       Offset(_player.x, _player.y),
       14,
       Paint()
-        ..color = const Color(0x554d9bf1)
+        ..color = mercenary.accent.withValues(alpha: .45)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
@@ -383,7 +494,7 @@ class SurvivorGame extends FlameGame {
         width: 12,
         height: 20,
       ),
-      Paint()..color = const Color(0xff39284a),
+      Paint()..color = mercenary.color,
     );
     canvas.drawCircle(
       Offset(_player.x, _player.y - 12),
@@ -404,18 +515,39 @@ class SurvivorGame extends FlameGame {
         ..style = PaintingStyle.fill,
     );
     final blade = Paint()
-      ..color = const Color(0xffded9ea)
+      ..color = mercenary.accent
       ..strokeWidth = 2;
-    canvas.drawLine(
-      Offset(_player.x - 5, _player.y + 2),
-      Offset(_player.x - 18, _player.y + 15),
-      blade,
-    );
-    canvas.drawLine(
-      Offset(_player.x + 5, _player.y + 2),
-      Offset(_player.x + 18, _player.y + 15),
-      blade,
-    );
+    if (mercenary.style == CombatStyle.blades) {
+      canvas.drawLine(
+        Offset(_player.x - 5, _player.y + 2),
+        Offset(_player.x - 18, _player.y + 15),
+        blade,
+      );
+      canvas.drawLine(
+        Offset(_player.x + 5, _player.y + 2),
+        Offset(_player.x + 18, _player.y + 15),
+        blade,
+      );
+    } else if (mercenary.style == CombatStyle.greatsword) {
+      blade.strokeWidth = 5;
+      canvas.drawLine(
+        Offset(_player.x - 3, _player.y + 5),
+        Offset(_player.x + 22, _player.y - 22),
+        blade,
+      );
+    } else {
+      blade.strokeWidth = 3;
+      canvas.drawLine(
+        Offset(_player.x + 7, _player.y + 7),
+        Offset(_player.x + 16, _player.y - 25),
+        blade,
+      );
+      canvas.drawCircle(
+        Offset(_player.x + 16, _player.y - 28),
+        5,
+        Paint()..color = mercenary.accent,
+      );
+    }
   }
 }
 
@@ -425,17 +557,21 @@ class BattleUnit {
     required this.ally,
     required this.elite,
     required this.hp,
+    required this.playerAggro,
   });
   Vector2 position;
   bool ally;
   bool elite;
   int hp;
+  bool playerAggro;
   double phase = 0;
+  double attackClock = 0;
   bool dead = false;
 }
 
 class SlashFx {
-  SlashFx(this.position, this.life);
+  SlashFx(this.position, this.life, this.style);
   final Vector2 position;
+  final CombatStyle style;
   double life;
 }

@@ -20,5 +20,7 @@
 
 - `assets/images/mercenary_camp.png`: 내비게이션 영역을 고려한 야전 캠프 배경
 - `assets/images/luna_belhardt.png`: 캐릭터 상세용 루나 전신 일러스트
+- `assets/images/kael_rozenfang.png`: 늑대족 검투사 카일 전신 일러스트
+- `assets/images/sera_inarion.png`: 여우족 환술사 세라 전신 일러스트
 
 생성 이미지에 글자를 굽지 않고 Flutter 레이어에서 접근성과 현지화를 처리한다.
