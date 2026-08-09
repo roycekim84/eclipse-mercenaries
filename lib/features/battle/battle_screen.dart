@@ -49,13 +49,12 @@ class _BattleScreenState extends State<BattleScreen> {
         SafeArea(
           child: ValueListenableBuilder<BattleStats>(
             valueListenable: game.stats,
-            builder: (context, value, _) => IgnorePointer(
-              child: BattleHud(
-                contract: widget.contract,
-                mercenary: widget.mercenary,
-                weapon: widget.weapon,
-                stats: value,
-              ),
+            builder: (context, value, _) => BattleHud(
+              contract: widget.contract,
+              mercenary: widget.mercenary,
+              weapon: widget.weapon,
+              stats: value,
+              onUltimate: game.triggerUltimate,
             ),
           ),
         ),
@@ -63,7 +62,19 @@ class _BattleScreenState extends State<BattleScreen> {
           right: 12,
           top: 12,
           child: SafeArea(
-            child: SmallIconButton(icon: Icons.close, onTap: widget.onExit),
+            child: Row(
+              children: [
+                ValueListenableBuilder<bool>(
+                  valueListenable: game.reducedEffects,
+                  builder: (context, reduced, _) => SmallIconButton(
+                    icon: reduced ? Icons.blur_off : Icons.blur_on,
+                    onTap: game.toggleReducedEffects,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SmallIconButton(icon: Icons.close, onTap: widget.onExit),
+              ],
+            ),
           ),
         ),
         ValueListenableBuilder<BattleChoice?>(
@@ -78,6 +89,16 @@ class _BattleScreenState extends State<BattleScreen> {
               ? const SizedBox.shrink()
               : EventBanner(event: event),
         ),
+        ValueListenableBuilder<UltimateSequence?>(
+          valueListenable: game.ultimate,
+          builder: (context, sequence, _) => sequence == null
+              ? const SizedBox.shrink()
+              : UltimateCutIn(
+                  key: ValueKey(sequence.activation),
+                  sequence: sequence,
+                  mercenary: widget.mercenary,
+                ),
+        ),
       ],
     );
   }
@@ -90,11 +111,13 @@ class BattleHud extends StatelessWidget {
     required this.mercenary,
     required this.weapon,
     required this.stats,
+    required this.onUltimate,
   });
   final BattlefieldContract contract;
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
   final BattleStats stats;
+  final VoidCallback onUltimate;
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +225,12 @@ class BattleHud extends StatelessWidget {
                 label: 'LV.${stats.weaponLevel}',
               ),
               const SkillOrb(icon: Icons.blur_circular, label: 'LV.1'),
-              const SkillOrb(icon: Icons.auto_awesome, label: 'ULT'),
+              UltimateOrb(
+                charge: stats.ultimateCharge,
+                enabled: stats.ultimateEnabled,
+                color: mercenary.visual.accent,
+                onTap: onUltimate,
+              ),
             ],
           ),
         ),

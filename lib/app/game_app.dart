@@ -16,6 +16,7 @@ part '../core/widgets/fantasy_components.dart';
 part '../core/widgets/game_cards.dart';
 part '../core/widgets/map_painter.dart';
 part '../features/battle/battle_screen.dart';
+part '../features/battle/ultimate_overlay.dart';
 part '../features/camp/camp_screen.dart';
 part '../features/contracts/contract_screens.dart';
 part '../features/equipment/equipment_screen.dart';

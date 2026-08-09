@@ -113,6 +113,14 @@ Flame은 HUD용 읽기 전용 `ValueNotifier` 또는 명시적인 상태 스트�
 
 Flame은 `BattleReport`를 한 번만 발행한다. Flutter가 결과를 검증하고 보상 적용/저장을 완료한 뒤 결과 화면을 표시한다.
 
+### 궁극기 시퀀스
+
+- Flame은 `BattleStats.ultimateCharge`와 `ultimateEnabled`를 HUD에 발행한다.
+- Flutter는 Ready 입력을 command로 전달하고 `UltimateSequence`를 받아 컷인을 표시한다.
+- 컷인 중 Flame 월드 `dt`만 8%로 감속하며 UI 애니메이션은 실제 시간으로 재생한다.
+- 충격 시점의 피해·사망·경험치는 Flame이 처리하고 Flutter는 연출 상태만 소유한다.
+- 저사양 모드는 피해 대상 수를 바꾸지 않고 동시 Slash/VFX 인스턴스만 제한한다.
+
 ## 7. Flame 시스템
 
 업데이트 순서:

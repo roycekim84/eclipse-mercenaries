@@ -25,6 +25,8 @@ class BattleStats {
     required this.kills,
     required this.secondsLeft,
     required this.weaponLevel,
+    required this.ultimateCharge,
+    required this.ultimateEnabled,
   });
 
   final double hp;
@@ -34,6 +36,20 @@ class BattleStats {
   final int kills;
   final int secondsLeft;
   final int weaponLevel;
+  final double ultimateCharge;
+  final bool ultimateEnabled;
+}
+
+class UltimateSequence {
+  const UltimateSequence({
+    required this.mercenaryId,
+    required this.title,
+    required this.activation,
+  });
+
+  final String mercenaryId;
+  final String title;
+  final int activation;
 }
 
 class BattleReport {

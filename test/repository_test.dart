@@ -56,4 +56,16 @@ void main() {
     expect(config.durationSeconds, 300);
     expect(config.seed, 20260809);
   });
+
+  test('every mercenary has one resolvable signature ultimate pairing', () {
+    final ultimateNames = <String>{};
+    for (final mercenary in content.mercenaries) {
+      final signature = content.weaponById(mercenary.signatureWeaponId);
+      expect(signature.ownerId, mercenary.id);
+      expect(mercenary.ultimate, isNotEmpty);
+      ultimateNames.add(mercenary.ultimate);
+    }
+
+    expect(ultimateNames, hasLength(content.mercenaries.length));
+  });
 }

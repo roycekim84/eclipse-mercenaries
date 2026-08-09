@@ -9,6 +9,8 @@ import '../domain/game_data.dart';
 import '../core/content/game_visuals.dart';
 import 'render/player_sprite_component.dart';
 
+part 'systems/ultimate_system.dart';
+
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
     : _random = math.Random(config.seed) {
@@ -21,6 +23,8 @@ class SurvivorGame extends FlameGame {
         kills: 0,
         secondsLeft: config.durationSeconds,
         weaponLevel: 1,
+        ultimateCharge: 0,
+        ultimateEnabled: config.weapon.id == config.mercenary.signatureWeaponId,
       ),
     );
   }
@@ -31,6 +35,8 @@ class SurvivorGame extends FlameGame {
   late final ValueNotifier<BattleStats> stats;
   final choice = ValueNotifier<BattleChoice?>(null);
   final event = ValueNotifier<BattleEvent?>(null);
+  final ultimate = ValueNotifier<UltimateSequence?>(null);
+  final reducedEffects = ValueNotifier(false);
   final math.Random _random;
   final _units = <BattleUnit>[];
   final _slashes = <SlashFx>[];
@@ -43,6 +49,10 @@ class SurvivorGame extends FlameGame {
   double _eventClock = 0;
   double _xp = 0;
   double _nextXp = 40;
+  double _ultimateCharge = 0;
+  double _ultimateClock = 0;
+  bool _ultimateImpactApplied = false;
+  int _ultimateActivation = 0;
   late double _speed;
   int _level = 1;
   int _kills = 0;
@@ -69,6 +79,8 @@ class SurvivorGame extends FlameGame {
       kills: 0,
       secondsLeft: config.durationSeconds,
       weaponLevel: 1,
+      ultimateCharge: 0,
+      ultimateEnabled: _signatureWeaponActive,
     );
     for (var i = 0; i < 330; i++) {
       final angle = _random.nextDouble() * math.pi * 2;
@@ -91,6 +103,31 @@ class SurvivorGame extends FlameGame {
       _moveTarget = Vector2(offset.dx, offset.dy);
   void clearMoveTarget() => _moveTarget = null;
 
+  bool get _signatureWeaponActive => weapon.id == mercenary.signatureWeaponId;
+
+  void toggleReducedEffects() => reducedEffects.value = !reducedEffects.value;
+
+  void triggerUltimate() {
+    if (!_signatureWeaponActive ||
+        _ultimateCharge < 1 ||
+        _ultimateClock > 0 ||
+        _finished ||
+        _pausedForChoice) {
+      return;
+    }
+    _ultimateCharge = 0;
+    _ultimateClock = 2.4;
+    _ultimateImpactApplied = false;
+    _ultimateActivation++;
+    ultimate.value = UltimateSequence(
+      mercenaryId: mercenary.id,
+      title: mercenary.ultimate,
+      activation: _ultimateActivation,
+    );
+    clearMoveTarget();
+    _publishStats();
+  }
+
   void selectUpgrade(int index) {
     if (index == 0) _weaponLevel++;
     if (index == 1) _speed += 18;
@@ -102,18 +139,21 @@ class SurvivorGame extends FlameGame {
 
   @override
   void update(double dt) {
-    super.update(dt);
+    final worldDt = _ultimateClock > 1.18 ? dt * .08 : dt;
+    super.update(worldDt);
     if (_finished || _pausedForChoice) {
       return;
     }
-    _elapsed += dt;
-    _attackClock += dt;
-    _eventClock += dt;
+    _advanceUltimate(dt);
+    _elapsed += worldDt;
+    _attackClock += worldDt;
+    _eventClock += worldDt;
     var isMoving = false;
     if (_moveTarget != null) {
       final delta = _moveTarget! - _player;
       if (delta.length > 8) {
-        _player += delta.normalized() * math.min(_speed * dt, delta.length);
+        _player +=
+            delta.normalized() * math.min(_speed * worldDt, delta.length);
         isMoving = true;
       }
     }
@@ -121,7 +161,7 @@ class SurvivorGame extends FlameGame {
       ..position = _player
       ..setMoving(isMoving);
     _rebuildGrid();
-    _updateUnits(dt);
+    _updateUnits(worldDt);
     final attackInterval =
         mercenary.attackInterval *
         (100 / (100 + weapon.speed)) *
@@ -131,7 +171,7 @@ class SurvivorGame extends FlameGame {
       _attackNearest();
     }
     for (final fx in _slashes) {
-      fx.life -= dt;
+      fx.life -= worldDt;
     }
     _slashes.removeWhere((fx) => fx.life <= 0);
     if (_eventClock > 14 && event.value == null) {
@@ -276,16 +316,33 @@ class SurvivorGame extends FlameGame {
               .take(5)
         : <BattleUnit>[nearest];
     for (final target in targets) {
-      target.hp -= damage;
-      _slashes.add(SlashFx(target.position.clone(), .24, mercenary.style));
-      if (target.hp <= 0) {
-        target.dead = true;
-        _kills++;
-        _xp += target.elite ? 16 : 5;
-      }
+      _damageEnemy(target, damage);
     }
     if (_xp >= _nextXp) {
       _levelUp();
+    }
+  }
+
+  void _damageEnemy(
+    BattleUnit target,
+    int damage, {
+    bool grantUltimateCharge = true,
+    double fxLife = .24,
+    bool showFx = true,
+  }) {
+    target.hp -= damage;
+    if (showFx) {
+      _slashes.add(SlashFx(target.position.clone(), fxLife, mercenary.style));
+    }
+    if (target.hp > 0 || target.dead) return;
+    target.dead = true;
+    _kills++;
+    _xp += target.elite ? 16 : 5;
+    if (grantUltimateCharge && _signatureWeaponActive) {
+      _ultimateCharge = math.min(
+        1,
+        _ultimateCharge + (target.elite ? .22 : .07),
+      );
     }
   }
 
@@ -311,11 +368,14 @@ class SurvivorGame extends FlameGame {
       kills: _kills,
       secondsLeft: (config.durationSeconds - _elapsed).ceil(),
       weaponLevel: _weaponLevel,
+      ultimateCharge: _ultimateCharge,
+      ultimateEnabled: _signatureWeaponActive,
     );
     final old = stats.value;
     if (old.level != next.level ||
         old.kills != next.kills ||
         old.secondsLeft != next.secondsLeft ||
+        (old.ultimateCharge - next.ultimateCharge).abs() > .005 ||
         (old.xp - next.xp).abs() > 1) {
       stats.value = next;
     }
@@ -325,6 +385,7 @@ class SurvivorGame extends FlameGame {
   void render(Canvas canvas) {
     _drawTerrain(canvas);
     _drawUnits(canvas);
+    _drawUltimateEffect(canvas);
     _drawPlayerMarker(canvas);
     super.render(canvas);
   }
@@ -399,7 +460,8 @@ class SurvivorGame extends FlameGame {
       }
     }
     for (final fx in _slashes) {
-      final alpha = (255 * (fx.life / .24)).clamp(0, 255).toInt();
+      final progress = 1 - fx.life / fx.maxLife;
+      final alpha = (255 * (fx.life / fx.maxLife)).clamp(0, 255).toInt();
       final fxColor = switch (fx.style) {
         CombatStyle.blades => mercenary.visual.accent,
         CombatStyle.greatsword => const Color(0xffd2675b),
@@ -412,7 +474,7 @@ class SurvivorGame extends FlameGame {
       if (fx.style == CombatStyle.magic) {
         canvas.drawCircle(
           Offset(fx.position.x, fx.position.y),
-          18 + (1 - fx.life / .24) * 18,
+          18 + progress * 18,
           paint,
         );
       } else {
@@ -467,8 +529,9 @@ class BattleUnit {
 }
 
 class SlashFx {
-  SlashFx(this.position, this.life, this.style);
+  SlashFx(this.position, this.life, this.style) : maxLife = life;
   final Vector2 position;
   final CombatStyle style;
+  final double maxLife;
   double life;
 }

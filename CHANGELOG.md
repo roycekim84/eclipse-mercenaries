@@ -1,5 +1,14 @@
 # 변경 기록
 
+## Signature ultimate framework — 2026-08-10
+
+- 고유무기 조건과 처치 기반 궁극기 게이지, Ready/Lock HUD 추가
+- Flutter JRPG 컷인과 Flame 전투 시간 감속 시퀀스 연결
+- 루나 화면 참격, 카일 혈월 충격파, 세라 구미 마법진 피해/VFX 구현
+- 궁극기 처치·경험치 반영과 재충전 방지 규칙 추가
+- 피해 결과를 유지하면서 렌더 수만 제한하는 저사양 모드 추가
+- M1.4와 비주얼 수직 슬라이스 M1 완료
+
 ## Animated mercenary sprites — 2026-08-09
 
 - 루나·카일·세라의 Idle/Walk/Attack/Hit/Dead 40프레임 픽셀 시트 제작
