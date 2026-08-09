@@ -6,6 +6,7 @@ import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
 import '../domain/combat_rules.dart';
+import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
 import '../domain/run_growth.dart';
 import '../core/content/game_visuals.dart';
@@ -69,6 +70,7 @@ class SurvivorGame extends FlameGame {
   final _damageNumbers = List.generate(36, (_) => DamageNumberFx());
   final _runWeapons = <RunWeaponState>[];
   final _passiveLevels = <String, int>{};
+  final _rareDrops = <String>[];
   final _escorts = <EscortUnit>[];
   final _frameSamples = List<double>.filled(512, 0);
   final _spatialGrid = <int, List<int>>{};
@@ -414,6 +416,11 @@ class SurvivorGame extends FlameGame {
         UnitRole.commander => const Size(54, 72),
         _ => const Size(44, 62),
       };
+      final rankScale = switch (unit.archetype?.rank) {
+        EnemyRank.elite => 1.18,
+        EnemyRank.boss => 1.34,
+        _ => 1.0,
+      };
       canvas.drawOval(
         Rect.fromCenter(
           center: Offset(unit.position.x, unit.position.y + 7),
@@ -430,6 +437,11 @@ class SurvivorGame extends FlameGame {
           Color(0xccffffff),
           BlendMode.modulate,
         );
+      } else if (unit.archetype != null) {
+        unitPaint.colorFilter = ColorFilter.mode(
+          unit.archetype!.factionColor,
+          BlendMode.modulate,
+        );
       }
       canvas.drawImageRect(
         _unitAtlas,
@@ -441,8 +453,8 @@ class SurvivorGame extends FlameGame {
         ),
         Rect.fromCenter(
           center: Offset(unit.position.x, unit.position.y - 14 + bob),
-          width: displaySize.width,
-          height: displaySize.height,
+          width: displaySize.width * rankScale,
+          height: displaySize.height * rankScale,
         ),
         unitPaint,
       );
@@ -462,14 +474,18 @@ class SurvivorGame extends FlameGame {
             ..strokeWidth = 2,
         );
       }
+      if (unit.archetype?.rank != null &&
+          unit.archetype!.rank != EnemyRank.common) {
+        _drawEnemyArchetypeMark(canvas, unit);
+      }
       if (unit.elite || unit.role == UnitRole.commander) {
         canvas.drawCircle(
           Offset(unit.position.x, unit.position.y),
-          unit.role == UnitRole.commander ? 22 : 15,
+          unit.role == UnitRole.commander ? 28 : 19,
           Paint()
-            ..color = unit.role == UnitRole.commander
-                ? const Color(0x99f0c96c)
-                : const Color(0x55e3b75d)
+            ..color = unit.archetype?.rank == EnemyRank.boss
+                ? const Color(0xccf0c96c)
+                : const Color(0x99ce8be0)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2,
         );
@@ -489,6 +505,82 @@ class SurvivorGame extends FlameGame {
             ..strokeWidth = 2,
         );
       }
+    }
+  }
+
+  void _drawEnemyArchetypeMark(Canvas canvas, BattleUnit unit) {
+    final archetype = unit.archetype!;
+    final center = Offset(unit.position.x, unit.position.y - 47);
+    final paint = Paint()
+      ..color = archetype.factionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = archetype.rank == EnemyRank.common ? 1.5 : 2.2;
+    switch (archetype.ability) {
+      case EnemyAbility.none:
+        canvas.drawCircle(center, 3, paint..style = PaintingStyle.fill);
+      case EnemyAbility.brace:
+        canvas.drawRect(
+          Rect.fromCenter(center: center, width: 9, height: 11),
+          paint,
+        );
+      case EnemyAbility.volley:
+        canvas.drawLine(
+          center.translate(-6, 4),
+          center.translate(6, -4),
+          paint,
+        );
+        canvas.drawLine(
+          center.translate(2, -5),
+          center.translate(6, -4),
+          paint,
+        );
+      case EnemyAbility.charge:
+        final path = Path()
+          ..moveTo(center.dx, center.dy - 6)
+          ..lineTo(center.dx + 6, center.dy + 5)
+          ..lineTo(center.dx - 6, center.dy + 5)
+          ..close();
+        canvas.drawPath(path, paint);
+      case EnemyAbility.hex || EnemyAbility.bloodNova:
+        canvas.drawCircle(center, 6, paint);
+        canvas.drawCircle(center, 2, paint..style = PaintingStyle.fill);
+      case EnemyAbility.breach || EnemyAbility.blast:
+        canvas.drawRect(
+          Rect.fromCenter(center: center, width: 10, height: 10),
+          paint,
+        );
+        canvas.drawLine(
+          center.translate(-5, -5),
+          center.translate(5, 5),
+          paint,
+        );
+      case EnemyAbility.flank || EnemyAbility.huntMark:
+        canvas.drawLine(center.translate(-6, -4), center, paint);
+        canvas.drawLine(center, center.translate(-6, 4), paint);
+        canvas.drawLine(center, center.translate(6, 0), paint);
+      case EnemyAbility.riposte:
+        canvas.drawLine(
+          center.translate(-5, 5),
+          center.translate(5, -5),
+          paint,
+        );
+        canvas.drawLine(
+          center.translate(-2, -5),
+          center.translate(5, -5),
+          paint,
+        );
+      case EnemyAbility.commandSiege:
+        canvas.drawLine(
+          center.translate(-5, 6),
+          center.translate(-5, -7),
+          paint,
+        );
+        final flag = Path()
+          ..moveTo(center.dx - 5, center.dy - 7)
+          ..lineTo(center.dx + 7, center.dy - 3)
+          ..lineTo(center.dx - 5, center.dy + 1)
+          ..close();
+        canvas.drawPath(flag, paint..style = PaintingStyle.fill);
     }
   }
 
@@ -521,6 +613,7 @@ class BattleUnit {
     required this.stance,
     required this.squadId,
     required this.maxHp,
+    this.archetype,
   });
   Vector2 position;
   bool ally;
@@ -532,6 +625,8 @@ class BattleUnit {
   UnitStance stance;
   int squadId;
   int maxHp;
+  EnemyArchetypeSpec? archetype;
+  int abilityCounter = 0;
   double phase = 0;
   double attackClock = 0;
   double hitFlash = 0;

@@ -21,6 +21,7 @@
 - `domain/game_data.dart`: Flutter 의존성이 없는 용병과 무기 규칙 데이터
 - `domain/battle_models.dart`: BattleConfig, BattleStats, BattleReport와 전투 오버레이 모델
 - `domain/run_growth.dart`: 런 성장 상태, 선택 유효성, 가중치 비복원 추출 순수 규칙
+- `domain/enemy_catalog.dart`: 8 일반·2 정예·2 보스 원형, 세력·능력·드롭 데이터
 - `game/survivor_game.dart`: 전투 세션 조합, 이동, 자동 공격, 경험치, 레벨업, 사건
 - `game/systems/run_growth_system.dart`: 다중 무기 타이머, 선택 적용과 HUD 빌드 스냅샷
 - `game/systems/gate_defense_system.dart`: 성문 목표, 진영 배치, 공성 피해, 승패/결과
@@ -155,6 +156,8 @@ M2.3 구현에서는 `domain/combat_rules.dart`의 `DamageResolver`가 방어, �
 M2.4 구현에서는 `RunGrowthRules`가 최대 레벨과 무기 슬롯을 먼저 검증한 뒤 가중치 비복원 추출로 중복 없는 3개 선택을 만든다. 선택 RNG는 `BattleConfig.seed ^ 0x5f3759df`로 생성해 전투 RNG 소비 순서가 레벨업 선택을 바꾸지 않게 한다. 런타임은 최대 4개 `RunWeaponState`에 독립 공격 타이머를 두고, `BattleStats.build`에는 UI가 안전하게 읽을 수 있는 ID·종류·레벨 스냅샷만 발행한다.
 
 M3.1 구현에서는 `BattlefieldType`과 `BattlefieldCondition`을 `BattleConfig`에 포함해 목표와 환경을 세션 시작 전에 고정한다. `EvacuationRules`는 Flame과 무관하게 8명 탈출 승패와 보너스를 판정한다. 호위 대상은 Component가 아닌 12개 경량 데이터 객체로 관리하며, 기존 적 AI의 목표 분기만 확장한다. 프레임 시간은 최근 512개 표본을 고정 배열에 기록하고 `BattleReport`에 최대 활성 유닛과 P95를 전달한다.
+
+M3.2 구현에서는 `EnemyArchetypeSpec`이 병과 위에 체력·공격·방어·속도 보정과 고유 능력을 합성한다. `BattleUnit`은 원형 참조와 능력 카운터만 추가로 보유하며 별도 Component를 생성하지 않는다. 일반 적은 기존 아틀라스와 세력 tint를 재사용하고 정예/보스만 스케일·링·Canvas 문양을 추가한다. 희귀 드롭 ID는 사망 경계에서 중복 없이 수집해 `BattleReport.rareDropIds`로만 Flutter 결과 화면에 전달한다.
 
 Flutter의 `BattleScreen`은 `WidgetsBindingObserver`로 background/inactive 상태를 Flame 정지 명령으로 변환한다. 사용자 정지와 lifecycle 정지를 별도 플래그로 관리해 앱 복귀가 사용자의 수동 정지를 해제하거나 레벨업 정지를 잘못 재개하지 않게 한다.
 

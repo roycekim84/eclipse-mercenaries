@@ -8,6 +8,7 @@ import '../core/content/game_visuals.dart';
 import '../core/persistence/save_repository.dart';
 import '../core/theme/game_theme.dart';
 import '../domain/battle_models.dart';
+import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
 import '../domain/run_growth.dart';
 import '../game/survivor_game.dart';
@@ -21,6 +22,7 @@ part '../features/battle/ultimate_overlay.dart';
 part '../features/camp/camp_screen.dart';
 part '../features/contracts/contract_screens.dart';
 part '../features/equipment/equipment_screen.dart';
+part '../features/codex/enemy_codex_screen.dart';
 part '../features/mercenaries/mercenary_screens.dart';
 part '../features/results/result_screen.dart';
 
@@ -49,6 +51,7 @@ enum AppScene {
   detail,
   battle,
   result,
+  enemyCodex,
 }
 
 class GameShell extends StatefulWidget {
@@ -113,6 +116,7 @@ class _GameShellState extends State<GameShell> {
             onDeploy: () => go(AppScene.contracts),
             onRoster: () => go(AppScene.roster),
             onEquipment: () => openEquipment(AppScene.camp),
+            onCodex: () => go(AppScene.enemyCodex),
           ),
           AppScene.contracts => ContractScreen(
             key: const ValueKey('contracts'),
@@ -180,6 +184,10 @@ class _GameShellState extends State<GameShell> {
             report: report!,
             onCamp: () => go(AppScene.camp),
             onReplay: () => go(AppScene.battle),
+          ),
+          AppScene.enemyCodex => EnemyCodexScreen(
+            key: const ValueKey('enemy-codex'),
+            onBack: () => go(AppScene.camp),
           ),
         },
       ),

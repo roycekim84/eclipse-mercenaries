@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/game_data.dart';
+import '../../domain/enemy_catalog.dart';
 
 class MercenaryVisual {
   const MercenaryVisual({
@@ -23,6 +24,13 @@ class WeaponVisual {
 
   final IconData icon;
   final Color color;
+}
+
+class EnemyVisual {
+  const EnemyVisual({required this.color, required this.icon});
+
+  final Color color;
+  final IconData icon;
 }
 
 const _mercenaryVisuals = <String, MercenaryVisual>{
@@ -73,6 +81,34 @@ extension MercenaryVisualLookup on MercenarySpec {
 extension WeaponVisualLookup on WeaponSpec {
   WeaponVisual get visual => _weaponVisuals[id]!;
 }
+
+extension EnemyVisualLookup on EnemyArchetypeSpec {
+  Color get factionColor => switch (faction) {
+    EnemyFaction.vargarEmpire => const Color(0xffb84d45),
+    EnemyFaction.cinderCoven => const Color(0xff9b5b9f),
+    EnemyFaction.freeBlades => const Color(0xffb88449),
+  };
+
+  IconData get abilityIcon => switch (ability) {
+    EnemyAbility.brace => Icons.shield_outlined,
+    EnemyAbility.volley => Icons.architecture,
+    EnemyAbility.charge => Icons.trending_flat,
+    EnemyAbility.hex || EnemyAbility.bloodNova => Icons.auto_awesome,
+    EnemyAbility.breach || EnemyAbility.blast => Icons.brightness_7,
+    EnemyAbility.flank || EnemyAbility.huntMark => Icons.directions_run,
+    EnemyAbility.riposte => Icons.gavel,
+    EnemyAbility.commandSiege => Icons.flag,
+    EnemyAbility.none => Icons.person_outline,
+  };
+
+  EnemyVisual get visual => EnemyVisual(color: factionColor, icon: abilityIcon);
+}
+
+String enemyFactionName(EnemyFaction faction) => switch (faction) {
+  EnemyFaction.vargarEmpire => '바르가르 제국',
+  EnemyFaction.cinderCoven => '잿불 교단',
+  EnemyFaction.freeBlades => '회색 자유단',
+};
 
 IconData gameIcon(String id) => switch (id) {
   'movement' => Icons.directions_run,

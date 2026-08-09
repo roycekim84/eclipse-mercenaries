@@ -5,6 +5,7 @@ import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
+import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:eclipse_mercenaries/domain/run_growth.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,8 +16,48 @@ void main() {
   test('alpha content IDs resolve through the repository', () {
     expect(content.mercenaries, hasLength(3));
     expect(content.weapons, hasLength(8));
+    expect(content.enemies, hasLength(12));
     expect(content.mercenaryById('kael').race, '늑대족');
     expect(content.weaponById('glass_flame').ownerId, 'sera');
+  });
+
+  test('enemy catalog satisfies alpha content counts', () {
+    expect(EnemyCatalog.common, hasLength(8));
+    expect(EnemyCatalog.elite, hasLength(2));
+    expect(EnemyCatalog.boss, hasLength(2));
+    expect(
+      alphaEnemyArchetypes.map((enemy) => enemy.id).toSet(),
+      hasLength(alphaEnemyArchetypes.length),
+    );
+  });
+
+  test('common enemies expose eight distinct battlefield abilities', () {
+    expect(
+      EnemyCatalog.common.map((enemy) => enemy.ability).toSet(),
+      hasLength(8),
+    );
+    for (final enemy in EnemyCatalog.common) {
+      expect(enemy.abilityDescription, isNotEmpty);
+      expect(enemy.lore, isNotEmpty);
+      expect(enemy.visual.color.a, greaterThan(0));
+    }
+  });
+
+  test('elite and boss enemies always expose rare drops', () {
+    for (final enemy in [...EnemyCatalog.elite, ...EnemyCatalog.boss]) {
+      expect(enemy.rareDropId, isNotNull);
+      expect(enemy.hpBonus, isPositive);
+    }
+  });
+
+  test('battlefields use tactically different boss archetypes', () {
+    final siegeMarshal = EnemyCatalog.byId('siege_marshal');
+    final huntCaptain = EnemyCatalog.byId('hunt_captain');
+
+    expect(siegeMarshal.ability, EnemyAbility.commandSiege);
+    expect(huntCaptain.ability, EnemyAbility.huntMark);
+    expect(siegeMarshal.role, UnitRole.commander);
+    expect(huntCaptain.role, UnitRole.commander);
   });
 
   test('every alpha content entry has presentation metadata', () {

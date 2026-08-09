@@ -7,19 +7,21 @@ extension GateDefenseSystem on SurvivorGame {
     for (var i = 0; i < config.unitCount; i++) {
       final ally = i % 3 == 0;
       final factionIndex = ally ? allyIndex++ : enemyIndex++;
-      final role = _roleForFactionIndex(factionIndex);
-      final elite = !ally && role != UnitRole.commander && i % 83 == 0;
+      final archetype = ally ? null : _enemyForIndex(factionIndex);
+      final role = archetype?.role ?? _roleForFactionIndex(factionIndex);
+      final elite = archetype?.rank == EnemyRank.elite;
       final objectiveAggro =
           !ally &&
           role != UnitRole.commander &&
-          (role == UnitRole.siege ||
+          (archetype?.ability == EnemyAbility.breach ||
+              archetype?.ability == EnemyAbility.blast ||
               _random.nextDouble() <
                   (config.battlefield == BattlefieldType.evacuation
                       ? .28
                       : .4));
       final maxHp =
           UnitRoleRules.maxHp(role) +
-          (elite ? 6 : 0) +
+          (archetype?.hpBonus ?? 0) +
           (objectiveAggro ? 4 : 0);
       final defaultPosition = config.battlefield == BattlefieldType.evacuation
           ? Vector2(
@@ -50,13 +52,18 @@ extension GateDefenseSystem on SurvivorGame {
         elite: elite,
         hp: maxHp,
         maxHp: maxHp,
-        playerAggro: !ally && (role == UnitRole.cavalry || i % 7 == 0),
+        playerAggro:
+            !ally &&
+            (archetype?.ability == EnemyAbility.charge ||
+                archetype?.ability == EnemyAbility.flank ||
+                i % 7 == 0),
         objectiveAggro: objectiveAggro,
         role: role,
         stance: role == UnitRole.commander
             ? UnitStance.support
             : UnitStance.advance,
         squadId: factionIndex ~/ 8,
+        archetype: archetype,
       );
       _units.add(unit);
       if (role == UnitRole.commander) {
@@ -68,6 +75,20 @@ extension GateDefenseSystem on SurvivorGame {
       }
     }
     _peakActiveUnits = math.max(_peakActiveUnits, _units.length);
+  }
+
+  EnemyArchetypeSpec _enemyForIndex(int index) {
+    if (index == 0) {
+      return EnemyCatalog.byId(
+        config.battlefield == BattlefieldType.evacuation
+            ? 'hunt_captain'
+            : 'siege_marshal',
+      );
+    }
+    if (index % 83 == 0) {
+      return EnemyCatalog.elite[(index ~/ 83) % EnemyCatalog.elite.length];
+    }
+    return EnemyCatalog.common[(index - 1) % EnemyCatalog.common.length];
   }
 
   UnitRole _roleForFactionIndex(int index) {
@@ -100,6 +121,7 @@ extension GateDefenseSystem on SurvivorGame {
     if (distance > attackRange) {
       final objectiveSpeed =
           UnitRoleRules.speed(unit.role) *
+          (unit.archetype?.speedMultiplier ?? 1) *
           (unit.role == UnitRole.siege ? 1.8 : 1.45);
       unit.position += (delta / math.max(distance, 1)) * objectiveSpeed * dt;
       return true;
@@ -108,7 +130,10 @@ extension GateDefenseSystem on SurvivorGame {
       unit.attackClock = unit.role == UnitRole.siege ? 1.65 : 1.05;
       _gateHp = math.max(
         0,
-        _gateHp - UnitRoleRules.damage(unit.role) - (unit.elite ? 4 : 0),
+        _gateHp -
+            UnitRoleRules.damage(unit.role) -
+            (unit.archetype?.damageBonus ?? 0) -
+            (unit.archetype?.ability == EnemyAbility.blast ? 5 : 0),
       );
       _emitSlash(_gatePosition, .2, CombatStyle.greatsword);
     }
@@ -193,6 +218,7 @@ extension GateDefenseSystem on SurvivorGame {
         escortTotal: _escorts.length,
         peakActiveUnits: _peakActiveUnits,
         frameTimeP95Ms: _frameTimeP95Ms,
+        rareDropIds: List.unmodifiable(_rareDrops),
       ),
     );
   }

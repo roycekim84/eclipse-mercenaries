@@ -61,13 +61,31 @@ extension UnitAiSystem on SurvivorGame {
       UnitRole.siege => 1.7,
       UnitRole.infantry => 1.0,
     };
-    attacker.attackClock = interval * (commandBuff ? .82 : 1);
-    final damage =
+    final ability = attacker.archetype?.ability ?? EnemyAbility.none;
+    attacker.abilityCounter++;
+    final abilityInterval = switch (ability) {
+      EnemyAbility.riposte => .68,
+      EnemyAbility.bloodNova => .86,
+      _ => 1.0,
+    };
+    attacker.attackClock = interval * (commandBuff ? .82 : 1) * abilityInterval;
+    var damage =
         UnitRoleRules.damage(attacker.role) +
+        (attacker.archetype?.damageBonus ?? 0) +
         (attacker.elite ? 1 : 0) +
         (commandBuff && attacker.role != UnitRole.commander ? 1 : 0);
+    if (ability == EnemyAbility.charge && attacker.abilityCounter == 1) {
+      damage += 3;
+    }
+    if (ability == EnemyAbility.volley && attacker.abilityCounter % 3 == 0) {
+      damage += 2;
+    }
     _damageBattleUnit(attacker, target, damage);
-    if (attacker.role == UnitRole.mage) {
+    if (ability == EnemyAbility.hex && !target.dead) {
+      target.status = StatusEffectType.slow;
+      target.statusClock = 1.8;
+    }
+    if (attacker.role == UnitRole.mage || ability == EnemyAbility.bloodNova) {
       var splashes = 0;
       for (final candidate in _units) {
         if (candidate.dead ||
@@ -76,8 +94,13 @@ extension UnitAiSystem on SurvivorGame {
             candidate.position.distanceTo(target.position) > 34) {
           continue;
         }
-        _damageBattleUnit(attacker, candidate, 1, showFx: false);
-        if (++splashes >= 2) break;
+        _damageBattleUnit(
+          attacker,
+          candidate,
+          ability == EnemyAbility.bloodNova ? 2 : 1,
+          showFx: false,
+        );
+        if (++splashes >= (ability == EnemyAbility.bloodNova ? 4 : 2)) break;
       }
     }
   }
@@ -155,10 +178,21 @@ extension UnitAiSystem on SurvivorGame {
         ? 1.12
         : 1.0;
     final statusSpeed = unit.status == StatusEffectType.slow ? .62 : 1.0;
+    final archetypeSpeed = unit.archetype?.speedMultiplier ?? 1.0;
+    final bossCommandSpeed =
+        commander?.archetype?.ability == EnemyAbility.commandSiege &&
+            unit.role == UnitRole.siege
+        ? 1.18
+        : commander?.archetype?.ability == EnemyAbility.huntMark &&
+              unit.objectiveAggro
+        ? 1.15
+        : 1.0;
     unit.position +=
         delta.normalized() *
         UnitRoleRules.speed(unit.role) *
         speedMultiplier *
+        archetypeSpeed *
+        bossCommandSpeed *
         commandSpeed *
         statusSpeed *
         dt;

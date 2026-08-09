@@ -140,6 +140,22 @@ class ResultScreen extends StatelessWidget {
                         Loot(icon: Icons.science, amount: '${report.xp}'),
                       ],
                     ),
+                    if (report.rareDropIds.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 7,
+                        runSpacing: 6,
+                        children: [
+                          for (final dropId in report.rareDropIds)
+                            ResultTag(
+                              icon: Icons.auto_awesome,
+                              label: '희귀 · ${rareDropName(dropId)}',
+                              positive: true,
+                            ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     Row(
                       children: [

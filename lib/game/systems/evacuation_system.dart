@@ -69,8 +69,11 @@ extension EvacuationSystem on SurvivorGame {
     }
     if (unit.attackClock <= 0) {
       unit.attackClock = unit.role == UnitRole.siege ? 1.8 : 1.15;
-      final damage = (UnitRoleRules.damage(unit.role) + (unit.elite ? 1 : 0))
-          .clamp(1, 5);
+      final damage =
+          (UnitRoleRules.damage(unit.role) +
+                  (unit.archetype?.damageBonus ?? 0) +
+                  (unit.archetype?.ability == EnemyAbility.blast ? 3 : 0))
+              .clamp(1, 6);
       target.hp -= damage;
       target.hitFlash = .14;
       _emitSlash(target.position, .18, CombatStyle.greatsword);

@@ -8,12 +8,14 @@ class CampScreen extends StatelessWidget {
     required this.onDeploy,
     required this.onRoster,
     required this.onEquipment,
+    required this.onCodex,
   });
   final int gold;
   final int crystals;
   final VoidCallback onDeploy;
   final VoidCallback onRoster;
   final VoidCallback onEquipment;
+  final VoidCallback onCodex;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,7 @@ class CampScreen extends StatelessWidget {
                           NavButton(
                             icon: Icons.local_fire_department_outlined,
                             label: '도감',
-                            onTap: () {},
+                            onTap: onCodex,
                           ),
                         ],
                       ),

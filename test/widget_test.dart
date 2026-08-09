@@ -38,4 +38,19 @@ void main() {
     expect(find.text('혈아대검'), findsOneWidget);
     expect(find.text('유리불꽃 지팡이'), findsOneWidget);
   });
+
+  testWidgets('camp codex exposes enemy catalog and filters', (tester) async {
+    await tester.pumpWidget(const EclipseMercenariesApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('도감'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('전장 도감'), findsOneWidget);
+    expect(find.text('전체 12'), findsOneWidget);
+    expect(find.text('일반 8'), findsOneWidget);
+    expect(find.text('정예 2'), findsOneWidget);
+    expect(find.text('지휘관 2'), findsOneWidget);
+    expect(find.text('바르가르 징집병'), findsWidgets);
+  });
 }

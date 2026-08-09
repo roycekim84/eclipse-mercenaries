@@ -12,7 +12,9 @@ extension DamageSystem on SurvivorGame {
   }) => DamageResolver.resolve(
     DamageRequest(
       baseDamage: baseDamage,
-      defense: UnitRoleRules.defense(target.role),
+      defense:
+          UnitRoleRules.defense(target.role) +
+          (target.archetype?.defenseBonus ?? 0),
       criticalChance: criticalChance,
       criticalRoll: _random.nextDouble(),
       kind: kind,
@@ -58,11 +60,22 @@ extension DamageSystem on SurvivorGame {
     if (target.hp > 0) return;
     target.dead = true;
     _kills++;
-    _xp += target.elite ? 16 : 5;
+    final rank = target.archetype?.rank ?? EnemyRank.common;
+    _xp += switch (rank) {
+      EnemyRank.common => 5,
+      EnemyRank.elite => 20,
+      EnemyRank.boss => 45,
+    };
+    _collectRareDrop(target);
     if (grantUltimateCharge && _signatureWeaponActive) {
       _ultimateCharge = math.min(
         1,
-        _ultimateCharge + (target.elite ? .22 : .07),
+        _ultimateCharge +
+            switch (rank) {
+              EnemyRank.common => .07,
+              EnemyRank.elite => .22,
+              EnemyRank.boss => .35,
+            },
       );
     }
   }
@@ -97,7 +110,17 @@ extension DamageSystem on SurvivorGame {
     }
     if (target.hp > 0) return;
     target.dead = true;
-    if (attacker.ally) _alliedKills++;
+    if (attacker.ally) {
+      _alliedKills++;
+      _collectRareDrop(target);
+    }
+  }
+
+  void _collectRareDrop(BattleUnit target) {
+    final rareDrop = target.archetype?.rareDropId;
+    if (rareDrop != null && !_rareDrops.contains(rareDrop)) {
+      _rareDrops.add(rareDrop);
+    }
   }
 
   void _applyStatus(BattleUnit target, StatusEffectType status) {

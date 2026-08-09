@@ -155,6 +155,7 @@ class BattleReport {
     this.escortTotal = 0,
     this.peakActiveUnits = 0,
     this.frameTimeP95Ms = 0,
+    this.rareDropIds = const [],
   });
 
   final String time;
@@ -173,6 +174,7 @@ class BattleReport {
   final int escortTotal;
   final int peakActiveUnits;
   final double frameTimeP95Ms;
+  final List<String> rareDropIds;
 }
 
 abstract final class EvacuationRules {
