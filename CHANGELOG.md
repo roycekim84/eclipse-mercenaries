@@ -1,5 +1,13 @@
 # 변경 기록
 
+## Animated mercenary sprites — 2026-08-09
+
+- 루나·카일·세라의 Idle/Walk/Attack/Hit/Dead 40프레임 픽셀 시트 제작
+- 크로마키 원본을 투명 알파 PNG로 정리하고 캐릭터 식별 요소 검수
+- Flame `SpriteAnimationGroupComponent` 기반 플레이어 렌더러 추가
+- 이동/정지/자동 공격 상태를 Walk/Idle/Attack 애니메이션에 연결
+- Visual catalog에 전투 스프라이트 경로를 추가하고 M1.3 완료
+
 ## Feature UI separation — 2026-08-09
 
 - 2,286줄 UI 파일을 앱 셸, 6개 기능 화면 그룹, 공통 컴포넌트 그룹으로 분리

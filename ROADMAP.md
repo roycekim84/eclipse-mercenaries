@@ -5,7 +5,7 @@
 ## 현재 상태 요약
 
 - M0 프로젝트 기반: 완료
-- M1 비주얼 수직 슬라이스: 진행 중 · M1.2 완료
+- M1 비주얼 수직 슬라이스: 진행 중 · M1.3 완료
 - M2 전투 시스템 알파: 대기
 - M3 콘텐츠 알파: 대기
 - M4 메타 성장 알파: 대기
@@ -59,11 +59,11 @@
 
 ### M1.3 실제 픽셀 캐릭터
 
-- [ ] 루나 Idle/Walk/Attack/Hit/Dead
-- [ ] 카일 Idle/Walk/Attack/Hit/Dead
-- [ ] 세라 Idle/Walk/Attack/Hit/Dead
-- [ ] 스프라이트 atlas와 방향/프레임 메타데이터
-- [ ] 픽셀 캐릭터와 전신 일러스트 식별 QA
+- [x] 루나 Idle/Walk/Attack/Hit/Dead
+- [x] 카일 Idle/Walk/Attack/Hit/Dead
+- [x] 세라 Idle/Walk/Attack/Hit/Dead
+- [x] 8열×5행 스프라이트 시트와 프레임 메타데이터
+- [x] 픽셀 캐릭터와 전신 일러스트 식별 QA
 
 ### M1.4 고유 궁극기
 

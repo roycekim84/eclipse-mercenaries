@@ -17,6 +17,7 @@ void main() {
   test('every alpha content entry has presentation metadata', () {
     for (final mercenary in content.mercenaries) {
       expect(mercenary.visual.portraitAsset, startsWith('assets/images/'));
+      expect(mercenary.visual.battleSpriteAsset, endsWith('_battle_sheet.png'));
     }
     for (final weapon in content.weapons) {
       expect(weapon.visual.icon.codePoint, isPositive);

@@ -125,6 +125,18 @@
 | Ultimate | 8 | 12+ | 컷인과 연결 가능한 시작/종료 |
 | Dash | 4 | 6 | 잔상 별도 VFX |
 
+### 알파 M1.3 시트 규격
+
+- 파일 크기: 1584×990px, 셀 크기: 198×198px
+- 배열: 8열×5행, 행 순서 `Idle/Walk/Attack/Hit/Dead`
+- 프레임 수: 모든 상태 8프레임
+- 배경: 투명 알파 PNG
+- 방향: down-right 탑다운 3/4 단방향. 4방향 확장 시 동일 행 규칙을 유지한다.
+- 런타임 표시 크기: 86×86 logical px, `FilterQuality.none`
+- 기준점: 각 셀 중앙. 전투 좌표와 발밑 링은 별도 렌더링한다.
+
+확정 시트는 `assets/images/characters/<character_id>_battle_sheet.png`에 저장하며 `MercenaryVisual.battleSpriteAsset`로 참조한다.
+
 ### 픽셀 표현 원칙
 
 - 얼굴 세부보다 머리, 귀, 꼬리, 무기, 대표색 실루엣을 우선한다.

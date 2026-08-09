@@ -8,12 +8,14 @@ class MercenaryVisual {
     required this.accent,
     required this.icon,
     required this.portraitAsset,
+    required this.battleSpriteAsset,
   });
 
   final Color color;
   final Color accent;
   final IconData icon;
   final String portraitAsset;
+  final String battleSpriteAsset;
 }
 
 class WeaponVisual {
@@ -29,18 +31,21 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xffb690d0),
     icon: Icons.pets,
     portraitAsset: 'assets/images/luna_belhardt.png',
+    battleSpriteAsset: 'characters/luna_battle_sheet.png',
   ),
   'kael': MercenaryVisual(
     color: Color(0xff49312f),
     accent: Color(0xffd47b67),
     icon: Icons.change_history,
     portraitAsset: 'assets/images/kael_rozenfang.png',
+    battleSpriteAsset: 'characters/kael_battle_sheet.png',
   ),
   'sera': MercenaryVisual(
     color: Color(0xff273d50),
     accent: Color(0xff79c9de),
     icon: Icons.auto_awesome,
     portraitAsset: 'assets/images/sera_inarion.png',
+    battleSpriteAsset: 'characters/sera_battle_sheet.png',
   ),
 };
 

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' show Offset, ValueNotifier;
 import '../domain/battle_models.dart';
 import '../domain/game_data.dart';
 import '../core/content/game_visuals.dart';
+import 'render/player_sprite_component.dart';
 
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
@@ -36,6 +37,7 @@ class SurvivorGame extends FlameGame {
   final _spatialGrid = <int, List<int>>{};
   Vector2? _moveTarget;
   late Vector2 _player;
+  late final PlayerSpriteComponent _playerSprite;
   double _elapsed = 0;
   double _attackClock = 0;
   double _eventClock = 0;
@@ -54,6 +56,10 @@ class SurvivorGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     _player = size / 2;
+    final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
+    _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
+      ..position = _player.clone();
+    await add(_playerSprite);
     _speed = mercenary.speed;
     stats.value = BattleStats(
       hp: mercenary.maxHp.toDouble(),
@@ -103,12 +109,17 @@ class SurvivorGame extends FlameGame {
     _elapsed += dt;
     _attackClock += dt;
     _eventClock += dt;
+    var isMoving = false;
     if (_moveTarget != null) {
       final delta = _moveTarget! - _player;
       if (delta.length > 8) {
         _player += delta.normalized() * math.min(_speed * dt, delta.length);
+        isMoving = true;
       }
     }
+    _playerSprite
+      ..position = _player
+      ..setMoving(isMoving);
     _rebuildGrid();
     _updateUnits(dt);
     final attackInterval =
@@ -249,6 +260,7 @@ class SurvivorGame extends FlameGame {
       }
     }
     if (nearest == null) return;
+    _playerSprite.playAttack();
     final impact = nearest.position.clone();
     final damage =
         mercenary.baseDamage + weapon.attack ~/ 650 + (_weaponLevel ~/ 2);
@@ -313,7 +325,7 @@ class SurvivorGame extends FlameGame {
   void render(Canvas canvas) {
     _drawTerrain(canvas);
     _drawUnits(canvas);
-    _drawPlayer(canvas);
+    _drawPlayerMarker(canvas);
     super.render(canvas);
   }
 
@@ -419,7 +431,7 @@ class SurvivorGame extends FlameGame {
     }
   }
 
-  void _drawPlayer(Canvas canvas) {
+  void _drawPlayerMarker(Canvas canvas) {
     canvas.drawCircle(
       Offset(_player.x, _player.y + 9),
       16,
@@ -433,66 +445,6 @@ class SurvivorGame extends FlameGame {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(_player.x, _player.y),
-        width: 12,
-        height: 20,
-      ),
-      Paint()..color = mercenary.visual.color,
-    );
-    canvas.drawCircle(
-      Offset(_player.x, _player.y - 12),
-      6,
-      Paint()..color = const Color(0xffdfb8a4),
-    );
-    final ears = Path()
-      ..moveTo(_player.x - 6, _player.y - 15)
-      ..lineTo(_player.x - 5, _player.y - 24)
-      ..lineTo(_player.x, _player.y - 16)
-      ..moveTo(_player.x + 2, _player.y - 16)
-      ..lineTo(_player.x + 6, _player.y - 24)
-      ..lineTo(_player.x + 8, _player.y - 15);
-    canvas.drawPath(
-      ears,
-      Paint()
-        ..color = const Color(0xff18151e)
-        ..style = PaintingStyle.fill,
-    );
-    final blade = Paint()
-      ..color = mercenary.visual.accent
-      ..strokeWidth = 2;
-    if (mercenary.style == CombatStyle.blades) {
-      canvas.drawLine(
-        Offset(_player.x - 5, _player.y + 2),
-        Offset(_player.x - 18, _player.y + 15),
-        blade,
-      );
-      canvas.drawLine(
-        Offset(_player.x + 5, _player.y + 2),
-        Offset(_player.x + 18, _player.y + 15),
-        blade,
-      );
-    } else if (mercenary.style == CombatStyle.greatsword) {
-      blade.strokeWidth = 5;
-      canvas.drawLine(
-        Offset(_player.x - 3, _player.y + 5),
-        Offset(_player.x + 22, _player.y - 22),
-        blade,
-      );
-    } else {
-      blade.strokeWidth = 3;
-      canvas.drawLine(
-        Offset(_player.x + 7, _player.y + 7),
-        Offset(_player.x + 16, _player.y - 25),
-        blade,
-      );
-      canvas.drawCircle(
-        Offset(_player.x + 16, _player.y - 28),
-        5,
-        Paint()..color = mercenary.visual.accent,
-      );
-    }
   }
 }
 

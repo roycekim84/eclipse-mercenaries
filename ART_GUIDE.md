@@ -24,5 +24,10 @@
 - `assets/images/luna_belhardt.png`: 캐릭터 상세용 루나 전신 일러스트
 - `assets/images/kael_rozenfang.png`: 늑대족 검투사 카일 전신 일러스트
 - `assets/images/sera_inarion.png`: 여우족 환술사 세라 전신 일러스트
+- `assets/images/characters/luna_battle_sheet.png`: 루나 8×5 전투 애니메이션 시트
+- `assets/images/characters/kael_battle_sheet.png`: 카일 8×5 전투 애니메이션 시트
+- `assets/images/characters/sera_battle_sheet.png`: 세라 8×5 전투 애니메이션 시트
 
 생성 이미지에 글자를 굽지 않고 Flutter 레이어에서 접근성과 현지화를 처리한다.
+
+전투 시트 행 순서는 `Idle → Walk → Attack → Hit → Dead`, 각 행은 8프레임이다. 런타임은 nearest-neighbor 필터를 사용하며, 현재 방향은 첨부 레퍼런스의 전투 시점에 맞춘 down-right 3/4 방향이다.
