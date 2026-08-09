@@ -17,4 +17,15 @@ flutter run -d chrome
 - 공격: 가장 가까운 적 자동 공격
 - 레벨업: 세 가지 강화 중 하나 선택
 
-상세 설계는 `GAME_DESIGN.md`, 구조는 `ARCHITECTURE.md`, 현재 상태는 `PROGRESS.md`를 참고하십시오.
+## 프로젝트 문서
+
+- 전체 문서 안내: [DOCS_INDEX.md](DOCS_INDEX.md)
+- 제품/게임 전체 기획: [PROJECT_PLAN.md](PROJECT_PLAN.md)
+- 게임 규칙과 알파 밸런스: [GAME_DESIGN.md](GAME_DESIGN.md)
+- 구현 작업 기획: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
+- 기술 구조: [ARCHITECTURE.md](ARCHITECTURE.md)
+- 이미지 에셋 스타일: [ASSET_STYLE_GUIDE.md](ASSET_STYLE_GUIDE.md)
+- 화면별 UI/UX 명세: [UI_UX_SPEC.md](UI_UX_SPEC.md)
+- 단계별 로드맵: [ROADMAP.md](ROADMAP.md)
+- 현재 진행 상황: [PROGRESS.md](PROGRESS.md)
+- 테스트 기준: [TESTING.md](TESTING.md)
