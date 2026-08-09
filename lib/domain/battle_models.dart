@@ -46,6 +46,16 @@ abstract final class UnitRoleRules {
     UnitRole.siege => 18,
     UnitRole.commander => 3,
   };
+
+  static int defense(UnitRole role) => switch (role) {
+    UnitRole.infantry => 8,
+    UnitRole.shield => 35,
+    UnitRole.archer => 4,
+    UnitRole.cavalry => 14,
+    UnitRole.mage => 7,
+    UnitRole.siege => 24,
+    UnitRole.commander => 28,
+  };
 }
 
 class BattleConfig {

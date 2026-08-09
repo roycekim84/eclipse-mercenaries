@@ -23,6 +23,9 @@
 - `game/survivor_game.dart`: 전투 세션 조합, 이동, 자동 공격, 경험치, 레벨업, 사건
 - `game/systems/gate_defense_system.dart`: 성문 목표, 진영 배치, 공성 피해, 승패/결과
 - `game/systems/unit_ai_system.dart`: 병과별 탐색·공격·대형·지원·후퇴 AI
+- `game/systems/damage_system.dart`: 공통 피해·치명타·상태이상·사망 반영
+- `game/systems/weapon_system.dart`: 8종 무기 대상 선정과 공격 패턴
+- `game/systems/pooled_effects_system.dart`: 투사체·VFX·대미지 숫자 풀과 렌더
 
 앱/도메인/게임 런타임 경계와 기능별 화면 분리가 완료됐다. 화면 파일은 Dart library part로 묶어 현재 비공개 상태 경계를 유지하며, 기능이 커질 때 독립 public widget library로 전환한다.
 
@@ -144,7 +147,11 @@ M2.1 구현에서는 `gate_defense_system.dart`가 진영별 초기 배치, 공�
 
 M2.2 구현에서는 `UnitRoleRules`가 7병과의 HP·속도·사거리·피해를 순수 도메인 규칙으로 제공한다. `unit_ai_system.dart`는 공간 그리드의 근접 상대 질의만 사용해 역할 공격, 원거리 거리 확보, 8인 분대 대형, 180px 지휘 오라와 저체력 후퇴를 처리한다. `BattleUnit`은 Component를 만들지 않는 경량 데이터이며 동일 7×2 아틀라스를 `drawImageRect`로 렌더링한다. `BattleStats`와 `BattleReport`에는 지휘관 생존 상태만 전달해 Flutter HUD가 AI 내부 객체를 참조하지 않게 한다.
 
-같은 프레임에서 순서가 바뀌어 결과가 달라지지 않도록 고정한다. 피해와 사망은 즉시 리스트를 변경하기보다 command buffer를 사용해 프레임 말에 반영한다.
+M2.3 구현에서는 `domain/combat_rules.dart`의 `DamageResolver`가 방어, 치명타, 피해 종류와 상태이상 판정을 순수 계산한다. 플레이어·병사·궁극기·지속 피해는 `damage_system.dart`를 통해 같은 HP/사망 경계를 사용한다. `WeaponPattern` 8종은 `weapon_system.dart`에서 즉시 타격, 직선 관통, 범위 타격 또는 풀링 투사체로 분기한다. 런타임은 투사체 64개, Slash/VFX 96개, 대미지 숫자 36개를 선할당하고 비활성 슬롯을 재사용한다.
+
+Flutter의 `BattleScreen`은 `WidgetsBindingObserver`로 background/inactive 상태를 Flame 정지 명령으로 변환한다. 사용자 정지와 lifecycle 정지를 별도 플래그로 관리해 앱 복귀가 사용자의 수동 정지를 해제하거나 레벨업 정지를 잘못 재개하지 않게 한다.
+
+같은 프레임에서 시스템 순서가 바뀌어 결과가 달라지지 않도록 고정한다. 현재 수직 슬라이스는 피해와 사망을 공통 경계에서 즉시 반영하며, 다중 투사체 동시 충돌이 확대될 때 command buffer로 전환한다.
 
 ## 8. 대량 유닛 구조
 

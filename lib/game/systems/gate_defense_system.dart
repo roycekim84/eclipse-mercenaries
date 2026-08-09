@@ -98,7 +98,7 @@ extension GateDefenseSystem on SurvivorGame {
         0,
         _gateHp - UnitRoleRules.damage(unit.role) - (unit.elite ? 4 : 0),
       );
-      _slashes.add(SlashFx(_gatePosition.clone(), .2, CombatStyle.greatsword));
+      _emitSlash(_gatePosition, .2, CombatStyle.greatsword);
     }
     return true;
   }

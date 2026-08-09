@@ -2,6 +2,8 @@ import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
 import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
+import 'package:eclipse_mercenaries/domain/combat_rules.dart';
+import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -109,6 +111,7 @@ void main() {
       expect(UnitRoleRules.speed(role), isPositive);
       expect(UnitRoleRules.attackRange(role), isPositive);
       expect(UnitRoleRules.damage(role), isPositive);
+      expect(UnitRoleRules.defense(role), isPositive);
     }
   });
 
@@ -132,6 +135,75 @@ void main() {
     expect(
       UnitRoleRules.maxHp(UnitRole.commander),
       greaterThan(UnitRoleRules.maxHp(UnitRole.siege)),
+    );
+  });
+
+  test('damage resolver applies defense critical and pure damage rules', () {
+    final defended = DamageResolver.resolve(
+      const DamageRequest(
+        baseDamage: 100,
+        defense: 100,
+        criticalChance: 0,
+        criticalRoll: .5,
+      ),
+    );
+    final critical = DamageResolver.resolve(
+      const DamageRequest(
+        baseDamage: 100,
+        defense: 100,
+        criticalChance: 25,
+        criticalRoll: .1,
+      ),
+    );
+    final pure = DamageResolver.resolve(
+      const DamageRequest(
+        baseDamage: 100,
+        defense: 999,
+        criticalChance: 0,
+        criticalRoll: .5,
+        kind: DamageKind.pure,
+      ),
+    );
+
+    expect(defended.amount, 50);
+    expect(critical.amount, 75);
+    expect(critical.isCritical, isTrue);
+    expect(pure.amount, 100);
+  });
+
+  test('damage resolver applies status only when its roll succeeds', () {
+    final applied = DamageResolver.resolve(
+      const DamageRequest(
+        baseDamage: 10,
+        defense: 0,
+        criticalChance: 0,
+        criticalRoll: 1,
+        status: StatusEffectType.bleed,
+        statusChance: .4,
+        statusRoll: .2,
+      ),
+    );
+    final resisted = DamageResolver.resolve(
+      const DamageRequest(
+        baseDamage: 10,
+        defense: 0,
+        criticalChance: 0,
+        criticalRoll: 1,
+        status: StatusEffectType.burn,
+        statusChance: .4,
+        statusRoll: .8,
+      ),
+    );
+
+    expect(applied.appliedStatus, StatusEffectType.bleed);
+    expect(resisted.appliedStatus, StatusEffectType.none);
+  });
+
+  test('all eight alpha weapons expose distinct attack patterns', () {
+    expect(content.weapons, hasLength(WeaponPattern.values.length));
+    expect(
+      content.weapons.map((weapon) => weapon.pattern).toSet(),
+      hasLength(WeaponPattern.values.length),
     );
   });
 }

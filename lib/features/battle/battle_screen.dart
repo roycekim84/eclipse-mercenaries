@@ -19,7 +19,8 @@ class BattleScreen extends StatefulWidget {
   State<BattleScreen> createState() => _BattleScreenState();
 }
 
-class _BattleScreenState extends State<BattleScreen> {
+class _BattleScreenState extends State<BattleScreen>
+    with WidgetsBindingObserver {
   late final SurvivorGame game;
 
   @override
@@ -29,6 +30,22 @@ class _BattleScreenState extends State<BattleScreen> {
       config: BattleConfig(mercenary: widget.mercenary, weapon: widget.weapon),
       onVictory: widget.onVictory,
     );
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      game.resumeFromLifecycle();
+    } else {
+      game.pauseForLifecycle();
+    }
   }
 
   @override
@@ -72,6 +89,14 @@ class _BattleScreenState extends State<BattleScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
+                ValueListenableBuilder<bool>(
+                  valueListenable: game.combatPaused,
+                  builder: (context, paused, _) => SmallIconButton(
+                    icon: paused ? Icons.play_arrow : Icons.pause,
+                    onTap: game.toggleCombatPause,
+                  ),
+                ),
+                const SizedBox(width: 6),
                 SmallIconButton(icon: Icons.close, onTap: widget.onExit),
               ],
             ),
@@ -99,7 +124,69 @@ class _BattleScreenState extends State<BattleScreen> {
                   mercenary: widget.mercenary,
                 ),
         ),
+        ValueListenableBuilder<bool>(
+          valueListenable: game.combatPaused,
+          builder: (context, paused, _) => paused
+              ? BattlePauseOverlay(onResume: game.toggleCombatPause)
+              : const SizedBox.shrink(),
+        ),
       ],
+    );
+  }
+}
+
+class BattlePauseOverlay extends StatelessWidget {
+  const BattlePauseOverlay({super.key, required this.onResume});
+
+  final VoidCallback onResume;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0xaa080a0f),
+        child: Center(
+          child: GoldPanel(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 26),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.hourglass_top,
+                    size: 30,
+                    color: Color(0xffd6bd81),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    '전투 일시정지',
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 22,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    '전장 시간과 모든 전투 처리가 멈췄습니다.',
+                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: 190,
+                    child: FantasyButton(
+                      label: '전투 계속',
+                      icon: Icons.play_arrow,
+                      prominent: true,
+                      onTap: onResume,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

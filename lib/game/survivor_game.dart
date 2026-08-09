@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
+import '../domain/combat_rules.dart';
 import '../domain/game_data.dart';
 import '../core/content/game_visuals.dart';
 import 'render/player_sprite_component.dart';
@@ -12,6 +13,9 @@ import 'render/player_sprite_component.dart';
 part 'systems/ultimate_system.dart';
 part 'systems/gate_defense_system.dart';
 part 'systems/unit_ai_system.dart';
+part 'systems/damage_system.dart';
+part 'systems/weapon_system.dart';
+part 'systems/pooled_effects_system.dart';
 
 class SurvivorGame extends FlameGame {
   SurvivorGame({required this.config, required this.onVictory})
@@ -44,9 +48,12 @@ class SurvivorGame extends FlameGame {
   final event = ValueNotifier<BattleEvent?>(null);
   final ultimate = ValueNotifier<UltimateSequence?>(null);
   final reducedEffects = ValueNotifier(false);
+  final combatPaused = ValueNotifier(false);
   final math.Random _random;
   final _units = <BattleUnit>[];
-  final _slashes = <SlashFx>[];
+  final _slashes = List.generate(96, (_) => SlashFx.pooled());
+  final _projectiles = List.generate(64, (_) => PooledProjectile());
+  final _damageNumbers = List.generate(36, (_) => DamageNumberFx());
   final _spatialGrid = <int, List<int>>{};
   Vector2? _moveTarget;
   late Vector2 _player;
@@ -74,6 +81,8 @@ class SurvivorGame extends FlameGame {
   int _weaponLevel = 1;
   bool _finished = false;
   bool _pausedForChoice = false;
+  bool _pausedByUser = false;
+  bool _pausedByLifecycle = false;
 
   @override
   Color backgroundColor() => const Color(0xff35362d);
@@ -116,6 +125,31 @@ class SurvivorGame extends FlameGame {
 
   void toggleReducedEffects() => reducedEffects.value = !reducedEffects.value;
 
+  void toggleCombatPause() {
+    if (_finished || _pausedForChoice || _pausedByLifecycle) return;
+    _pausedByUser = !_pausedByUser;
+    combatPaused.value = _pausedByUser;
+    if (_pausedByUser) {
+      pauseEngine();
+    } else {
+      resumeEngine();
+    }
+  }
+
+  void pauseForLifecycle() {
+    if (_finished) return;
+    _pausedByLifecycle = true;
+    combatPaused.value = true;
+    pauseEngine();
+  }
+
+  void resumeFromLifecycle() {
+    if (!_pausedByLifecycle) return;
+    _pausedByLifecycle = false;
+    combatPaused.value = _pausedByUser;
+    if (!_pausedByUser && !_pausedForChoice && !_finished) resumeEngine();
+  }
+
   void triggerUltimate() {
     if (!_signatureWeaponActive ||
         _ultimateCharge < 1 ||
@@ -142,7 +176,7 @@ class SurvivorGame extends FlameGame {
     if (index == 1) _speed += 18;
     choice.value = null;
     _pausedForChoice = false;
-    resumeEngine();
+    if (!_pausedByUser && !_pausedByLifecycle) resumeEngine();
     _publishStats();
   }
 
@@ -171,6 +205,7 @@ class SurvivorGame extends FlameGame {
       ..setMoving(isMoving);
     _rebuildGrid();
     _updateUnits(worldDt);
+    _updateCombatPools(worldDt);
     final attackInterval =
         mercenary.attackInterval *
         (100 / (100 + weapon.speed)) *
@@ -179,10 +214,6 @@ class SurvivorGame extends FlameGame {
       _attackClock = 0;
       _attackNearest();
     }
-    for (final fx in _slashes) {
-      fx.life -= worldDt;
-    }
-    _slashes.removeWhere((fx) => fx.life <= 0);
     if (_eventClock > 14 && event.value == null) {
       event.value = const BattleEvent(
         '희귀 전장 사건',
@@ -219,6 +250,8 @@ class SurvivorGame extends FlameGame {
     for (final unit in _units) {
       if (_finished) break;
       if (unit.dead) continue;
+      _updateUnitStatus(unit, dt);
+      if (unit.dead) continue;
       unit.attackClock -= dt;
       final playerDistance = _player.distanceTo(unit.position);
       if (playerDistance > size.x * .8) continue; // Off-screen AI throttling.
@@ -246,71 +279,6 @@ class SurvivorGame extends FlameGame {
       }
     }
     return nearest;
-  }
-
-  void _attackNearest() {
-    BattleUnit? nearest;
-    var best = mercenary.style == CombatStyle.magic ? 330.0 : 230.0;
-    final cx = _player.x ~/ 96;
-    final cy = _player.y ~/ 96;
-    for (var gx = cx - 3; gx <= cx + 3; gx++) {
-      for (var gy = cy - 3; gy <= cy + 3; gy++) {
-        for (final index in _spatialGrid[gx * 10000 + gy] ?? const <int>[]) {
-          final unit = _units[index];
-          if (unit.ally || unit.dead) continue;
-          final d = unit.position.distanceTo(_player);
-          if (d < best) {
-            best = d;
-            nearest = unit;
-          }
-        }
-      }
-    }
-    if (nearest == null) return;
-    _playerSprite.playAttack();
-    final impact = nearest.position.clone();
-    final damage =
-        mercenary.baseDamage + weapon.attack ~/ 650 + (_weaponLevel ~/ 2);
-    final Iterable<BattleUnit> targets =
-        mercenary.style == CombatStyle.greatsword
-        ? _units
-              .where(
-                (unit) =>
-                    !unit.dead &&
-                    !unit.ally &&
-                    unit.position.distanceTo(impact) < 55,
-              )
-              .take(5)
-        : <BattleUnit>[nearest];
-    for (final target in targets) {
-      _damageEnemy(target, damage);
-    }
-    if (_xp >= _nextXp) {
-      _levelUp();
-    }
-  }
-
-  void _damageEnemy(
-    BattleUnit target,
-    int damage, {
-    bool grantUltimateCharge = true,
-    double fxLife = .24,
-    bool showFx = true,
-  }) {
-    target.hp -= damage;
-    if (showFx) {
-      _slashes.add(SlashFx(target.position.clone(), fxLife, mercenary.style));
-    }
-    if (target.hp > 0 || target.dead) return;
-    target.dead = true;
-    _kills++;
-    _xp += target.elite ? 16 : 5;
-    if (grantUltimateCharge && _signatureWeaponActive) {
-      _ultimateCharge = math.min(
-        1,
-        _ultimateCharge + (target.elite ? .22 : .07),
-      );
-    }
   }
 
   void _levelUp() {
@@ -362,6 +330,7 @@ class SurvivorGame extends FlameGame {
     _drawTerrain(canvas);
     _drawBattlefieldObjective(canvas);
     _drawUnits(canvas);
+    _drawCombatPools(canvas);
     _drawUltimateEffect(canvas);
     _drawPlayerMarker(canvas);
     super.render(canvas);
@@ -417,6 +386,13 @@ class SurvivorGame extends FlameGame {
       );
       final cellWidth = _unitAtlas.width / UnitRole.values.length;
       final cellHeight = _unitAtlas.height / 2;
+      final unitPaint = Paint()..filterQuality = FilterQuality.none;
+      if (unit.hitFlash > 0) {
+        unitPaint.colorFilter = const ColorFilter.mode(
+          Color(0xccffffff),
+          BlendMode.modulate,
+        );
+      }
       canvas.drawImageRect(
         _unitAtlas,
         Rect.fromLTWH(
@@ -430,8 +406,24 @@ class SurvivorGame extends FlameGame {
           width: displaySize.width,
           height: displaySize.height,
         ),
-        Paint()..filterQuality = FilterQuality.none,
+        unitPaint,
       );
+      if (unit.status != StatusEffectType.none) {
+        final statusColor = switch (unit.status) {
+          StatusEffectType.bleed => const Color(0xffd94f58),
+          StatusEffectType.burn => const Color(0xffff8a43),
+          StatusEffectType.slow => const Color(0xff62c9e8),
+          StatusEffectType.none => const Color(0x00000000),
+        };
+        canvas.drawCircle(
+          Offset(unit.position.x, unit.position.y + 2),
+          11,
+          Paint()
+            ..color = statusColor.withValues(alpha: .7)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2,
+        );
+      }
       if (unit.elite || unit.role == UnitRole.commander) {
         canvas.drawCircle(
           Offset(unit.position.x, unit.position.y),
@@ -457,38 +449,6 @@ class SurvivorGame extends FlameGame {
             ..color = const Color(0xffe1b75e)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2,
-        );
-      }
-    }
-    for (final fx in _slashes) {
-      final progress = 1 - fx.life / fx.maxLife;
-      final alpha = (255 * (fx.life / fx.maxLife)).clamp(0, 255).toInt();
-      final fxColor = switch (fx.style) {
-        CombatStyle.blades => mercenary.visual.accent,
-        CombatStyle.greatsword => const Color(0xffd2675b),
-        CombatStyle.magic => const Color(0xff71d4e7),
-      };
-      final paint = Paint()
-        ..color = fxColor.withAlpha(alpha)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = fx.style == CombatStyle.greatsword ? 7 : 4;
-      if (fx.style == CombatStyle.magic) {
-        canvas.drawCircle(
-          Offset(fx.position.x, fx.position.y),
-          18 + progress * 18,
-          paint,
-        );
-      } else {
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: Offset(fx.position.x, fx.position.y),
-            width: fx.style == CombatStyle.greatsword ? 72 : 50,
-            height: fx.style == CombatStyle.greatsword ? 48 : 32,
-          ),
-          -.8,
-          2.2,
-          false,
-          paint,
         );
       }
     }
@@ -536,13 +496,41 @@ class BattleUnit {
   int maxHp;
   double phase = 0;
   double attackClock = 0;
+  double hitFlash = 0;
+  StatusEffectType status = StatusEffectType.none;
+  double statusClock = 0;
+  double statusTickClock = 0;
   bool dead = false;
 }
 
 class SlashFx {
-  SlashFx(this.position, this.life, this.style) : maxLife = life;
-  final Vector2 position;
-  final CombatStyle style;
-  final double maxLife;
-  double life;
+  SlashFx.pooled();
+  Vector2 position = Vector2.zero();
+  CombatStyle style = CombatStyle.blades;
+  double maxLife = 0;
+  double life = 0;
+  bool active = false;
+}
+
+class PooledProjectile {
+  bool active = false;
+  Vector2 position = Vector2.zero();
+  BattleUnit? target;
+  WeaponPattern pattern = WeaponPattern.longBow;
+  int damage = 0;
+  double speed = 0;
+  double criticalChance = 0;
+  int chainRemaining = 0;
+  bool appliesDamage = true;
+  double life = 0;
+}
+
+class DamageNumberFx {
+  bool active = false;
+  Vector2 position = Vector2.zero();
+  int amount = 0;
+  bool critical = false;
+  double life = 0;
+  double maxLife = 0;
+  Paragraph? paragraph;
 }

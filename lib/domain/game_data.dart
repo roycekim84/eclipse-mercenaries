@@ -1,5 +1,16 @@
 enum CombatStyle { blades, greatsword, magic }
 
+enum WeaponPattern {
+  twinSlash,
+  bloodCleave,
+  chainFlame,
+  swordStrike,
+  longBow,
+  emberBurst,
+  spearLine,
+  shadowPierce,
+}
+
 class MercenarySpec {
   const MercenarySpec({
     required this.id,
@@ -47,6 +58,7 @@ class WeaponSpec {
     required this.crit,
     required this.speed,
     required this.description,
+    required this.pattern,
     this.ownerId,
   });
 
@@ -57,6 +69,7 @@ class WeaponSpec {
   final int crit;
   final int speed;
   final String description;
+  final WeaponPattern pattern;
   final String? ownerId;
 }
 
@@ -126,6 +139,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 18,
     speed: 14,
     description: '치명타 발생 시 40% 확률로 추가 참격',
+    pattern: WeaponPattern.twinSlash,
     ownerId: 'luna',
   ),
   WeaponSpec(
@@ -136,6 +150,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 9,
     speed: -5,
     description: '연속 처치 시 공격 범위와 흡혈량 증가',
+    pattern: WeaponPattern.bloodCleave,
     ownerId: 'kael',
   ),
   WeaponSpec(
@@ -146,6 +161,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 13,
     speed: 8,
     description: '투사체가 적 사이를 두 번 도약',
+    pattern: WeaponPattern.chainFlame,
     ownerId: 'sera',
   ),
   WeaponSpec(
@@ -156,6 +172,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 5,
     speed: 3,
     description: '정직하고 안정적인 전장용 장검',
+    pattern: WeaponPattern.swordStrike,
   ),
   WeaponSpec(
     id: 'war_bow',
@@ -165,6 +182,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 12,
     speed: 6,
     description: '먼 거리 적을 우선 공격',
+    pattern: WeaponPattern.longBow,
   ),
   WeaponSpec(
     id: 'ember_orb',
@@ -174,6 +192,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 8,
     speed: 10,
     description: '일정 확률로 작은 폭발 발생',
+    pattern: WeaponPattern.emberBurst,
   ),
   WeaponSpec(
     id: 'guard_spear',
@@ -183,6 +202,7 @@ const alphaWeapons = <WeaponSpec>[
     crit: 4,
     speed: 0,
     description: '공격 범위가 크게 증가',
+    pattern: WeaponPattern.spearLine,
   ),
   WeaponSpec(
     id: 'shadow_knife',
@@ -192,5 +212,6 @@ const alphaWeapons = <WeaponSpec>[
     crit: 16,
     speed: 12,
     description: '낮은 확률로 관통 투척검 발사',
+    pattern: WeaponPattern.shadowPierce,
   ),
 ];

@@ -62,7 +62,7 @@ extension UnitAiSystem on SurvivorGame {
         UnitRoleRules.damage(attacker.role) +
         (attacker.elite ? 1 : 0) +
         (commandBuff && attacker.role != UnitRole.commander ? 1 : 0);
-    _dealUnitDamage(attacker, target, damage);
+    _damageBattleUnit(attacker, target, damage);
     if (attacker.role == UnitRole.mage) {
       var splashes = 0;
       for (final candidate in _units) {
@@ -72,35 +72,10 @@ extension UnitAiSystem on SurvivorGame {
             candidate.position.distanceTo(target.position) > 34) {
           continue;
         }
-        _dealUnitDamage(attacker, candidate, 1, showFx: false);
+        _damageBattleUnit(attacker, candidate, 1, showFx: false);
         if (++splashes >= 2) break;
       }
     }
-  }
-
-  void _dealUnitDamage(
-    BattleUnit attacker,
-    BattleUnit target,
-    int amount, {
-    bool showFx = true,
-  }) {
-    final applied = target.role == UnitRole.shield
-        ? math.max(1, amount - 1)
-        : amount;
-    target.hp -= applied;
-    if (showFx) {
-      final style = switch (attacker.role) {
-        UnitRole.mage => CombatStyle.magic,
-        UnitRole.cavalry ||
-        UnitRole.siege ||
-        UnitRole.commander => CombatStyle.greatsword,
-        _ => CombatStyle.blades,
-      };
-      _slashes.add(SlashFx(target.position.clone(), .18, style));
-    }
-    if (target.hp > 0 || target.dead) return;
-    target.dead = true;
-    if (attacker.ally) _alliedKills++;
   }
 
   void _moveRetreatingUnit(BattleUnit unit, double dt) {
@@ -169,11 +144,13 @@ extension UnitAiSystem on SurvivorGame {
             commander.position.distanceTo(unit.position) <= 180
         ? 1.12
         : 1.0;
+    final statusSpeed = unit.status == StatusEffectType.slow ? .62 : 1.0;
     unit.position +=
         delta.normalized() *
         UnitRoleRules.speed(unit.role) *
         speedMultiplier *
         commandSpeed *
+        statusSpeed *
         dt;
   }
 }
