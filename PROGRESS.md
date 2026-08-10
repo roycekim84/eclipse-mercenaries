@@ -111,11 +111,24 @@
 - 정예·지휘관·상태 표식을 보존하는 거리 기반 전장 상세 LOD
 - 원거리 장식·일반 그림자·비핵심 VFX를 줄이는 영구 저사양 전투 모드
 - save schema v6와 기존 저장의 저사양 설정 migration
+- `월식 용병단: Eclipse Mercenaries` 정식 프로젝트 제목과 공개 GitHub 저장소
+- main push마다 검증·release 빌드·배포하는 GitHub Pages workflow
+- 공개 Web 알파 테스트 주소와 버그/플레이테스트 Issue Form
 
 ## 다음 작업
 
 - 실제 Web/모바일 DevTools GPU·GC trace와 기기 발열 검증
-- Web 외부 테스트 배포와 피드백 수집 절차
+- iOS/Android 네이티브 회귀 체크리스트와 기기 빌드 검증
+
+## 최근 검증 — 2026-08-10 M5.6
+
+- 공개 저장소: `https://github.com/roycekim84/eclipse-mercenaries`
+- Web 알파: `https://roycekim84.github.io/eclipse-mercenaries/`
+- GitHub Actions 실행 `31354867125`: analyze·휴대용 테스트·release Web·Pages 배포 성공
+- 로컬 `flutter analyze` 이슈 0건, 전체 테스트 63개와 Pages base-href release 빌드 통과
+- 공개 Pages에서 캠프→계약→용병 선택→실전 전투 진입 확인
+- 1280×720·844×390 공개 Web 전투에서 자산 누락·overflow·브라우저 warning/error 0건
+- 플레이테스트/버그 Issue Form과 `playtest`, `feedback` 라벨 활성화
 
 ## 최근 검증 — 2026-08-10 M5.5
 

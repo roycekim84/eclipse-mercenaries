@@ -55,7 +55,7 @@ class EclipseMercenariesApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: '월식 용병단',
+      title: '월식 용병단: Eclipse Mercenaries',
       theme: buildGameTheme(),
       home: GameShell(
         saveRepository: saveRepository,

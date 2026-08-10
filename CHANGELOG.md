@@ -1,5 +1,16 @@
 # 변경 기록
 
+## Public Web alpha and GitHub Pages — 2026-08-10
+
+- 프로젝트 정식 제목을 `월식 용병단: Eclipse Mercenaries`로 통일
+- `roycekim84/eclipse-mercenaries` 공개 GitHub 저장소 생성과 전체 개발 이력 게시
+- Flutter 3.44.0 분석·테스트·release 빌드 후 GitHub Pages에 자동 배포하는 workflow 추가
+- 저장소 하위 경로용 base href, 다크 테마 PWA 메타데이터와 모바일 가로 방향 설정
+- 공개 Web 알파 주소, 우선 테스트 흐름과 local storage 제한 안내 추가
+- 플레이테스트 피드백과 버그 리포트 Issue Form 및 전용 라벨 구성
+- 공개 Pages 데스크톱·모바일 가로 실전 전투 검증 완료
+- M5.6 외부 Web 테스트 배포와 피드백 수집 절차 완료
+
 ## Batched battlefield rendering and performance mode — 2026-08-10
 
 - 7병과×2진영 원본에서 역할별 표시 비율을 유지하는 744×296 런타임 아틀라스 생성 도구 추가

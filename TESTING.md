@@ -102,6 +102,9 @@ flutter test test/golden/core_screens_golden_test.dart
 72. 500개 가시 병사가 단일 아틀라스 제출 경로를 사용하고 병과별 표시 비율과 진영색을 유지하는지 확인한다.
 73. 저사양 모드가 원거리 일반 유닛의 장식·그림자를 줄이되 정예·지휘관·상태 표식은 유지하는지 확인한다.
 74. 저사양 설정이 schema v6에 저장되고 이전 저장에서는 안전하게 꺼진 상태로 migration되는지 확인한다.
+75. GitHub Pages 주소가 200 응답하고 캠프 배경·폰트·전투 아틀라스를 저장소 하위 경로에서 정상 로드하는지 확인한다.
+76. 공개 Web에서 캠프→계약→용병 선택→전투 진입이 데스크톱과 모바일 가로 화면 모두 동작하는지 확인한다.
+77. 플레이테스트와 버그 Issue Form이 기기·브라우저·재현 정보 입력을 요구하는지 확인한다.
 
 ## 성능 기준
 
@@ -308,3 +311,16 @@ Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임
 - `flutter build web --release`: 통과, Wasm dry run 통과
 - release Web 1280×720·844×390 실제 저사양 전투 렌더와 설정 화면 확인
 - 진영색·병과 비율·정예/지휘관/상태 표식 유지, 브라우저 warning/error 0건
+
+## 최근 검증 — 2026-08-10 M5.6
+
+- GitHub 공개 저장소 `roycekim84/eclipse-mercenaries` 생성과 전체 main 이력 push
+- `flutter analyze`: 통과, 이슈 0건
+- `flutter test`: 전체 63개 통과, Golden 3개 포함
+- `flutter build web --release --base-href "/eclipse-mercenaries/"`: 통과
+- GitHub Actions run `31354867125`: build 1분 38초, deploy 10초, 최종 성공
+- 공개 URL `https://roycekim84.github.io/eclipse-mercenaries/` HTTPS Pages 활성화
+- 공개 Pages 1280×720 캠프→계약→용병 선택→전투 진입 통과
+- 공개 Pages 844×390 전투 레이아웃과 조작 UI 확인
+- 공개 Web 브라우저 warning/error 0건
+- 공식 Pages 액션의 Node 20 호환 경고는 GitHub가 Node 24 강제 실행으로 처리하며 배포 결과에는 영향 없음
