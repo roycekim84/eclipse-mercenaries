@@ -68,6 +68,14 @@ class SettingsScreen extends StatelessWidget {
                         onChanged(settings.copyWith(reducedFlash: value)),
                   ),
                   _SettingTile(
+                    icon: Icons.speed_outlined,
+                    title: '저사양 전투 모드',
+                    description: '원거리 장식, 일반 그림자와 비핵심 VFX를 줄입니다.',
+                    value: settings.performanceMode,
+                    onChanged: (value) =>
+                        onChanged(settings.copyWith(performanceMode: value)),
+                  ),
+                  _SettingTile(
                     icon: Icons.text_increase,
                     title: '큰 글자',
                     description: '게임 UI 글자를 약 15% 확대합니다.',

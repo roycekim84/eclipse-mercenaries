@@ -63,7 +63,7 @@ class AccountSave {
     settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 5;
+  static const currentSchemaVersion = 6;
 
   final int schemaVersion;
   final int gold;
@@ -279,6 +279,18 @@ abstract final class SaveMigration {
         'settings': const GameSettings.defaults().toJson(),
       };
       version = 5;
+    }
+    if (version < 6) {
+      final rawSettings = current['settings'];
+      final settings = rawSettings is Map
+          ? Map<String, Object?>.from(rawSettings)
+          : const GameSettings.defaults().toJson();
+      current = {
+        ...current,
+        'schemaVersion': 6,
+        'settings': {...settings, 'performanceMode': false},
+      };
+      version = 6;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

@@ -252,7 +252,7 @@ SaveGame
 └── settings
 ```
 
-현재 schema v5의 실제 저장 필드는 `gold`, `crystals`, `warSeals`, `honor`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`, `recruitmentCount`, `mercenaryCopies`, `shopPurchaseCounts`, `shopRefreshCount`, `settings`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2→v3→v4→v5 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
+현재 schema v6의 실제 저장 필드는 `gold`, `crystals`, `warSeals`, `honor`, `selectedMercenaryId`, 용병별 장착 무기, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`, `recruitmentCount`, `mercenaryCopies`, `shopPurchaseCounts`, `shopRefreshCount`, `settings`다. `JsonSaveRepository`는 JSON encode/decode와 v1→v2→v3→v4→v5→v6 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
 
 원칙:
 
@@ -269,7 +269,7 @@ SaveGame
 
 모집 순서와 상점 가격/한도는 `RecruitmentRules`, `ShopRules`에서 결정한다. 모집 결과 적용은 크리스탈/계약서 차감, 보유 사본 증가, 중복 증표 지급을 하나의 계정 스냅샷으로 저장한다. 상점 구매도 재화 차감, inventory 지급, 갱신별 구매 횟수 증가를 동시에 반영한다. 알파 로컬 빌드에는 결제 SDK와 실제 화폐 상품을 포함하지 않는다.
 
-`GameSettings`는 첫 계약 안내 완료, 효과음, 진동, 화면 흔들림, 섬광 감소, 큰 글자 상태를 타입으로 보관한다. 앱 셸은 시스템 글자 배율과 앱 큰 글자 배율을 조합해 1.0~1.3 범위에서 렌더하고, 섬광 감소는 전투 시작 시 Flame `reducedEffects` 초기값에 반영한다. 튜토리얼은 앱 셸 오버레이로 표시하며 완료 즉시 저장한다.
+`GameSettings`는 첫 계약 안내 완료, 효과음, 진동, 화면 흔들림, 섬광 감소, 저사양 전투 모드, 큰 글자 상태를 타입으로 보관한다. 앱 셸은 시스템 글자 배율과 앱 큰 글자 배율을 조합해 1.0~1.3 범위에서 렌더하고, 섬광 감소와 저사양 모드는 전투 시작 시 Flame 설정에 반영한다. 튜토리얼은 앱 셸 오버레이로 표시하며 완료 즉시 저장한다.
 
 공통 `GameStatePanel`은 로딩·빈 목록·복구 가능한 오류의 제목, 설명, 행동 구조를 통일한다. 저장 실패는 메모리의 최신 계정 스냅샷을 유지하고 캠프/결과의 `StatusBanner`에서 같은 repository 저장을 다시 시도한다. 재시도 성공 시 오류를 제거하며 실패 시 사용자 행동이 가능한 안내를 유지한다.
 
@@ -318,6 +318,10 @@ AudioService가 BGM, SFX, UI, voice 채널을 관리한다. 동시 재생 상한
 `BattlePerformanceProfiler`는 update 전체, AI/공간 탐색, 전투 풀, 무기, render CPU 구간을 각각 최신 512샘플 고정 배열에 기록한다. 결과 화면에서 P95와 공간 버킷, 투사체/VFX/대미지 숫자 풀 최대 사용량을 확인할 수 있다. render 값은 Flame의 Canvas 제출 코드에 걸린 CPU 시간이며 GPU 시간이나 화면 주사율이 아니다.
 
 `tool/long_run_memory_benchmark.dart`는 1,000유닛을 18,000프레임, 즉 60Hz 5분 상당으로 반복해 워밍업 이후 RSS와 공간 버킷 수를 비교한다. 이는 버킷/샘플의 무제한 증가를 막는 결정론적 VM 회귀 검사다. 실제 Web 브라우저와 모바일의 GPU, GC pause, 발열은 release 빌드의 DevTools trace로 별도 승인한다.
+
+전장 병사는 7병과×2진영 제작 원본을 `tool/update_unit_role_batch.py`로 역할별 표시 비율에 맞춘 런타임 아틀라스로 변환한다. 가시 유닛의 source rect, transform, tint를 재사용 리스트에 모은 뒤 `Canvas.drawAtlas` 한 번으로 제출한다. 그림자와 상태/등급 표식은 전후 레이어로 분리한다.
+
+`BattleRenderPolicy`는 표준/저사양 모드의 지형 밀도, 상세 LOD 반경, 그림자, 참격과 피해 숫자 방출 비율을 순수 규칙으로 관리한다. 저사양 모드에서도 정예·지휘관·보스·상태이상·후퇴 유닛은 중요 대상으로 분류해 전술 표식을 유지한다. `tool/render_budget_benchmark.dart`는 500개 가시 유닛의 스프라이트 제출과 장식/VFX 예산을 비교한다.
 
 ## 17. 오류 처리
 

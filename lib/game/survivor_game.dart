@@ -6,6 +6,7 @@ import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
 import '../domain/battle_performance.dart';
+import '../domain/battle_render_policy.dart';
 import '../domain/battlefield_events.dart';
 import '../domain/battle_rewards.dart';
 import '../domain/combat_rules.dart';
@@ -84,6 +85,7 @@ class SurvivorGame extends FlameGame {
   final eventPrompt = ValueNotifier<BattlefieldEventSpec?>(null);
   final ultimate = ValueNotifier<UltimateSequence?>(null);
   final reducedEffects = ValueNotifier(false);
+  final performanceMode = ValueNotifier(false);
   final combatPaused = ValueNotifier(false);
   final math.Random _random;
   final math.Random _upgradeRandom;
@@ -103,6 +105,13 @@ class SurvivorGame extends FlameGame {
   final _performanceProfiler = BattlePerformanceProfiler();
   final _updateClock = Stopwatch();
   final _renderClock = Stopwatch();
+  final _visibleUnits = <BattleUnit>[];
+  final _visibleUnitDetails = <bool>[];
+  final _unitTransforms = <RSTransform>[];
+  final _unitSources = <Rect>[];
+  final _unitColors = <Color>[];
+  final _unitBatchPaint = Paint()..filterQuality = FilterQuality.none;
+  final _unitShadowPaint = Paint()..color = const Color(0x66000000);
   Vector2? _moveTarget;
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
@@ -140,6 +149,37 @@ class SurvivorGame extends FlameGame {
   bool _pausedForEvent = false;
   bool _pausedByUser = false;
   bool _pausedByLifecycle = false;
+  int _slashEmissionSequence = 0;
+  int _damageNumberEmissionSequence = 0;
+
+  static const _standardRenderPolicy = BattleRenderPolicy(
+    performanceMode: false,
+  );
+  static const _performanceRenderPolicy = BattleRenderPolicy(
+    performanceMode: true,
+  );
+  static const _alliedUnitSources = <Rect>[
+    Rect.fromLTWH(0, 0, 88, 124),
+    Rect.fromLTWH(88, 0, 88, 124),
+    Rect.fromLTWH(176, 0, 88, 124),
+    Rect.fromLTWH(264, 0, 136, 148),
+    Rect.fromLTWH(400, 0, 88, 124),
+    Rect.fromLTWH(488, 0, 148, 132),
+    Rect.fromLTWH(636, 0, 108, 144),
+  ];
+  static const _enemyUnitSources = <Rect>[
+    Rect.fromLTWH(0, 148, 88, 124),
+    Rect.fromLTWH(88, 148, 88, 124),
+    Rect.fromLTWH(176, 148, 88, 124),
+    Rect.fromLTWH(264, 148, 136, 148),
+    Rect.fromLTWH(400, 148, 88, 124),
+    Rect.fromLTWH(488, 148, 148, 132),
+    Rect.fromLTWH(636, 148, 108, 144),
+  ];
+
+  BattleRenderPolicy get _renderPolicy =>
+      performanceMode.value ? _performanceRenderPolicy : _standardRenderPolicy;
+  bool get _reducedVisualLoad => reducedEffects.value || performanceMode.value;
 
   @override
   Color backgroundColor() => const Color(0xff35362d);
@@ -151,7 +191,7 @@ class SurvivorGame extends FlameGame {
         : size / 2;
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
-    _unitAtlas = await images.load('battlefield/unit_role_atlas.png');
+    _unitAtlas = await images.load('battlefield/unit_role_batch.png');
     final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
     _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
       ..position = _player.clone();
@@ -450,6 +490,7 @@ class SurvivorGame extends FlameGame {
   }
 
   void _drawTerrain(Canvas canvas) {
+    final policy = _renderPolicy;
     canvas.drawRect(
       Offset.zero & Size(size.x, size.y),
       Paint()..color = const Color(0xff3b3b31),
@@ -457,14 +498,14 @@ class SurvivorGame extends FlameGame {
     final grid = Paint()
       ..color = const Color(0x1822251f)
       ..strokeWidth = 1;
-    for (double x = 0; x < size.x; x += 48) {
+    for (double x = 0; x < size.x; x += policy.terrainGridStep) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.y), grid);
     }
-    for (double y = 0; y < size.y; y += 48) {
+    for (double y = 0; y < size.y; y += policy.terrainGridStep) {
       canvas.drawLine(Offset(0, y), Offset(size.x, y), grid);
     }
     final stain = Paint()..color = const Color(0x335a3028);
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < policy.terrainStainCount; i++) {
       canvas.drawCircle(
         Offset((i * 137) % size.x, (i * 79) % size.y),
         12 + i % 4 * 5,
@@ -474,6 +515,13 @@ class SurvivorGame extends FlameGame {
   }
 
   void _drawUnits(Canvas canvas) {
+    final policy = _renderPolicy;
+    final viewportLongestSide = math.max(size.x, size.y);
+    _visibleUnits.clear();
+    _visibleUnitDetails.clear();
+    _unitTransforms.clear();
+    _unitSources.clear();
+    _unitColors.clear();
     for (final unit in _units) {
       if (unit.dead) continue;
       if (unit.position.x < -20 ||
@@ -482,7 +530,16 @@ class SurvivorGame extends FlameGame {
           unit.position.y > size.y + 20) {
         continue;
       }
-      final bob = math.sin(unit.phase) * 1.2;
+      _visibleUnits.add(unit);
+      final distance = _player.distanceTo(unit.position);
+      final important = _isImportantRenderUnit(unit);
+      final detailed = policy.showsDetail(
+        distance: distance,
+        viewportLongestSide: viewportLongestSide,
+        important: important,
+      );
+      _visibleUnitDetails.add(detailed);
+      final bob = detailed ? math.sin(unit.phase) * 1.2 : 0.0;
       final displaySize = switch (unit.role) {
         UnitRole.cavalry => const Size(68, 74),
         UnitRole.siege => const Size(74, 66),
@@ -494,43 +551,48 @@ class SurvivorGame extends FlameGame {
         EnemyRank.boss => 1.34,
         _ => 1.0,
       };
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(unit.position.x, unit.position.y + 7),
-          width: displaySize.width * .56,
-          height: 8,
-        ),
-        Paint()..color = const Color(0x66000000),
-      );
-      final cellWidth = _unitAtlas.width / UnitRole.values.length;
-      final cellHeight = _unitAtlas.height / 2;
-      final unitPaint = Paint()..filterQuality = FilterQuality.none;
-      if (unit.hitFlash > 0) {
-        unitPaint.colorFilter = const ColorFilter.mode(
-          Color(0xccffffff),
-          BlendMode.modulate,
-        );
-      } else if (unit.archetype != null) {
-        unitPaint.colorFilter = ColorFilter.mode(
-          unit.archetype!.factionColor,
-          BlendMode.modulate,
+      if (policy.showsShadow(detailed: detailed, important: important)) {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(unit.position.x, unit.position.y + 7),
+            width: displaySize.width * .56,
+            height: 8,
+          ),
+          _unitShadowPaint,
         );
       }
-      canvas.drawImageRect(
-        _unitAtlas,
-        Rect.fromLTWH(
-          unit.role.index * cellWidth,
-          unit.ally ? 0 : cellHeight,
-          cellWidth,
-          cellHeight,
+      final source = _unitBatchSource(unit);
+      _unitSources.add(source);
+      _unitTransforms.add(
+        RSTransform.fromComponents(
+          scale: .5 * rankScale,
+          anchorX: source.width / 2,
+          anchorY: source.height / 2,
+          rotation: 0,
+          translateX: unit.position.x,
+          translateY: unit.position.y - 14 + bob,
         ),
-        Rect.fromCenter(
-          center: Offset(unit.position.x, unit.position.y - 14 + bob),
-          width: displaySize.width * rankScale,
-          height: displaySize.height * rankScale,
-        ),
-        unitPaint,
       );
+      _unitColors.add(
+        unit.hitFlash > 0
+            ? const Color(0xffffe8d5)
+            : unit.archetype?.factionColor ?? const Color(0xffffffff),
+      );
+    }
+    if (_unitSources.isNotEmpty) {
+      canvas.drawAtlas(
+        _unitAtlas,
+        _unitTransforms,
+        _unitSources,
+        _unitColors,
+        BlendMode.modulate,
+        null,
+        _unitBatchPaint,
+      );
+    }
+    for (var index = 0; index < _visibleUnits.length; index++) {
+      final unit = _visibleUnits[index];
+      if (!_visibleUnitDetails[index]) continue;
       if (unit.status != StatusEffectType.none) {
         final statusColor = switch (unit.status) {
           StatusEffectType.bleed => const Color(0xffd94f58),
@@ -579,6 +641,18 @@ class SurvivorGame extends FlameGame {
         );
       }
     }
+  }
+
+  bool _isImportantRenderUnit(BattleUnit unit) =>
+      unit.elite ||
+      unit.role == UnitRole.commander ||
+      unit.archetype?.rank == EnemyRank.boss ||
+      unit.status != StatusEffectType.none ||
+      unit.stance == UnitStance.retreat;
+
+  Rect _unitBatchSource(BattleUnit unit) {
+    final sources = unit.ally ? _alliedUnitSources : _enemyUnitSources;
+    return sources[unit.role.index];
   }
 
   void _drawEnemyArchetypeMark(Canvas canvas, BattleUnit unit) {

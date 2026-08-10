@@ -38,9 +38,7 @@ void main() {
     expect(restored.settings.tutorialCompleted, isTrue);
   });
 
-  testWidgets('accessibility settings persist reduced flash and large text', (
-    tester,
-  ) async {
+  testWidgets('accessibility and performance settings persist', (tester) async {
     final repository = InMemorySaveRepository();
     await tester.pumpWidget(
       EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
@@ -52,11 +50,14 @@ void main() {
     expect(find.text('환경 설정'), findsOneWidget);
     await tester.tap(find.text('섬광 줄이기'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('저사양 전투 모드'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('큰 글자'));
     await tester.pumpAndSettle();
 
     final restored = await repository.load();
     expect(restored.settings.reducedFlash, isTrue);
+    expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);
   });
 

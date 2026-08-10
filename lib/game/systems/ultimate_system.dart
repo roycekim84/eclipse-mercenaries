@@ -30,9 +30,9 @@ extension UltimateSystem on SurvivorGame {
       CombatStyle.magic => 64,
     };
     final visualLimit = switch (mercenary.style) {
-      CombatStyle.blades => reducedEffects.value ? 18 : 48,
-      CombatStyle.greatsword => reducedEffects.value ? 14 : 36,
-      CombatStyle.magic => reducedEffects.value ? 20 : 64,
+      CombatStyle.blades => _reducedVisualLoad ? 18 : 48,
+      CombatStyle.greatsword => _reducedVisualLoad ? 14 : 36,
+      CombatStyle.magic => _reducedVisualLoad ? 20 : 64,
     };
     final range = switch (mercenary.style) {
       CombatStyle.blades => 520.0,
@@ -86,7 +86,7 @@ extension UltimateSystem on SurvivorGame {
       return;
     }
     if (mercenary.style == CombatStyle.magic) {
-      final count = reducedEffects.value ? 3 : 9;
+      final count = _reducedVisualLoad ? 3 : 9;
       for (var i = 0; i < count; i++) {
         final angle = math.pi * 2 * i / count + progress * 2;
         final center = Offset(
@@ -97,7 +97,7 @@ extension UltimateSystem on SurvivorGame {
       }
       return;
     }
-    final count = reducedEffects.value ? 6 : 16;
+    final count = _reducedVisualLoad ? 6 : 16;
     for (var i = 0; i < count; i++) {
       final phase = i / count;
       final x = size.x * phase + math.sin(progress * 14 + i) * 80;

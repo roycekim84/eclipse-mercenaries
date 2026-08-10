@@ -36,12 +36,15 @@
 - `assets/images/characters/kael_battle_sheet.png`: 카일 8×5 전투 애니메이션 시트
 - `assets/images/characters/sera_battle_sheet.png`: 세라 8×5 전투 애니메이션 시트
 - `assets/images/battlefield/unit_role_atlas.png`: 아군/적군 7병과 전투 아틀라스
+- `assets/images/battlefield/unit_role_batch.png`: 원본 비율을 보존한 런타임 배칭 전용 아틀라스
 
 생성 이미지에 글자를 굽지 않고 Flutter 레이어에서 접근성과 현지화를 처리한다.
 
 전투 시트 행 순서는 `Idle → Walk → Attack → Hit → Dead`, 각 행은 8프레임이다. 런타임은 nearest-neighbor 필터를 사용하며, 현재 방향은 첨부 레퍼런스의 전투 시점에 맞춘 down-right 3/4 방향이다.
 
 진영 병과 아틀라스는 7열×2행이며 열은 `보병 → 방패병 → 궁병 → 기병 → 마법병 → 공성병기 → 지휘관`, 행은 `아군 회청색 → 적군 적갈색` 순서다. 각 병과는 무기와 체형만으로 식별하고 지휘관은 망토/깃발, 공성병기는 가로로 긴 파성추 실루엣을 사용한다.
+
+`unit_role_atlas.png`가 제작 원본이며 `tool/update_unit_role_batch.py`가 병과별 실제 표시 비율로 리샘플링한 `unit_role_batch.png`를 생성한다. 런타임 파일을 직접 수정하지 않는다. 원본을 교체한 뒤 도구를 다시 실행하고 1280×720과 844×390 전투에서 진영색, 무기 실루엣, 투명 경계와 픽셀 선명도를 확인한다.
 ## M3.1 전장 시각 기준
 
 - 성문 방어전은 냉청색 아군 방어 구역, 적갈색 공격 구역, 금색 방어선을 사용한다.

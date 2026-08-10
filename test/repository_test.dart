@@ -267,7 +267,7 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 5);
+      expect(migrated.schemaVersion, 6);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
@@ -276,6 +276,7 @@ void main() {
       expect(migrated.mercenaryCopies['luna'], 1);
       expect(migrated.warSeals, 120);
       expect(migrated.settings.tutorialCompleted, isFalse);
+      expect(migrated.settings.performanceMode, isFalse);
     },
   );
 
@@ -296,6 +297,24 @@ void main() {
     expect(recovered.gold, 77777);
     expect(recovered.inventory['officer_map'], 2);
     expect(store.values[JsonSaveRepository.primaryKey], isNot('{broken json'));
+  });
+
+  test('version five settings migrate performance mode safely', () async {
+    final settings =
+        const GameSettings.defaults().copyWith(reducedFlash: true).toJson()
+          ..remove('performanceMode');
+    final raw = AccountSave.initial().toJson()
+      ..['schemaVersion'] = 5
+      ..['settings'] = settings;
+    final repository = JsonSaveRepository(
+      MemoryKeyValueStore({JsonSaveRepository.primaryKey: jsonEncode(raw)}),
+    );
+
+    final migrated = await repository.load();
+
+    expect(migrated.schemaVersion, 6);
+    expect(migrated.settings.reducedFlash, isTrue);
+    expect(migrated.settings.performanceMode, isFalse);
   });
 
   test('mercenary and weapon permanent growth crosses level thresholds', () {
@@ -368,6 +387,7 @@ void main() {
       settings: const GameSettings.defaults().copyWith(
         tutorialCompleted: true,
         reducedFlash: true,
+        performanceMode: true,
         largeText: true,
       ),
     );
@@ -385,6 +405,7 @@ void main() {
     expect(restored.shopPurchaseCounts['ration_pack'], 2);
     expect(restored.settings.tutorialCompleted, isTrue);
     expect(restored.settings.reducedFlash, isTrue);
+    expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);
   });
 
@@ -399,6 +420,7 @@ void main() {
     expect(settings.hapticsEnabled, isTrue);
     expect(settings.screenShakeEnabled, isTrue);
     expect(settings.reducedFlash, isFalse);
+    expect(settings.performanceMode, isFalse);
   });
 
   test('recruitment rolls are deterministic and respect currency gates', () {

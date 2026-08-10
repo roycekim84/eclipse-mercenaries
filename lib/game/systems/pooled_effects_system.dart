@@ -2,6 +2,7 @@ part of '../survivor_game.dart';
 
 extension PooledEffectsSystem on SurvivorGame {
   void _emitSlash(Vector2 position, double life, CombatStyle style) {
+    if (!_renderPolicy.emitsSlash(_slashEmissionSequence++)) return;
     final fx = _slashes.firstWhere(
       (candidate) => !candidate.active,
       orElse: () => _slashes.reduce((a, b) => a.life < b.life ? a : b),
@@ -15,6 +16,12 @@ extension PooledEffectsSystem on SurvivorGame {
   }
 
   void _emitDamageNumber(Vector2 position, int amount, bool critical) {
+    if (!_renderPolicy.emitsDamageNumber(
+      sequence: _damageNumberEmissionSequence++,
+      critical: critical,
+    )) {
+      return;
+    }
     final fx = _damageNumbers.firstWhere(
       (candidate) => !candidate.active,
       orElse: () => _damageNumbers.reduce((a, b) => a.life < b.life ? a : b),

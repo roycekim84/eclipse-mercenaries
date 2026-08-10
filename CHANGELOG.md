@@ -1,5 +1,15 @@
 # 변경 기록
 
+## Batched battlefield rendering and performance mode — 2026-08-10
+
+- 7병과×2진영 원본에서 역할별 표시 비율을 유지하는 744×296 런타임 아틀라스 생성 도구 추가
+- 화면 내 병사 스프라이트를 개별 drawImageRect 대신 단일 Canvas.drawAtlas 호출로 배칭
+- 거리 기반 상세 LOD와 정예·지휘관·보스·상태이상·후퇴 중요도 예외 구현
+- 저사양 모드에서 지형 장식, 일반 그림자, 참격, 피해 숫자와 궁극기 VFX 감소
+- 환경 설정에 저사양 전투 모드를 추가하고 save schema v6 migration 및 저장 연결
+- 500유닛 표준/저사양 렌더 예산 하네스와 순수 정책 회귀 테스트 추가
+- M5 atlas/batching/LOD 및 저사양 파티클/그림자 항목 완료
+
 ## Fixed-capacity battle profiling and memory stability — 2026-08-10
 
 - 전투 update를 AI/공간 탐색, 전투 풀, 무기 단계로 나눈 512샘플 고정 용량 P95 프로파일러 추가

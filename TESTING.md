@@ -99,12 +99,17 @@ flutter test test/golden/core_screens_golden_test.dart
 69. 전투 프로파일러가 512개를 넘는 샘플을 보관하지 않고 단계별 P95를 결과에 전달하는지 확인한다.
 70. 재사용 공간 그리드가 1,000유닛 장시간 반복에서 264개보다 많은 버킷을 할당하지 않는지 확인한다.
 71. 결과 화면의 성능 패널이 update/AI/전투/무기/렌더 CPU와 풀 최대치를 구분해 표시하는지 확인한다.
+72. 500개 가시 병사가 단일 아틀라스 제출 경로를 사용하고 병과별 표시 비율과 진영색을 유지하는지 확인한다.
+73. 저사양 모드가 원거리 일반 유닛의 장식·그림자를 줄이되 정예·지휘관·상태 표식은 유지하는지 확인한다.
+74. 저사양 설정이 schema v6에 저장되고 이전 저장에서는 안전하게 꺼진 상태로 migration되는지 확인한다.
 
 ## 성능 기준
 
 Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임을 기록한다. AI, 렌더, 이펙트 비용을 별도로 측정한다.
 
 빠른 CPU 회귀 검사는 `dart run tool/performance_benchmark.dart`로 실행한다. 장시간 할당 회귀는 `dart run tool/long_run_memory_benchmark.dart`로 실행한다. 이 값들은 동일 머신의 커밋 간 비교용이며 브라우저 FPS나 GPU/모바일 메모리로 해석하지 않는다. 2026-08-10 M5.4 warm-up 후 120프레임 기준 330/500/750/1,000 유닛 P95는 0.177/0.230/0.340/0.512ms, 후보 검사율은 8.62/6.34/4.54/4.87%였다.
+
+렌더 제출/장식 예산은 `dart run tool/render_budget_benchmark.dart`로 비교한다. 500개 가시 유닛의 스프라이트는 표준·저사양 모두 한 번의 아틀라스 호출로 제출한다. 저사양 모드는 중요 유닛 우선 LOD를 적용하며 이 하네스는 GPU 시간 대신 결정론적 제출 개수만 검증한다.
 
 ## 최근 검증 — 2026-08-09 M1.3
 
@@ -292,3 +297,14 @@ Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임
 - 결과 화면 성능 프로파일을 포함한 1280×720 Golden 갱신 및 재실행 일치
 - release Web 1280×720·844×390 캠프 레이아웃 확인, 브라우저 warning/error 0건
 - RSS 수치는 Dart VM 구조 회귀값이며 실제 Web/모바일 DevTools 승인과 분리
+
+## 최근 검증 — 2026-08-10 M5.5
+
+- `flutter analyze`: 통과, 이슈 0건
+- `flutter test`: 전체 63개 통과, Golden 3개 포함
+- `dart run tool/render_budget_benchmark.dart`: 500개 스프라이트 제출 500→1
+- 표준 상세/그림자/참격/피해 숫자 415/500/500/500
+- 저사양 상세/그림자/참격/피해 숫자 255/255/250/180
+- `flutter build web --release`: 통과, Wasm dry run 통과
+- release Web 1280×720·844×390 실제 저사양 전투 렌더와 설정 화면 확인
+- 진영색·병과 비율·정예/지휘관/상태 표식 유지, 브라우저 warning/error 0건

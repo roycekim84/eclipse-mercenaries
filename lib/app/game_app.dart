@@ -707,6 +707,7 @@ class GameShellState extends State<GameShell> {
                       account.weaponProgress[equippedWeapon.id] ??
                       const WeaponProgress(level: 1, xp: 0, stage: 1),
                   reducedEffects: account.settings.reducedFlash,
+                  performanceMode: account.settings.performanceMode,
                   onExit: () => go(AppScene.camp),
                   onVictory: finishBattle,
                 ),

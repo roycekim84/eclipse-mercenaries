@@ -5,6 +5,7 @@ class GameSettings {
     required this.hapticsEnabled,
     required this.screenShakeEnabled,
     required this.reducedFlash,
+    required this.performanceMode,
     required this.largeText,
   });
 
@@ -14,6 +15,7 @@ class GameSettings {
       hapticsEnabled = true,
       screenShakeEnabled = true,
       reducedFlash = false,
+      performanceMode = false,
       largeText = false;
 
   final bool tutorialCompleted;
@@ -21,6 +23,7 @@ class GameSettings {
   final bool hapticsEnabled;
   final bool screenShakeEnabled;
   final bool reducedFlash;
+  final bool performanceMode;
   final bool largeText;
 
   GameSettings copyWith({
@@ -29,6 +32,7 @@ class GameSettings {
     bool? hapticsEnabled,
     bool? screenShakeEnabled,
     bool? reducedFlash,
+    bool? performanceMode,
     bool? largeText,
   }) => GameSettings(
     tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
@@ -36,6 +40,7 @@ class GameSettings {
     hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     screenShakeEnabled: screenShakeEnabled ?? this.screenShakeEnabled,
     reducedFlash: reducedFlash ?? this.reducedFlash,
+    performanceMode: performanceMode ?? this.performanceMode,
     largeText: largeText ?? this.largeText,
   );
 
@@ -45,6 +50,7 @@ class GameSettings {
     'hapticsEnabled': hapticsEnabled,
     'screenShakeEnabled': screenShakeEnabled,
     'reducedFlash': reducedFlash,
+    'performanceMode': performanceMode,
     'largeText': largeText,
   };
 
@@ -58,6 +64,8 @@ class GameSettings {
       screenShakeEnabled:
           raw['screenShakeEnabled'] as bool? ?? defaults.screenShakeEnabled,
       reducedFlash: raw['reducedFlash'] as bool? ?? defaults.reducedFlash,
+      performanceMode:
+          raw['performanceMode'] as bool? ?? defaults.performanceMode,
       largeText: raw['largeText'] as bool? ?? defaults.largeText,
     );
   }
