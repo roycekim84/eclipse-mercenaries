@@ -88,12 +88,20 @@ class _BattleScreenState extends State<BattleScreen>
         SafeArea(
           child: ValueListenableBuilder<BattleStats>(
             valueListenable: game.stats,
-            builder: (context, value, _) => BattleHud(
-              contract: widget.contract,
-              mercenary: widget.mercenary,
-              weapon: widget.weapon,
-              stats: value,
-              onUltimate: game.triggerUltimate,
+            builder: (context, value, _) => ValueListenableBuilder(
+              valueListenable: game.controls,
+              builder: (context, controls, _) => BattleHud(
+                contract: widget.contract,
+                mercenary: widget.mercenary,
+                weapon: widget.weapon,
+                stats: value,
+                controls: controls,
+                onUltimate: game.triggerUltimate,
+                onDash: game.triggerDash,
+                onTactical: game.triggerTacticalAction,
+                onMove: game.setMoveDirection,
+                onMoveEnd: game.clearMoveDirection,
+              ),
             ),
           ),
         ),
@@ -240,17 +248,28 @@ class BattleHud extends StatelessWidget {
     required this.mercenary,
     required this.weapon,
     required this.stats,
+    required this.controls,
     required this.onUltimate,
+    required this.onDash,
+    required this.onTactical,
+    required this.onMove,
+    required this.onMoveEnd,
   });
   final BattlefieldContract contract;
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
   final BattleStats stats;
+  final BattleControlState controls;
   final VoidCallback onUltimate;
+  final VoidCallback onDash;
+  final VoidCallback onTactical;
+  final ValueChanged<Offset> onMove;
+  final VoidCallback onMoveEnd;
 
   @override
   Widget build(BuildContext context) {
     final seconds = stats.secondsLeft.clamp(0, 999);
+    final compact = MediaQuery.sizeOf(context).width < 900;
     return Stack(
       children: [
         Positioned(
@@ -393,23 +412,35 @@ class BattleHud extends StatelessWidget {
         Positioned(
           left: 12,
           bottom: 12,
-          child: Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0x88c7a460)),
-              color: const Color(0x6610141b),
-            ),
-            child: const Icon(Icons.control_camera, color: Colors.white54),
-          ),
+          child: BattleJoystick(onMove: onMove, onEnd: onMoveEnd),
         ),
         Positioned(
           right: 14,
           bottom: 10,
           child: Row(
             children: [
-              for (final entry in stats.build.take(6))
+              BattleActionOrb(
+                icon: Icons.double_arrow,
+                label: '대시',
+                cooldown: controls.dashCooldown,
+                maxCooldown: BattleControlRules.dashCooldownSeconds,
+                color: const Color(0xff507aa1),
+                onTap: onDash,
+              ),
+              BattleActionOrb(
+                icon: contract.battlefield == BattlefieldType.evacuation
+                    ? Icons.directions_run
+                    : Icons.flag,
+                label: contract.battlefield == BattlefieldType.evacuation
+                    ? '강행군'
+                    : '집결',
+                cooldown: controls.tacticalCooldown,
+                maxCooldown: BattleControlRules.tacticalCooldownSeconds,
+                active: controls.tacticalActive,
+                color: const Color(0xffb58a42),
+                onTap: onTactical,
+              ),
+              for (final entry in stats.build.take(compact ? 2 : 6))
                 SkillOrb(
                   icon: entry.kind == RunUpgradeKind.weapon
                       ? gameContent.weaponById(entry.id).visual.icon
@@ -428,6 +459,168 @@ class BattleHud extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class BattleJoystick extends StatefulWidget {
+  const BattleJoystick({super.key, required this.onMove, required this.onEnd});
+
+  final ValueChanged<Offset> onMove;
+  final VoidCallback onEnd;
+
+  @override
+  State<BattleJoystick> createState() => _BattleJoystickState();
+}
+
+class _BattleJoystickState extends State<BattleJoystick> {
+  static const _size = 76.0;
+  static const _travel = 24.0;
+  Offset _knob = Offset.zero;
+
+  void _update(Offset localPosition) {
+    final delta = localPosition - const Offset(_size / 2, _size / 2);
+    final distance = delta.distance;
+    final clamped = distance > _travel ? delta / distance * _travel : delta;
+    setState(() => _knob = clamped);
+    widget.onMove(clamped / _travel);
+  }
+
+  void _end() {
+    setState(() => _knob = Offset.zero);
+    widget.onEnd();
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: '이동 조이스틱',
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onPanStart: (details) => _update(details.localPosition),
+      onPanUpdate: (details) => _update(details.localPosition),
+      onPanEnd: (_) => _end(),
+      onPanCancel: _end,
+      child: Container(
+        width: _size,
+        height: _size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0x9910141b),
+          border: Border.all(color: const Color(0xaac7a460), width: 1.5),
+          boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 8)],
+        ),
+        child: Center(
+          child: Transform.translate(
+            offset: _knob,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const RadialGradient(
+                  colors: [Color(0xff8095aa), Color(0xff263543)],
+                ),
+                border: Border.all(color: const Color(0xffd7c28e)),
+              ),
+              child: const Icon(
+                Icons.control_camera,
+                size: 17,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class BattleActionOrb extends StatelessWidget {
+  const BattleActionOrb({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.cooldown,
+    required this.maxCooldown,
+    required this.color,
+    required this.onTap,
+    this.active = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final double cooldown;
+  final double maxCooldown;
+  final Color color;
+  final VoidCallback onTap;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = cooldown <= 0;
+    final progress = 1 - (cooldown / maxCooldown).clamp(0, 1).toDouble();
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Semantics(
+        button: true,
+        enabled: ready,
+        label: ready ? '$label 사용' : '$label ${cooldown.ceil()}초 후 사용',
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: ready ? onTap : null,
+            child: Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    color.withValues(alpha: ready ? .9 : .35),
+                    const Color(0xff11131a),
+                  ],
+                ),
+                border: Border.all(
+                  color: active ? const Color(0xffffdf86) : color,
+                  width: active ? 2.5 : 1.2,
+                ),
+                boxShadow: active
+                    ? [BoxShadow(color: color, blurRadius: 14)]
+                    : null,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox.square(
+                    dimension: 48,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 2.5,
+                      color: const Color(0xffffdd80),
+                      backgroundColor: Colors.white10,
+                    ),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 18, color: Colors.white),
+                      Text(
+                        ready ? label : '${cooldown.ceil()}s',
+                        style: const TextStyle(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

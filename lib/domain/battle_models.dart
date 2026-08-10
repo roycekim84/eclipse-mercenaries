@@ -13,6 +13,32 @@ enum UnitRole { infantry, shield, archer, cavalry, mage, siege, commander }
 
 enum UnitStance { advance, support, retreat }
 
+class BattleControlState {
+  const BattleControlState({
+    required this.dashCooldown,
+    required this.tacticalCooldown,
+    required this.tacticalActive,
+  });
+
+  const BattleControlState.ready()
+    : dashCooldown = 0,
+      tacticalCooldown = 0,
+      tacticalActive = false;
+
+  final double dashCooldown;
+  final double tacticalCooldown;
+  final bool tacticalActive;
+}
+
+abstract final class BattleControlRules {
+  static const dashCooldownSeconds = 2.5;
+  static const tacticalCooldownSeconds = 14.0;
+  static const tacticalDurationSeconds = 4.0;
+
+  static double dashDistance(double movementSpeed) =>
+      (movementSpeed * .72).clamp(92, 132).toDouble();
+}
+
 abstract final class UnitRoleRules {
   static int maxHp(UnitRole role) => switch (role) {
     UnitRole.infantry => 4,

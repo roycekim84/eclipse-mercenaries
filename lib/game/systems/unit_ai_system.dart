@@ -2,6 +2,10 @@ part of '../survivor_game.dart';
 
 extension UnitAiSystem on SurvivorGame {
   void _updateRoleUnit(BattleUnit unit, double dt) {
+    if (unit.ally && _tacticalClock > 0) {
+      unit.attackClock -= dt * .45;
+      dt *= 1.18;
+    }
     if (unit.hp <= unit.maxHp * .25 &&
         unit.role != UnitRole.commander &&
         unit.role != UnitRole.siege) {

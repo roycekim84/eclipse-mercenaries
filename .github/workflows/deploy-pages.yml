@@ -42,6 +42,7 @@ jobs:
       - name: Run portable tests
         run: >-
           flutter test
+          test/battle_control_test.dart
           test/battle_render_policy_test.dart
           test/content_catalog_test.dart
           test/performance_profiler_test.dart

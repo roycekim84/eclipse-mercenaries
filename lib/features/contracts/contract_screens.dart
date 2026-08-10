@@ -297,7 +297,9 @@ class DeploymentSummary extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(
+              MediaQuery.sizeOf(context).height < 500 ? 10 : 18,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

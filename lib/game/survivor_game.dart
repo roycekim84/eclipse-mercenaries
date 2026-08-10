@@ -87,6 +87,7 @@ class SurvivorGame extends FlameGame {
   final reducedEffects = ValueNotifier(false);
   final performanceMode = ValueNotifier(false);
   final combatPaused = ValueNotifier(false);
+  final controls = ValueNotifier(const BattleControlState.ready());
   final math.Random _random;
   final math.Random _upgradeRandom;
   final math.Random _eventRandom;
@@ -113,6 +114,7 @@ class SurvivorGame extends FlameGame {
   final _unitBatchPaint = Paint()..filterQuality = FilterQuality.none;
   final _unitShadowPaint = Paint()..color = const Color(0x66000000);
   Vector2? _moveTarget;
+  Vector2? _moveDirection;
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
   late final Image _unitAtlas;
@@ -133,6 +135,9 @@ class SurvivorGame extends FlameGame {
   double _nextXp = 40;
   double _ultimateCharge = 0;
   double _ultimateClock = 0;
+  double _dashCooldown = 0;
+  double _tacticalCooldown = 0;
+  double _tacticalClock = 0;
   bool _ultimateImpactApplied = false;
   int _ultimateActivation = 0;
   double _gateHp = GateDefenseRules.maxGateHp;
@@ -242,6 +247,62 @@ class SurvivorGame extends FlameGame {
   void setMoveTarget(Offset offset) =>
       _moveTarget = Vector2(offset.dx, offset.dy);
   void clearMoveTarget() => _moveTarget = null;
+  void setMoveDirection(Offset direction) {
+    final next = Vector2(direction.dx, direction.dy);
+    _moveDirection = next.length2 > .01 ? next.normalized() : null;
+    _moveTarget = null;
+  }
+
+  void clearMoveDirection() => _moveDirection = null;
+
+  void triggerDash() {
+    if (_dashCooldown > 0 ||
+        _finished ||
+        _pausedForChoice ||
+        _pausedForEvent ||
+        _pausedByUser ||
+        _pausedByLifecycle) {
+      return;
+    }
+    var direction = _moveDirection;
+    if (direction == null && _moveTarget != null) {
+      final delta = _moveTarget! - _player;
+      if (delta.length2 > 1) direction = delta.normalized();
+    }
+    direction ??= Vector2(1, 0);
+    final distance = BattleControlRules.dashDistance(_speed);
+    _player.add(direction * distance);
+    _player
+      ..x = _player.x.clamp(24, size.x - 24)
+      ..y = _player.y.clamp(24, size.y - 24);
+    _playerSprite.position = _player;
+    _emitSlash(_player, .32, mercenary.style);
+    _dashCooldown = BattleControlRules.dashCooldownSeconds;
+    _publishControls();
+  }
+
+  void triggerTacticalAction() {
+    if (_tacticalCooldown > 0 ||
+        _finished ||
+        _pausedForChoice ||
+        _pausedForEvent ||
+        _pausedByUser ||
+        _pausedByLifecycle) {
+      return;
+    }
+    _tacticalClock = BattleControlRules.tacticalDurationSeconds;
+    _tacticalCooldown = BattleControlRules.tacticalCooldownSeconds;
+    _emitSlash(_player, .5, CombatStyle.magic);
+    event.value = BattleEvent(
+      '전술 명령',
+      config.battlefield == BattlefieldType.evacuation ? '강행군' : '전선 집결',
+      config.battlefield == BattlefieldType.evacuation
+          ? '호위대가 4초간 이동속도 35% 증가'
+          : '아군이 4초간 공격·이동 주기 가속',
+      id: 'tactical_action',
+    );
+    _publishControls();
+  }
 
   bool get _signatureWeaponActive => _runWeapons.isEmpty
       ? weapon.id == mercenary.signatureWeaponId
@@ -261,6 +322,8 @@ class SurvivorGame extends FlameGame {
     _pausedByUser = !_pausedByUser;
     combatPaused.value = _pausedByUser;
     if (_pausedByUser) {
+      clearMoveDirection();
+      clearMoveTarget();
       pauseEngine();
     } else {
       resumeEngine();
@@ -269,6 +332,8 @@ class SurvivorGame extends FlameGame {
 
   void pauseForLifecycle() {
     if (_finished) return;
+    clearMoveDirection();
+    clearMoveTarget();
     _pausedByLifecycle = true;
     combatPaused.value = true;
     pauseEngine();
@@ -301,6 +366,7 @@ class SurvivorGame extends FlameGame {
       activation: _ultimateActivation,
     );
     clearMoveTarget();
+    clearMoveDirection();
     _publishStats();
   }
 
@@ -317,10 +383,25 @@ class SurvivorGame extends FlameGame {
       return;
     }
     _advanceUltimate(dt);
+    _dashCooldown = math.max(0, _dashCooldown - worldDt);
+    _tacticalCooldown = math.max(0, _tacticalCooldown - worldDt);
+    final tacticalWasActive = _tacticalClock > 0;
+    _tacticalClock = math.max(0, _tacticalClock - worldDt);
+    if (tacticalWasActive &&
+        _tacticalClock <= 0 &&
+        event.value?.id == 'tactical_action') {
+      event.value = null;
+    }
     _elapsed += worldDt;
     _eventClock += worldDt;
     var isMoving = false;
-    if (_moveTarget != null) {
+    if (_moveDirection != null) {
+      _player += _moveDirection! * _speed * worldDt;
+      _player
+        ..x = _player.x.clamp(24, size.x - 24)
+        ..y = _player.y.clamp(24, size.y - 24);
+      isMoving = true;
+    } else if (_moveTarget != null) {
       final delta = _moveTarget! - _player;
       if (delta.length > 8) {
         _player +=
@@ -373,6 +454,7 @@ class SurvivorGame extends FlameGame {
       _finishBattle(objectiveOutcome);
     }
     _publishStats();
+    _publishControls();
   }
 
   void _rebuildGrid() {
@@ -457,6 +539,20 @@ class SurvivorGame extends FlameGame {
         (old.ultimateCharge - next.ultimateCharge).abs() > .005 ||
         (old.xp - next.xp).abs() > 1) {
       stats.value = next;
+    }
+  }
+
+  void _publishControls() {
+    final next = BattleControlState(
+      dashCooldown: _dashCooldown,
+      tacticalCooldown: _tacticalCooldown,
+      tacticalActive: _tacticalClock > 0,
+    );
+    final old = controls.value;
+    if ((old.dashCooldown - next.dashCooldown).abs() > .08 ||
+        (old.tacticalCooldown - next.tacticalCooldown).abs() > .08 ||
+        old.tacticalActive != next.tacticalActive) {
+      controls.value = next;
     }
   }
 

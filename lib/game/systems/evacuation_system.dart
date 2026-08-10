@@ -40,7 +40,10 @@ extension EvacuationSystem on SurvivorGame {
       final windSpeed = config.condition == BattlefieldCondition.ashWind
           ? .94
           : 1.0;
-      escort.position.add(direction * escort.speed * windSpeed * dt);
+      final tacticalSpeed = _tacticalClock > 0 ? 1.35 : 1.0;
+      escort.position.add(
+        direction * escort.speed * windSpeed * tacticalSpeed * dt,
+      );
       if (escort.position.x >= exitX) escort.escaped = true;
     }
   }
