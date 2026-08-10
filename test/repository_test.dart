@@ -23,25 +23,25 @@ void main() {
   test('beta content IDs resolve through the repository', () {
     expect(content.mercenaries, hasLength(8));
     expect(content.weapons, hasLength(16));
-    expect(content.enemies, hasLength(12));
+    expect(content.enemies, hasLength(27));
     expect(content.mercenaryById('kael').race, '늑대족');
     expect(content.weaponById('glass_flame').ownerId, 'sera');
   });
 
-  test('enemy catalog satisfies alpha content counts', () {
-    expect(EnemyCatalog.common, hasLength(8));
-    expect(EnemyCatalog.elite, hasLength(2));
-    expect(EnemyCatalog.boss, hasLength(2));
+  test('enemy catalog satisfies beta content counts', () {
+    expect(EnemyCatalog.common, hasLength(16));
+    expect(EnemyCatalog.elite, hasLength(6));
+    expect(EnemyCatalog.boss, hasLength(5));
     expect(
       alphaEnemyArchetypes.map((enemy) => enemy.id).toSet(),
       hasLength(alphaEnemyArchetypes.length),
     );
   });
 
-  test('common enemies expose eight distinct battlefield abilities', () {
+  test('common enemies expose nine distinct battlefield abilities', () {
     expect(
       EnemyCatalog.common.map((enemy) => enemy.ability).toSet(),
-      hasLength(8),
+      hasLength(9),
     );
     for (final enemy in EnemyCatalog.common) {
       expect(enemy.abilityDescription, isNotEmpty);
@@ -85,11 +85,35 @@ void main() {
     }
   });
 
-  test('battlefield event catalog contains eight complete unique events', () {
-    expect(alphaBattlefieldEvents, hasLength(8));
+  test('battlefield event catalog contains 24 complete unique events', () {
+    expect(alphaBattlefieldEvents, hasLength(24));
     expect(
       alphaBattlefieldEvents.map((event) => event.id).toSet(),
-      hasLength(8),
+      hasLength(24),
+    );
+    expect(
+      alphaBattlefieldEvents.where(
+        (event) => event.rarity == BattlefieldEventRarity.common,
+      ),
+      hasLength(10),
+    );
+    expect(
+      alphaBattlefieldEvents.where(
+        (event) => event.rarity == BattlefieldEventRarity.special,
+      ),
+      hasLength(7),
+    );
+    expect(
+      alphaBattlefieldEvents.where(
+        (event) => event.rarity == BattlefieldEventRarity.rare,
+      ),
+      hasLength(5),
+    );
+    expect(
+      alphaBattlefieldEvents.where(
+        (event) => event.rarity == BattlefieldEventRarity.legendary,
+      ),
+      hasLength(2),
     );
     expect(
       alphaBattlefieldEvents.map((event) => event.effect).toSet(),

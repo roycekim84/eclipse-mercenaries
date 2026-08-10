@@ -8,7 +8,22 @@ enum BattleOutcome { victory, retreat, defeat }
 
 enum BattlefieldType { gateDefense, evacuation }
 
-enum BattlefieldCondition { moonlitNight, ashWind }
+enum BattlefieldCondition {
+  moonlitNight,
+  ashWind,
+  blackForest,
+  whiteNight,
+  twilightSiege,
+}
+
+enum ContractObjective {
+  defense,
+  evacuation,
+  supplyEscort,
+  assassination,
+  ambush,
+  fortressRetake,
+}
 
 enum UnitRole { infantry, shield, archer, cavalry, mage, siege, commander }
 
@@ -125,6 +140,7 @@ class BattleConfig {
     required this.weapon,
     this.battlefield = BattlefieldType.gateDefense,
     this.condition = BattlefieldCondition.moonlitNight,
+    this.objective = ContractObjective.defense,
     this.durationSeconds = 45,
     this.seed = 19,
     this.unitCount = 500,
@@ -142,6 +158,7 @@ class BattleConfig {
   final WeaponSpec weapon;
   final BattlefieldType battlefield;
   final BattlefieldCondition condition;
+  final ContractObjective objective;
   final int durationSeconds;
   final int seed;
   final int unitCount;

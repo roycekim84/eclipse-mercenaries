@@ -487,13 +487,36 @@ class SurvivorGame extends FlameGame {
       _publishControls();
       return;
     }
-    final objectiveOutcome = config.battlefield == BattlefieldType.evacuation
-        ? EvacuationRules.resolve(
-            alive: _escortAlive,
-            escaped: _escortEscaped,
-            secondsLeft: secondsLeft,
-          )
-        : GateDefenseRules.resolve(gateHp: _gateHp, secondsLeft: secondsLeft);
+    final objectiveOutcome = switch (config.objective) {
+      ContractObjective.evacuation ||
+      ContractObjective.supplyEscort => EvacuationRules.resolve(
+        alive: _escortAlive,
+        escaped: _escortEscaped,
+        secondsLeft: secondsLeft,
+      ),
+      ContractObjective.assassination =>
+        _enemyCommander?.dead == true
+            ? BattleOutcome.victory
+            : (_gateHp <= 0 || secondsLeft <= 0
+                  ? BattleOutcome.defeat
+                  : BattleOutcome.retreat),
+      ContractObjective.ambush =>
+        _kills >= 120
+            ? BattleOutcome.victory
+            : (_gateHp <= 0 || secondsLeft <= 0
+                  ? BattleOutcome.defeat
+                  : BattleOutcome.retreat),
+      ContractObjective.fortressRetake =>
+        _enemyCommander?.dead == true && _kills >= 80
+            ? BattleOutcome.victory
+            : (_gateHp <= 0 || secondsLeft <= 0
+                  ? BattleOutcome.defeat
+                  : BattleOutcome.retreat),
+      ContractObjective.defense => GateDefenseRules.resolve(
+        gateHp: _gateHp,
+        secondsLeft: secondsLeft,
+      ),
+    };
     if (objectiveOutcome != BattleOutcome.retreat) {
       _finishBattle(objectiveOutcome);
     }

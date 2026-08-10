@@ -48,6 +48,7 @@ class _BattleScreenState extends State<BattleScreen>
         weapon: widget.weapon,
         battlefield: widget.contract.battlefield,
         condition: widget.contract.condition,
+        objective: widget.contract.objective,
         contractId: widget.contract.id,
         contractName: widget.contract.name,
         contractGold: widget.contract.reward,
@@ -412,12 +413,16 @@ class BattleHud extends StatelessWidget {
                       fontSize: 11,
                     ),
                   ),
-                  Text(
-                    contract.battlefield == BattlefieldType.evacuation
-                        ? '호위 대상 ${EvacuationRules.requiredEscaped}명 탈출'
-                        : '성문 방어선 유지  ${stats.kills} / 120',
-                    style: const TextStyle(fontSize: 11),
-                  ),
+                  Text(switch (contract.objective) {
+                    ContractObjective.evacuation =>
+                      '부상병 ${EvacuationRules.requiredEscaped}명 탈출',
+                    ContractObjective.supplyEscort =>
+                      '보급대 ${EvacuationRules.requiredEscaped}명 호위',
+                    ContractObjective.assassination => '적 지휘관 제거',
+                    ContractObjective.ambush => '적 병력 120명 격파',
+                    ContractObjective.fortressRetake => '지휘관 격파 · 80명 소탕',
+                    ContractObjective.defense => '성문 방어선 유지',
+                  }, style: const TextStyle(fontSize: 11)),
                   const SizedBox(height: 5),
                   Row(
                     children: [
@@ -725,9 +730,13 @@ class BattleMiniMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final conditionLabel = contract.condition == BattlefieldCondition.ashWind
-        ? '잿바람 · 이동 -6%'
-        : '월광 야전 · 야행성';
+    final conditionLabel = switch (contract.condition) {
+      BattlefieldCondition.ashWind => '잿바람 · 이동 -6%',
+      BattlefieldCondition.blackForest => '검은숲 · 시야 제한',
+      BattlefieldCondition.whiteNight => '백야 · 빙결 지대',
+      BattlefieldCondition.twilightSiege => '황혼 · 공성 포격',
+      BattlefieldCondition.moonlitNight => '월광 야전 · 야행성',
+    };
     return Container(
       width: 150,
       height: 86,

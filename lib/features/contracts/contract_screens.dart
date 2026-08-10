@@ -38,10 +38,10 @@ class ContractScreen extends StatelessWidget {
                       ),
                       ...List.generate(contracts.length, (index) {
                         final item = contracts[index];
-                        final x =
-                            constraints.maxWidth * [0.22, 0.5, 0.78][index];
-                        final y =
-                            constraints.maxHeight * [0.38, 0.25, 0.43][index];
+                        const xFactors = [.13, .32, .51, .7, .87, .48];
+                        const yFactors = [.28, .42, .23, .4, .25, .48];
+                        final x = constraints.maxWidth * xFactors[index];
+                        final y = constraints.maxHeight * yFactors[index];
                         return Positioned(
                           left: x - 95,
                           top: y - 74,

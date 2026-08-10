@@ -86,9 +86,13 @@ extension BossSystem on SurvivorGame {
         final count = 5 + _bossPhase * 3;
         _spawnEventWave(
           count: count,
-          archetypeId: boss.archetype!.id == 'hunt_captain'
-              ? 'free_skirmisher'
-              : 'siege_ram',
+          archetypeId: switch (boss.archetype!.id) {
+            'hunt_captain' => 'free_skirmisher',
+            'forest_warlord' => 'fog_stalker',
+            'frost_castellan' => 'frost_mage',
+            'dusk_general' => 'cinder_hexer',
+            _ => 'siege_ram',
+          },
         );
         if (config.battlefield == BattlefieldType.gateDefense) {
           _gateHp = math.max(0, _gateHp - 8 * _bossPhase);

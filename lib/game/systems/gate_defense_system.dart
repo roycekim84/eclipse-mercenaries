@@ -79,11 +79,13 @@ extension GateDefenseSystem on SurvivorGame {
 
   EnemyArchetypeSpec _enemyForIndex(int index) {
     if (index == 0) {
-      return EnemyCatalog.byId(
-        config.battlefield == BattlefieldType.evacuation
-            ? 'hunt_captain'
-            : 'siege_marshal',
-      );
+      return EnemyCatalog.byId(switch (config.condition) {
+        BattlefieldCondition.ashWind => 'hunt_captain',
+        BattlefieldCondition.blackForest => 'forest_warlord',
+        BattlefieldCondition.whiteNight => 'frost_castellan',
+        BattlefieldCondition.twilightSiege => 'dusk_general',
+        BattlefieldCondition.moonlitNight => 'siege_marshal',
+      });
     }
     if (index % 83 == 0) {
       return EnemyCatalog.elite[(index ~/ 83) % EnemyCatalog.elite.length];

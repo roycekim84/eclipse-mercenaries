@@ -111,13 +111,57 @@ extension BattlefieldEventSystem on SurvivorGame {
       case 'challenge_royal_guard':
         _spawnEventWave(
           count: 1,
-          archetypeId: config.battlefield == BattlefieldType.evacuation
-              ? 'hunt_captain'
-              : 'siege_marshal',
+          archetypeId: switch (config.condition) {
+            BattlefieldCondition.ashWind => 'hunt_captain',
+            BattlefieldCondition.blackForest => 'forest_warlord',
+            BattlefieldCondition.whiteNight => 'frost_castellan',
+            BattlefieldCondition.twilightSiege => 'dusk_general',
+            BattlefieldCondition.moonlitNight => 'siege_marshal',
+          },
         );
         _spawnEventWave(count: 18, archetypeId: 'iron_guard');
         _eventGoldBonus += 1600;
         _eventXpBonus += 500;
+      case 'salvage_arrows' || 'recover_orders':
+        _eventGoldBonus += 320;
+        _eventXpBonus += 90;
+      case 'clear_mud' || 'repair_bridge' || 'hold_in_fog' || 'avoid_dragon':
+        _eventXpBonus += 120;
+      case 'raise_standard' || 'accept_aid':
+        final commander = _allyCommander;
+        if (commander != null && !commander.dead) {
+          commander.hp = math.min(commander.maxHp, commander.hp + 8);
+        }
+        if (config.battlefield == BattlefieldType.gateDefense) {
+          _gateHp = math.min(GateDefenseRules.maxGateHp, _gateHp + 70);
+        } else {
+          for (final escort in _escorts) {
+            if (!escort.dead && !escort.escaped) {
+              escort.hp = math.min(escort.maxHp.toDouble(), escort.hp + 4);
+            }
+          }
+        }
+      case 'buy_intel':
+        _eventGoldBonus -= 180;
+        _eventXpBonus += 260;
+      case 'detonate_cache' || 'counter_raid':
+        _spawnEventWave(count: 24, archetypeId: 'vargar_conscript');
+        _eventGoldBonus += 520;
+        _eventXpBonus += 160;
+      case 'bait_wyvern' || 'mark_artillery':
+        _spawnEventWave(count: 14, archetypeId: 'iron_guard');
+        _eventGoldBonus += 700;
+        _eventXpBonus += 210;
+      case 'seal_well':
+        _eventRewardMultiplier *= 1.08;
+        _eventXpBonus += 180;
+      case 'accept_rivalry':
+        _spawnEventWave(count: 2, archetypeId: 'nameless_knight');
+        _eventGoldBonus += 950;
+        _eventXpBonus += 300;
+      case 'secure_relic':
+        _eventRewardMultiplier *= 1.14;
+        _eventGoldBonus += 800;
     }
   }
 

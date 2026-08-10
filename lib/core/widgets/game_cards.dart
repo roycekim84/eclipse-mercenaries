@@ -45,7 +45,7 @@ class ContractMarker extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               color: const Color(0xdd0a0c11),
               child: Text(
-                '${contract.name}\n${faction.name}',
+                '${contract.name}\n${contract.battlefieldName}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class ContractSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${contract.name} · ${faction.name}',
+                  '${contract.name} · ${contract.battlefieldName} · ${faction.name}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(

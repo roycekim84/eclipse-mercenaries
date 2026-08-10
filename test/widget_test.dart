@@ -8,6 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('beta contracts cover five battlefields and six objective types', () {
+    expect(contracts, hasLength(6));
+    expect(
+      contracts.map((contract) => contract.battlefieldName).toSet(),
+      hasLength(5),
+    );
+    expect(
+      contracts.map((contract) => contract.objective).toSet(),
+      hasLength(ContractObjective.values.length),
+    );
+  });
+
   testWidgets('camp renders primary actions', (tester) async {
     await tester.pumpWidget(
       EclipseMercenariesApp(
