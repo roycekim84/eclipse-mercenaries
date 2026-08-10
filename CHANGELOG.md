@@ -1,5 +1,11 @@
 # 변경 기록
 
+## B4 narrow web guidance and UI audio feedback — 2026-08-10
+
+- 세로/좁은 Web 비차단 가로 화면 권장 배너와 접근성 live-region 추가
+- 화면 이동 및 성장·구매·장착 확정 시스템 음향을 효과음 설정과 연결
+- 390×844 세로 Web 회귀 테스트 추가
+
 ## B3 distinct battlefield art — 2026-08-10
 
 - 생성형 이미지 기반 잿바람·검은숲·백야 요새·황혼 공성 평원 탑다운 픽셀 배경 제작

@@ -20,6 +20,24 @@ void main() {
     );
   });
 
+  testWidgets('portrait web shows a non-blocking landscape hint', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('가로 화면에서'), findsOneWidget);
+    expect(find.text('전쟁터 출전'), findsOneWidget);
+  });
+
   testWidgets('camp renders primary actions', (tester) async {
     await tester.pumpWidget(
       EclipseMercenariesApp(

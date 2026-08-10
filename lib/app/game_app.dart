@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../core/content/game_content_repository.dart';
 import '../core/content/game_visuals.dart';
+import '../core/audio/game_audio_feedback.dart';
 import '../core/persistence/save_repository.dart';
 import '../core/theme/game_theme.dart';
 import '../domain/battle_models.dart';
@@ -23,6 +24,7 @@ import '../game/survivor_game.dart';
 part '../core/widgets/collection_components.dart';
 part '../core/widgets/fantasy_components.dart';
 part '../core/widgets/game_cards.dart';
+part '../core/widgets/landscape_hint.dart';
 part '../core/widgets/map_painter.dart';
 part '../features/battle/battle_screen.dart';
 part '../features/battle/ultimate_overlay.dart';
@@ -203,7 +205,10 @@ class GameShellState extends State<GameShell> {
     }
   }
 
-  void go(AppScene next) => setState(() => scene = next);
+  void go(AppScene next) {
+    unawaited(GameAudioFeedback.navigation(account.settings));
+    setState(() => scene = next);
+  }
 
   void openEquipment(AppScene returnTo) {
     setState(() {
@@ -213,6 +218,7 @@ class GameShellState extends State<GameShell> {
   }
 
   void _updateAccount(AccountSave next, String notice) {
+    unawaited(GameAudioFeedback.confirmation(account.settings));
     setState(() {
       _account = next;
       actionNotice = notice;
@@ -602,6 +608,8 @@ class GameShellState extends State<GameShell> {
         widget.enableTutorial &&
         !account.settings.tutorialCompleted &&
         scene == AppScene.camp;
+    final showLandscapeHint =
+        media.size.width < 600 || media.size.height > media.size.width;
     return MediaQuery(
       data: media.copyWith(textScaler: TextScaler.linear(effectiveScale)),
       child: Scaffold(
@@ -854,6 +862,7 @@ class GameShellState extends State<GameShell> {
                 },
                 onSkip: completeTutorial,
               ),
+            if (showLandscapeHint) const LandscapeHintBanner(),
           ],
         ),
       ),
