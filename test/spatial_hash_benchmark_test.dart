@@ -11,6 +11,7 @@ void main() {
       expect(result.candidateChecks, greaterThan(0));
       expect(result.candidateRatio, lessThan(.35));
       expect(result.p95FrameMs, greaterThanOrEqualTo(0));
+      expect(result.allocatedBuckets, lessThanOrEqualTo(300));
     }
   });
 }

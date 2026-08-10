@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart' show Offset, ValueNotifier;
 
 import '../domain/battle_models.dart';
+import '../domain/battle_performance.dart';
 import '../domain/battlefield_events.dart';
 import '../domain/battle_rewards.dart';
 import '../domain/combat_rules.dart';
@@ -12,6 +13,7 @@ import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
 import '../domain/progression.dart';
 import '../domain/run_growth.dart';
+import '../domain/reusable_spatial_grid.dart';
 import '../core/content/game_visuals.dart';
 import 'render/player_sprite_component.dart';
 
@@ -97,7 +99,10 @@ class SurvivorGame extends FlameGame {
   final _eventRecords = <BattlefieldEventRecord>[];
   final _escorts = <EscortUnit>[];
   final _frameSamples = List<double>.filled(512, 0);
-  final _spatialGrid = <int, List<int>>{};
+  final _spatialGrid = ReusableSpatialGrid();
+  final _performanceProfiler = BattlePerformanceProfiler();
+  final _updateClock = Stopwatch();
+  final _renderClock = Stopwatch();
   Vector2? _moveTarget;
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
@@ -256,9 +261,13 @@ class SurvivorGame extends FlameGame {
   @override
   void update(double dt) {
     _recordPerformance(dt);
+    _updateClock
+      ..reset()
+      ..start();
     final worldDt = _ultimateClock > 1.18 ? dt * .08 : dt;
     super.update(worldDt);
     if (_finished || _pausedForChoice || _pausedForEvent) {
+      _updateClock.stop();
       return;
     }
     _advanceUltimate(dt);
@@ -279,13 +288,33 @@ class SurvivorGame extends FlameGame {
     if (config.battlefield == BattlefieldType.evacuation) {
       _updateEvacuation(worldDt);
     }
+    final aiStartMicros = _updateClock.elapsedMicroseconds;
     _rebuildGrid();
     _updateUnits(worldDt);
+    final aiMs = (_updateClock.elapsedMicroseconds - aiStartMicros) / 1000;
+    final combatStartMicros = _updateClock.elapsedMicroseconds;
     _updateCombatPools(worldDt);
+    final combatMs =
+        (_updateClock.elapsedMicroseconds - combatStartMicros) / 1000;
+    final weaponsStartMicros = _updateClock.elapsedMicroseconds;
     _updateRunWeapons(worldDt);
-    if (_pausedForChoice) return;
+    final weaponsMs =
+        (_updateClock.elapsedMicroseconds - weaponsStartMicros) / 1000;
+    if (_pausedForChoice) {
+      _updateClock.stop();
+      return;
+    }
     _updateBattlefieldEvents();
     _updateFrontPressure();
+    _updateClock.stop();
+    if (_elapsed >= 2) {
+      _performanceProfiler.recordUpdate(
+        totalMs: _updateClock.elapsedMicroseconds / 1000,
+        aiMs: aiMs,
+        combatMs: combatMs,
+        weaponsMs: weaponsMs,
+      );
+    }
     final secondsLeft = (config.durationSeconds - _elapsed).ceil();
     final objectiveOutcome = config.battlefield == BattlefieldType.evacuation
         ? EvacuationRules.resolve(
@@ -301,12 +330,14 @@ class SurvivorGame extends FlameGame {
   }
 
   void _rebuildGrid() {
-    _spatialGrid.clear();
+    _spatialGrid.beginFrame();
     for (var i = 0; i < _units.length; i++) {
       if (_units[i].dead) continue;
-      final cell =
-          (_units[i].position.x ~/ 96) * 10000 + (_units[i].position.y ~/ 96);
-      (_spatialGrid[cell] ??= []).add(i);
+      _spatialGrid.add(
+        x: _units[i].position.x,
+        y: _units[i].position.y,
+        index: i,
+      );
     }
   }
 
@@ -327,11 +358,11 @@ class SurvivorGame extends FlameGame {
   BattleUnit? _nearestOpponent(BattleUnit source, double range) {
     BattleUnit? nearest;
     var best = range;
-    final cx = source.position.x ~/ 96;
-    final cy = source.position.y ~/ 96;
+    final cx = _spatialGrid.cellX(source.position.x);
+    final cy = _spatialGrid.cellY(source.position.y);
     for (var gx = cx - 2; gx <= cx + 2; gx++) {
       for (var gy = cy - 2; gy <= cy + 2; gy++) {
-        for (final index in _spatialGrid[gx * 10000 + gy] ?? const <int>[]) {
+        for (final index in _spatialGrid.bucketAt(gx, gy)) {
           final candidate = _units[index];
           if (candidate.dead || candidate.ally == source.ally) continue;
           final distance = candidate.position.distanceTo(source.position);
@@ -400,6 +431,9 @@ class SurvivorGame extends FlameGame {
 
   @override
   void render(Canvas canvas) {
+    _renderClock
+      ..reset()
+      ..start();
     _drawTerrain(canvas);
     _drawBattlefieldObjective(canvas);
     _drawUnits(canvas);
@@ -407,6 +441,12 @@ class SurvivorGame extends FlameGame {
     _drawUltimateEffect(canvas);
     _drawPlayerMarker(canvas);
     super.render(canvas);
+    _renderClock.stop();
+    if (_elapsed >= 2) {
+      _performanceProfiler.recordRender(
+        _renderClock.elapsedMicroseconds / 1000,
+      );
+    }
   }
 
   void _drawTerrain(Canvas canvas) {

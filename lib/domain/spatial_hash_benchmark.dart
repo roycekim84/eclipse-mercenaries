@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'reusable_spatial_grid.dart';
+
 class SpatialHashBenchmarkResult {
   const SpatialHashBenchmarkResult({
     required this.unitCount,
@@ -8,6 +10,7 @@ class SpatialHashBenchmarkResult {
     required this.averageFrameMs,
     required this.candidateChecks,
     required this.naiveChecks,
+    required this.allocatedBuckets,
   });
 
   final int unitCount;
@@ -16,6 +19,7 @@ class SpatialHashBenchmarkResult {
   final double averageFrameMs;
   final int candidateChecks;
   final int naiveChecks;
+  final int allocatedBuckets;
 
   double get candidateRatio => candidateChecks / naiveChecks;
 }
@@ -26,7 +30,6 @@ class SpatialHashBenchmarkResult {
 /// rebuilds, and 5x5-cell opponent queries so regressions can be compared at
 /// the alpha target populations without running a full 45-second contract.
 abstract final class SpatialHashBenchmark {
-  static const double _cellSize = 96;
   static const double _width = 2048;
   static const double _height = 1152;
 
@@ -47,27 +50,25 @@ abstract final class SpatialHashBenchmark {
         faction: index & 1,
       );
     });
-    final grid = <int, List<int>>{};
+    final grid = ReusableSpatialGrid();
     final frameMicros = <int>[];
     var candidateChecks = 0;
 
     for (var frame = 0; frame < frames; frame++) {
       final stopwatch = Stopwatch()..start();
-      grid.clear();
+      grid.beginFrame();
       for (var index = 0; index < units.length; index++) {
         final unit = units[index];
         unit.move();
-        final key = _cellKey(unit.x, unit.y);
-        (grid[key] ??= <int>[]).add(index);
+        grid.add(x: unit.x, y: unit.y, index: index);
       }
       for (final unit in units) {
-        final cellX = unit.x ~/ _cellSize;
-        final cellY = unit.y ~/ _cellSize;
+        final cellX = grid.cellX(unit.x);
+        final cellY = grid.cellY(unit.y);
         var nearestSquared = double.infinity;
         for (var y = cellY - 2; y <= cellY + 2; y++) {
           for (var x = cellX - 2; x <= cellX + 2; x++) {
-            final candidates = grid[x * 10000 + y];
-            if (candidates == null) continue;
+            final candidates = grid.bucketAt(x, y);
             for (final candidateIndex in candidates) {
               final candidate = units[candidateIndex];
               if (candidate.faction == unit.faction) continue;
@@ -96,11 +97,9 @@ abstract final class SpatialHashBenchmark {
       averageFrameMs: totalMicros / frames / 1000,
       candidateChecks: candidateChecks,
       naiveChecks: unitCount * unitCount * frames,
+      allocatedBuckets: grid.allocatedBucketCount,
     );
   }
-
-  static int _cellKey(double x, double y) =>
-      (x ~/ _cellSize) * 10000 + (y ~/ _cellSize);
 }
 
 class _BenchmarkUnit {

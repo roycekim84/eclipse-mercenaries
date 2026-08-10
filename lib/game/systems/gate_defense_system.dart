@@ -246,6 +246,9 @@ extension GateDefenseSystem on SurvivorGame {
         escortTotal: _escorts.length,
         peakActiveUnits: _peakActiveUnits,
         frameTimeP95Ms: _frameTimeP95Ms,
+        performance: _performanceProfiler.snapshot(
+          spatialBuckets: _spatialGrid.allocatedBucketCount,
+        ),
         rareDropIds: List.unmodifiable(_rareDrops),
         triggeredEventIds: List.unmodifiable(_triggeredEventIds),
         eventRecords: List.unmodifiable(_eventRecords),

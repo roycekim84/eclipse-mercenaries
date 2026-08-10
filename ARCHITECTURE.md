@@ -313,7 +313,11 @@ AudioService가 BGM, SFX, UI, voice 채널을 관리한다. 동시 재생 상한
 - 전투 중 큰 이미지 decode 금지
 - 프레임당 신규 객체 allocation 최소화
 
-`tool/performance_benchmark.dart`는 전투 런타임의 96px 셀과 반경 2셀 탐색을 그대로 사용해 330/500/750/1,000 유닛의 이동·그리드 재구축·상대 탐색을 120 프레임 반복한다. 출력하는 CPU P95와 전체 조합 대비 후보 검사율은 코드 회귀 비교용이며, 실제 FPS·GPU 렌더·GC 평가는 release Web의 결과 화면 계측과 DevTools 프로파일을 별도로 사용한다.
+`ReusableSpatialGrid`는 한 번 생성한 96px 셀 버킷을 프레임 사이에 비우고 재사용한다. 전투와 `tool/performance_benchmark.dart`가 같은 구현을 사용하므로 벤치마크가 실제 런타임의 할당 특성을 반영한다. CPU 하네스는 330/500/750/1,000 유닛의 이동·그리드 재구축·반경 2셀 상대 탐색을 120 프레임 반복한다.
+
+`BattlePerformanceProfiler`는 update 전체, AI/공간 탐색, 전투 풀, 무기, render CPU 구간을 각각 최신 512샘플 고정 배열에 기록한다. 결과 화면에서 P95와 공간 버킷, 투사체/VFX/대미지 숫자 풀 최대 사용량을 확인할 수 있다. render 값은 Flame의 Canvas 제출 코드에 걸린 CPU 시간이며 GPU 시간이나 화면 주사율이 아니다.
+
+`tool/long_run_memory_benchmark.dart`는 1,000유닛을 18,000프레임, 즉 60Hz 5분 상당으로 반복해 워밍업 이후 RSS와 공간 버킷 수를 비교한다. 이는 버킷/샘플의 무제한 증가를 막는 결정론적 VM 회귀 검사다. 실제 Web 브라우저와 모바일의 GPU, GC pause, 발열은 release 빌드의 DevTools trace로 별도 승인한다.
 
 ## 17. 오류 처리
 

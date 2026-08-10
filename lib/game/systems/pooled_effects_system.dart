@@ -74,17 +74,22 @@ extension PooledEffectsSystem on SurvivorGame {
   }
 
   void _updateCombatPools(double dt) {
+    var activeEffects = 0;
     for (final fx in _slashes) {
       if (!fx.active) continue;
       fx.life -= dt;
       if (fx.life <= 0) fx.active = false;
+      if (fx.active) activeEffects++;
     }
+    var activeDamageNumbers = 0;
     for (final number in _damageNumbers) {
       if (!number.active) continue;
       number.life -= dt;
       number.position.y -= 18 * dt;
       if (number.life <= 0) number.active = false;
+      if (number.active) activeDamageNumbers++;
     }
+    var activeProjectiles = 0;
     for (final projectile in _projectiles) {
       if (!projectile.active) continue;
       projectile.life -= dt;
@@ -102,7 +107,20 @@ extension PooledEffectsSystem on SurvivorGame {
       } else {
         projectile.position += delta.normalized() * travel;
       }
+      if (projectile.active) activeProjectiles++;
     }
+    _performanceProfiler.peakEffects = math.max(
+      _performanceProfiler.peakEffects,
+      activeEffects,
+    );
+    _performanceProfiler.peakDamageNumbers = math.max(
+      _performanceProfiler.peakDamageNumbers,
+      activeDamageNumbers,
+    );
+    _performanceProfiler.peakProjectiles = math.max(
+      _performanceProfiler.peakProjectiles,
+      activeProjectiles,
+    );
   }
 
   void _impactProjectile(PooledProjectile projectile, BattleUnit target) {

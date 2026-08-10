@@ -1,5 +1,15 @@
 # 변경 기록
 
+## Fixed-capacity battle profiling and memory stability — 2026-08-10
+
+- 전투 update를 AI/공간 탐색, 전투 풀, 무기 단계로 나눈 512샘플 고정 용량 P95 프로파일러 추가
+- Flame render Canvas 제출 CPU P95와 투사체/VFX/대미지 숫자 풀 최대 사용량 계측
+- 매 프레임 공간 셀 List를 다시 만드는 구조를 버킷 재사용 방식으로 교체
+- 전투 결과에 단계별 성능과 그리드/풀 사용량을 표시하는 고밀도 판타지 패널 추가
+- 1,000유닛·10,000프레임 버킷 재사용 테스트와 5분 상당 RSS 하네스 추가
+- 공통 공간 그리드를 사용하는 330/500/750/1,000유닛 벤치마크로 회귀 기준 갱신
+- M5 성능 프로파일링과 장시간 allocation 안정성 항목 완료
+
 ## Deterministic fonts and golden visual regression — 2026-08-10
 
 - 캠프·전쟁 계약·전투 결과 1280×720 Golden 기준 이미지와 픽셀 회귀 테스트 추가

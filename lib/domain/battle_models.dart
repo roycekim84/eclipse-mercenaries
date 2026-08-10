@@ -172,6 +172,7 @@ class BattleReport {
     this.escortTotal = 0,
     this.peakActiveUnits = 0,
     this.frameTimeP95Ms = 0,
+    this.performance = const BattlePerformanceMetrics(),
     this.rareDropIds = const [],
     this.eventRecords = const [],
     required this.rewardBreakdown,
@@ -197,12 +198,39 @@ class BattleReport {
   final int escortTotal;
   final int peakActiveUnits;
   final double frameTimeP95Ms;
+  final BattlePerformanceMetrics performance;
   final List<String> rareDropIds;
   final List<BattlefieldEventRecord> eventRecords;
   final RewardBreakdown rewardBreakdown;
   final List<LootDrop> lootDrops;
   final BattleAward award;
   final int ultimateActivations;
+}
+
+class BattlePerformanceMetrics {
+  const BattlePerformanceMetrics({
+    this.sampleCount = 0,
+    this.updateP95Ms = 0,
+    this.aiP95Ms = 0,
+    this.combatP95Ms = 0,
+    this.weaponsP95Ms = 0,
+    this.renderCpuP95Ms = 0,
+    this.spatialBuckets = 0,
+    this.peakProjectiles = 0,
+    this.peakEffects = 0,
+    this.peakDamageNumbers = 0,
+  });
+
+  final int sampleCount;
+  final double updateP95Ms;
+  final double aiP95Ms;
+  final double combatP95Ms;
+  final double weaponsP95Ms;
+  final double renderCpuP95Ms;
+  final int spatialBuckets;
+  final int peakProjectiles;
+  final int peakEffects;
+  final int peakDamageNumbers;
 }
 
 abstract final class EvacuationRules {

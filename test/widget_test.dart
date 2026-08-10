@@ -327,6 +327,18 @@ void main() {
         detail: '성문 방어선을 흔들림 없이 유지했습니다.',
         honors: [],
       ),
+      performance: const BattlePerformanceMetrics(
+        sampleCount: 512,
+        updateP95Ms: 5.8,
+        aiP95Ms: 2.4,
+        combatP95Ms: 1.3,
+        weaponsP95Ms: .7,
+        renderCpuP95Ms: 3.1,
+        spatialBuckets: 264,
+        peakProjectiles: 64,
+        peakEffects: 83,
+        peakDamageNumbers: 34,
+      ),
     );
 
     await tester.pumpWidget(
@@ -358,6 +370,8 @@ void main() {
     expect(find.text('MVP · 북문의 철벽'), findsOneWidget);
     expect(find.text('보상 명세'), findsOneWidget);
     expect(find.text('희귀 · 장교의 전술지도'), findsOneWidget);
+    expect(find.text('성능 프로파일'), findsOneWidget);
+    expect(find.textContaining('렌더 CPU'), findsOneWidget);
   });
 
   testWidgets('result screen explains a valid empty loot state', (

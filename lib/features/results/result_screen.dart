@@ -127,6 +127,10 @@ class ResultScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (report.performance.sampleCount > 0) ...[
+                      const SizedBox(height: 10),
+                      _PerformanceDetailPanel(metrics: report.performance),
+                    ],
                     const SizedBox(height: 14),
                     _MvpPanel(award: report.award),
                     const SizedBox(height: 18),
@@ -221,6 +225,55 @@ class ResultScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PerformanceDetailPanel extends StatelessWidget {
+  const _PerformanceDetailPanel({required this.metrics});
+
+  final BattlePerformanceMetrics metrics;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+    decoration: BoxDecoration(
+      color: const Color(0x55211b2c),
+      border: Border.all(color: const Color(0x665f4b73)),
+    ),
+    child: Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 14,
+      runSpacing: 5,
+      children: [
+        const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.monitor_heart_outlined,
+              size: 15,
+              color: Color(0xffc7a6df),
+            ),
+            SizedBox(width: 6),
+            Text('성능 프로파일', style: TextStyle(color: Color(0xffd6bd81))),
+          ],
+        ),
+        Text(
+          '업데이트 ${metrics.updateP95Ms.toStringAsFixed(1)} · '
+          'AI ${metrics.aiP95Ms.toStringAsFixed(1)} · '
+          '전투 ${metrics.combatP95Ms.toStringAsFixed(1)} · '
+          '무기 ${metrics.weaponsP95Ms.toStringAsFixed(1)}ms',
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
+        Text(
+          '렌더 CPU ${metrics.renderCpuP95Ms.toStringAsFixed(1)}ms · '
+          '그리드 ${metrics.spatialBuckets} · '
+          '풀 ${metrics.peakProjectiles}/${metrics.peakEffects}/${metrics.peakDamageNumbers}',
+          style: const TextStyle(color: Colors.white54, fontSize: 11),
+        ),
+      ],
+    ),
+  );
 }
 
 class _PermanentGrowthPanel extends StatelessWidget {
