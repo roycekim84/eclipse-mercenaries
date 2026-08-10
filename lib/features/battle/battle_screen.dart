@@ -10,6 +10,7 @@ class BattleScreen extends StatefulWidget {
     required this.weaponProgress,
     required this.reducedEffects,
     required this.performanceMode,
+    required this.screenShakeEnabled,
     required this.inputMode,
     required this.targetPriority,
     required this.onVictory,
@@ -22,6 +23,7 @@ class BattleScreen extends StatefulWidget {
   final WeaponProgress weaponProgress;
   final bool reducedEffects;
   final bool performanceMode;
+  final bool screenShakeEnabled;
   final BattleInputMode inputMode;
   final AutoTargetPriority targetPriority;
   final ValueChanged<BattleReport> onVictory;
@@ -54,6 +56,7 @@ class _BattleScreenState extends State<BattleScreen>
       ),
       onVictory: widget.onVictory,
       targetPriority: widget.targetPriority,
+      screenShakeEnabled: widget.screenShakeEnabled,
     );
     game.reducedEffects.value = widget.reducedEffects;
     game.performanceMode.value = widget.performanceMode;

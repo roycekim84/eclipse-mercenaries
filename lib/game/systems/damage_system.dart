@@ -11,6 +11,7 @@ extension DamageSystem on SurvivorGame {
     _playerHitFlash = .16;
     _playerInvulnerability = invulnerabilitySeconds;
     _emitSlash(_player, .2, style);
+    _triggerImpact(hitStop: .04, impulse: 5.5);
   }
 
   DamageResult _resolveAgainstUnit(
@@ -66,6 +67,21 @@ extension DamageSystem on SurvivorGame {
       _applyStatus(target, result.appliedStatus);
     }
     if (showFx) _emitSlash(target.position, fxLife, mercenary.style);
+    if (showFx) {
+      final bossHit = target.archetype?.rank == EnemyRank.boss;
+      _triggerImpact(
+        hitStop: result.isCritical
+            ? .035
+            : bossHit
+            ? .026
+            : .012,
+        impulse: result.isCritical
+            ? 3.2
+            : bossHit
+            ? 2.2
+            : .8,
+      );
+    }
     if (showNumber) {
       _emitDamageNumber(target.position, result.amount, result.isCritical);
     }

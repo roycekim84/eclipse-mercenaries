@@ -708,6 +708,7 @@ class GameShellState extends State<GameShell> {
                       const WeaponProgress(level: 1, xp: 0, stage: 1),
                   reducedEffects: account.settings.reducedFlash,
                   performanceMode: account.settings.performanceMode,
+                  screenShakeEnabled: account.settings.screenShakeEnabled,
                   inputMode: account.settings.battleInputMode,
                   targetPriority: account.settings.autoTargetPriority,
                   onExit: () => go(AppScene.camp),

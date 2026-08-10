@@ -41,6 +41,7 @@ class SurvivorGame extends FlameGame {
     required this.config,
     required this.onVictory,
     this.targetPriority = AutoTargetPriority.nearest,
+    this.screenShakeEnabled = true,
   }) : _random = math.Random(config.seed),
        _upgradeRandom = math.Random(config.seed ^ 0x5f3759df),
        _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
@@ -73,6 +74,7 @@ class SurvivorGame extends FlameGame {
   }
   final BattleConfig config;
   final AutoTargetPriority targetPriority;
+  final bool screenShakeEnabled;
   MercenarySpec get mercenary => config.mercenary;
   WeaponSpec get weapon => config.weapon;
   double get _permanentDamageMultiplier =>
@@ -145,6 +147,8 @@ class SurvivorGame extends FlameGame {
   double _dashCooldown = 0;
   double _playerInvulnerability = 0;
   double _playerHitFlash = 0;
+  double _hitStopClock = 0;
+  double _cameraImpulse = 0;
   late double _playerHp;
   double _tacticalCooldown = 0;
   double _tacticalClock = 0;
@@ -396,7 +400,11 @@ class SurvivorGame extends FlameGame {
     _updateClock
       ..reset()
       ..start();
-    final worldDt = _ultimateClock > 1.18 ? dt * .08 : dt;
+    final hitStopActive = _hitStopClock > 0;
+    _hitStopClock = math.max(0, _hitStopClock - dt);
+    _cameraImpulse = math.max(0, _cameraImpulse - dt * 18);
+    final combatTimeScale = hitStopActive ? .08 : 1.0;
+    final worldDt = (_ultimateClock > 1.18 ? dt * .08 : dt) * combatTimeScale;
     super.update(worldDt);
     if (_finished || _pausedForChoice || _pausedForEvent) {
       _updateClock.stop();
@@ -606,6 +614,11 @@ class SurvivorGame extends FlameGame {
     _renderClock
       ..reset()
       ..start();
+    final allowShake = screenShakeEnabled && !_reducedVisualLoad;
+    final shakeX = allowShake ? math.sin(_elapsed * 117) * _cameraImpulse : 0.0;
+    final shakeY = allowShake ? math.cos(_elapsed * 93) * _cameraImpulse : 0.0;
+    canvas.save();
+    canvas.translate(shakeX, shakeY);
     _drawTerrain(canvas);
     _drawBattlefieldObjective(canvas);
     _drawUnits(canvas);
@@ -614,11 +627,20 @@ class SurvivorGame extends FlameGame {
     _drawUltimateEffect(canvas);
     _drawPlayerMarker(canvas);
     super.render(canvas);
+    canvas.restore();
     _renderClock.stop();
     if (_elapsed >= 2) {
       _performanceProfiler.recordRender(
         _renderClock.elapsedMicroseconds / 1000,
       );
+    }
+  }
+
+  void _triggerImpact({required double hitStop, required double impulse}) {
+    if (reducedEffects.value || performanceMode.value) return;
+    _hitStopClock = math.max(_hitStopClock, hitStop);
+    if (screenShakeEnabled) {
+      _cameraImpulse = math.max(_cameraImpulse, impulse);
     }
   }
 
