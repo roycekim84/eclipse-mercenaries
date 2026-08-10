@@ -275,6 +275,14 @@ void main() {
     }
   });
 
+  test('every mercenary owns a distinct battle animation sheet', () {
+    final spriteAssets = content.mercenaries
+        .map((mercenary) => mercenary.visual.battleSpriteAsset)
+        .toList(growable: false);
+
+    expect(spriteAssets.toSet(), hasLength(content.mercenaries.length));
+  });
+
   test('save repository preserves loadout and reward state', () async {
     final repository = InMemorySaveRepository();
     final initial = await repository.load();

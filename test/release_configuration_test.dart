@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -84,5 +85,27 @@ void main() {
       File('assets/source/generated/enemy_atlas_source.png').existsSync(),
       isTrue,
     );
+  });
+
+  test('all mercenary battle sheets satisfy the Flame 8 by 5 contract', () {
+    const mercenaryIds = [
+      'luna',
+      'kael',
+      'sera',
+      'nyra',
+      'aurel',
+      'vesta',
+      'rask',
+      'iris',
+    ];
+    for (final id in mercenaryIds) {
+      final file = File('assets/images/characters/${id}_battle_sheet.png');
+      expect(file.existsSync(), isTrue, reason: id);
+      final bytes = file.readAsBytesSync();
+      final header = ByteData.sublistView(bytes);
+      expect(header.getUint32(16), 1584, reason: '$id width');
+      expect(header.getUint32(20), 990, reason: '$id height');
+      expect(bytes[25], 6, reason: '$id must be RGBA PNG');
+    }
   });
 }

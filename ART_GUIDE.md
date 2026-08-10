@@ -35,12 +35,21 @@
 - `assets/images/characters/luna_battle_sheet.png`: 루나 8×5 전투 애니메이션 시트
 - `assets/images/characters/kael_battle_sheet.png`: 카일 8×5 전투 애니메이션 시트
 - `assets/images/characters/sera_battle_sheet.png`: 세라 8×5 전투 애니메이션 시트
+- `assets/images/characters/nyra_battle_sheet.png`: 니라의 장궁·토끼 귀 전투 애니메이션 시트
+- `assets/images/characters/aurel_battle_sheet.png`: 아우렐의 뿔·방패·검 전투 애니메이션 시트
+- `assets/images/characters/vesta_battle_sheet.png`: 베스타의 마도서·룬 전투 애니메이션 시트
+- `assets/images/characters/rask_battle_sheet.png`: 라스크의 비늘 꼬리·장창 전투 애니메이션 시트
+- `assets/images/characters/iris_battle_sheet.png`: 아이리스의 수정 뿔·월광 마검 전투 애니메이션 시트
 - `assets/images/battlefield/unit_role_atlas.png`: 아군/적군 7병과 전투 아틀라스
 - `assets/images/battlefield/unit_role_batch.png`: 원본 비율을 보존한 런타임 배칭 전용 아틀라스
 
 생성 이미지에 글자를 굽지 않고 Flutter 레이어에서 접근성과 현지화를 처리한다.
 
 전투 시트 행 순서는 `Idle → Walk → Attack → Hit → Dead`, 각 행은 8프레임이다. 런타임은 nearest-neighbor 필터를 사용하며, 현재 방향은 첨부 레퍼런스의 전투 시점에 맞춘 down-right 3/4 방향이다.
+
+8명 전투 시트는 모두 서로 다른 파일을 사용한다. 최종 규격은 `1584×990 RGBA`, 셀 규격은 `198×198`, 배열은 `8열×5행`이다. 생성 원본은 `assets/source/generated/mercenary_sheets/`에 보관하며, 단색 크로마 배경을 투명화한 뒤 런타임 에셋으로 저장한다. 생성 결과가 7열인 경우 `tool/normalize_animation_grid.swift`로 각 셀을 정수 경계에서 추출하고 중간 포즈를 한 프레임 유지해 8열로 정규화한다. 프레임을 임의로 늘려 잘라내거나 한 캐릭터 시트를 다른 캐릭터에 재사용하지 않는다.
+
+현재 전투 런타임은 위 다섯 기본 상태만 재생한다. 스킬과 궁극기는 별도 Flame VFX·컷인 계층에서 처리하며, 향후 `Skill/Ultimate/Dash` 행을 추가할 때는 시트 계약과 `PlayerSpriteComponent`를 함께 버전업한다.
 
 진영 병과 아틀라스는 7열×2행이며 열은 `보병 → 방패병 → 궁병 → 기병 → 마법병 → 공성병기 → 지휘관`, 행은 `아군 회청색 → 적군 적갈색` 순서다. 각 병과는 무기와 체형만으로 식별하고 지휘관은 망토/깃발, 공성병기는 가로로 긴 파성추 실루엣을 사용한다.
 
