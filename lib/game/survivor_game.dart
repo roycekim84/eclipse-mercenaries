@@ -222,11 +222,15 @@ class SurvivorGame extends FlameGame {
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
     _unitAtlas = await images.load('battlefield/unit_role_batch.png');
-    if (config.battlefield == BattlefieldType.gateDefense) {
-      _battlefieldBackground = await images.load(
+    _battlefieldBackground = await images.load(switch (config.condition) {
+      BattlefieldCondition.moonlitNight =>
         'battlefield/north_gate_battlefield.png',
-      );
-    }
+      BattlefieldCondition.ashWind => 'battlefield/ashwind_road.png',
+      BattlefieldCondition.blackForest => 'battlefield/black_forest_route.png',
+      BattlefieldCondition.whiteNight => 'battlefield/white_night_fortress.png',
+      BattlefieldCondition.twilightSiege =>
+        'battlefield/twilight_siege_plain.png',
+    });
     final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
     _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
       ..position = _player.clone();

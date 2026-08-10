@@ -9,6 +9,14 @@
 - 최종 프롬프트 핵심: 5개 균등 패널, 토끼 척후병/사슴 성기사/조류 전술사/파충류 창병/환수 마검사, 인간 얼굴·인간 체형, 전신과 대표 무기 노출, 남색·금색·보라색 다크 판타지, 텍스트·로고·워터마크 금지
 - 유지 규칙: 초상→픽셀 시트 전환 시 머리색, 귀/뿔/깃/비늘, 대표색, 무기 실루엣을 바꾸지 않는다.
 
+## B3 전장 4종 제작 기록
+
+- 생성 방식: built-in image generation, `stylized-concept`
+- 원본 시트: `assets/images/battlefield/beta_battlefield_sheet.png`
+- 전장 에셋: `ashwind_road.png`, `black_forest_route.png`, `white_night_fortress.png`, `twilight_siege_plain.png`
+- 최종 프롬프트 핵심: 캐릭터 없는 탑다운 픽셀 전장, 32~48px 유닛 기준, 잿불 협곡/검은숲 길/빙설 요새/황혼 공성 평원의 서로 다른 지형 구조와 가장자리 랜드마크, 중앙 전투 시야 확보, UI·문자·워터마크 금지
+- 런타임 규칙: `BattlefieldCondition`이 에셋과 전용 보스를 함께 결정하며 nearest-neighbor 필터로 화면비에 맞춰 합성한다.
+
 ## 구현 자산 기록 — 북문 성문 방어전
 
 - 파일: `assets/images/battlefield/north_gate_battlefield.png`

@@ -1,5 +1,11 @@
 # 변경 기록
 
+## B3 distinct battlefield art — 2026-08-10
+
+- 생성형 이미지 기반 잿바람·검은숲·백야 요새·황혼 공성 평원 탑다운 픽셀 배경 제작
+- 전장별 1672×941 에셋과 `BattlefieldCondition` 런타임 매핑 추가
+- 기존 목표물·호위로·유닛·보스 예고를 새 배경 위에 nearest-neighbor 방식으로 합성
+
 ## B3 battlefields, enemies, and 24 events — 2026-08-10
 
 - 5개 전장과 방어·철수·보급·암살·기습·탈환 6개 계약 목표/승리 조건 추가
