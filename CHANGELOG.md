@@ -6,6 +6,7 @@
 - 생성형 루나 앱 아이콘, adaptive/iOS icon set, 다크 스플래시와 스토어 캡처 추가
 - 앱 내부 개인정보 패널, 공개 정책·약관·스토어 등록·출시 체크리스트 초안 추가
 - Android release와 iOS unsigned 산출물을 만드는 모바일 CI 추가
+- Linux 래스터 차이로 Golden이 실패하지 않도록 모바일 CI를 82개 portable 테스트와 별도 로컬 Golden 검증으로 분리
 
 ## B5 diagnostics and safe balance manifest — 2026-08-10
 

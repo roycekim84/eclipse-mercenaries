@@ -78,6 +78,7 @@ macOS의 파일 동기화 경로에서 iOS framework에 Finder 확장 속성이 
 
 - `flutter analyze`: 이슈 0건
 - `flutter test`: 85개 통과, Golden 3개 포함
+- Linux 모바일 CI는 OS별 래스터 차이가 있는 Golden 3개를 제외한 82개 portable 테스트를 실행하며, Golden은 기준 생성 환경에서 별도로 통과한다.
 - 콘텐츠 감사: 용병 8 / 무기 16 / 적 27 / 사건 24 / 장비 9, 참조 오류 0건
 - 1,000유닛·18,000프레임 장시간 하네스: 392ms, warm-up 이후 RSS -0.03MB, 버킷 264 고정
 - Android release APK: 성공, 89.1MB (`build/app/outputs/flutter-apk/app-release.apk`)
