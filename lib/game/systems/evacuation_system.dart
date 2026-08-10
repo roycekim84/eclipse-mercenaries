@@ -30,7 +30,9 @@ extension EvacuationSystem on SurvivorGame {
     for (final escort in _escorts) {
       if (escort.dead || escort.escaped) continue;
       escort.hitFlash = math.max(0, escort.hitFlash - dt);
-      final targetY = size.y * (.3 + escort.lane * .2);
+      final progress = (escort.position.x / size.x).clamp(0.0, 1.0);
+      final laneOffset = (escort.lane - 1) * size.y * .08;
+      final targetY = size.y * (.78 - progress * .56) + laneOffset;
       final direction = Vector2(
         1,
         ((targetY + math.sin(_elapsed * .8 + escort.lane) * 18) -
@@ -88,28 +90,28 @@ extension EvacuationSystem on SurvivorGame {
 
   void _drawEvacuationObjective(Canvas canvas) {
     final road = Path()
-      ..moveTo(0, size.y * .22)
+      ..moveTo(0, size.y * .78)
       ..cubicTo(
-        size.x * .28,
-        size.y * .34,
-        size.x * .62,
-        size.y * .66,
+        size.x * .3,
+        size.y * .68,
+        size.x * .67,
+        size.y * .32,
         size.x,
-        size.y * .42,
+        size.y * .22,
       );
     canvas.drawPath(
       road,
       Paint()
-        ..color = const Color(0x66554735)
+        ..color = const Color(0x18554735)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 155,
+        ..strokeWidth = 78,
     );
     canvas.drawPath(
       road,
       Paint()
-        ..color = const Color(0x556f624a)
+        ..color = const Color(0x886f624a)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+        ..strokeWidth = 2,
     );
 
     final exitRect = Rect.fromLTWH(size.x - 112, 22, 88, size.y - 44);
@@ -132,18 +134,30 @@ extension EvacuationSystem on SurvivorGame {
         Paint()..color = const Color(0x66000000),
       );
       if (escort.supplyCart) {
-        canvas.drawRect(
-          Rect.fromCenter(center: position, width: 30, height: 20),
-          Paint()
-            ..color = flash ? const Color(0xffffe3bd) : const Color(0xff765438),
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: position.translate(0, -8),
-            width: 24,
-            height: 8,
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: position, width: 28, height: 15),
+            const Radius.circular(4),
           ),
-          Paint()..color = const Color(0xffb59a70),
+          Paint()
+            ..color = flash ? const Color(0xffd9ba8b) : const Color(0xff69472f),
+        );
+        canvas.drawLine(
+          position.translate(-12, -5),
+          position.translate(16, -5),
+          Paint()
+            ..color = const Color(0xffa77d4f)
+            ..strokeWidth = 2,
+        );
+        canvas.drawCircle(
+          position.translate(-7, -5),
+          4,
+          Paint()..color = const Color(0xff8f7150),
+        );
+        canvas.drawCircle(
+          position.translate(3, -5),
+          4,
+          Paint()..color = const Color(0xff806243),
         );
         canvas.drawCircle(
           position.translate(-10, 12),
@@ -157,21 +171,37 @@ extension EvacuationSystem on SurvivorGame {
         );
       } else {
         canvas.drawCircle(
-          position.translate(0, -11),
-          6,
+          position.translate(0, -9),
+          4,
           Paint()
-            ..color = flash ? const Color(0xffffe3bd) : const Color(0xffd4b794),
+            ..color = flash ? const Color(0xffffd7ad) : const Color(0xffb78d6d),
         );
-        canvas.drawRect(
-          Rect.fromCenter(center: position, width: 14, height: 24),
-          Paint()..color = const Color(0xff667f91),
+        final cloak = Path()
+          ..moveTo(position.dx, position.dy - 5)
+          ..lineTo(position.dx - 7, position.dy + 12)
+          ..lineTo(position.dx + 7, position.dy + 12)
+          ..close();
+        canvas.drawPath(
+          cloak,
+          Paint()
+            ..color = flash ? const Color(0xffa9c3cf) : const Color(0xff425e71),
+        );
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: position.translate(-5, 2),
+            width: 8,
+            height: 13,
+          ),
+          Paint()
+            ..color = const Color(0xff263b49)
+            ..style = PaintingStyle.fill,
         );
         canvas.drawLine(
-          position.translate(-5, -2),
-          position.translate(7, 9),
+          position.translate(2, -4),
+          position.translate(8, 10),
           Paint()
-            ..color = const Color(0xffd9d0bc)
-            ..strokeWidth = 3,
+            ..color = const Color(0xffb7aa8d)
+            ..strokeWidth = 1.5,
         );
       }
       final ratio = (escort.hp / escort.maxHp).clamp(0.0, 1.0);

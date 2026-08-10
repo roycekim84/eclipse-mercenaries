@@ -277,16 +277,22 @@ class _ShopProductCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 58,
+                height: 58,
                 decoration: BoxDecoration(
                   color: const Color(0xff24202a),
                   border: Border.all(color: const Color(0xff80634a)),
                 ),
-                child: Icon(
-                  _itemIcon(product.itemId),
-                  size: 26,
-                  color: const Color(0xffc7a6df),
+                child: ClipRect(
+                  child: Image.asset(
+                    _shopItemArt(product.itemId),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Icon(
+                      _itemIcon(product.itemId),
+                      size: 28,
+                      color: const Color(0xffc7a6df),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -367,4 +373,13 @@ IconData _itemIcon(String id) => switch (id) {
   'contract_seal' => Icons.approval_outlined,
   'mooncloth' => Icons.nights_stay_outlined,
   _ => Icons.inventory_2_outlined,
+};
+
+String _shopItemArt(String id) => switch (id) {
+  'field_ration' => 'assets/images/shop/field_ration.png',
+  'war_scrap' || 'tempered_iron' => 'assets/images/shop/war_scrap.png',
+  'contract_ticket' ||
+  'contract_seal' ||
+  'officer_map' => 'assets/images/shop/contract_ticket.png',
+  _ => 'assets/images/shop/war_scrap.png',
 };

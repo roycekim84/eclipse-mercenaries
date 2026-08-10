@@ -97,6 +97,14 @@ class ContractMarker extends StatelessWidget {
                       fontSize: 8,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '권장 ${contract.power ~/ 1000}K · ${contract.reward} G',
+                    style: const TextStyle(
+                      color: Color(0xffd8bd7b),
+                      fontSize: 7,
+                    ),
+                  ),
                 ],
               ),
             ),

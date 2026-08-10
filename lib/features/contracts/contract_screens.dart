@@ -45,9 +45,12 @@ class ContractScreen extends StatelessWidget {
                             .toDouble();
                         final x = constraints.maxWidth * xFactors[index];
                         final y = nodeAreaHeight * yFactors[index];
+                        final safeTop = (y - 48)
+                            .clamp(18.0, nodeAreaHeight - 100)
+                            .toDouble();
                         return Positioned(
                           left: x - 76,
-                          top: y - 48,
+                          top: safeTop,
                           child: ContractMarker(
                             contract: item,
                             faction: FactionRules.byId(item.factionId),
@@ -103,7 +106,7 @@ class ContractScreen extends StatelessWidget {
   }
 }
 
-class MercenarySelectScreen extends StatelessWidget {
+class MercenarySelectScreen extends StatefulWidget {
   const MercenarySelectScreen({
     super.key,
     required this.selected,
@@ -124,6 +127,47 @@ class MercenarySelectScreen extends StatelessWidget {
   final VoidCallback onDeploy;
 
   @override
+  State<MercenarySelectScreen> createState() => _MercenarySelectScreenState();
+}
+
+class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelection());
+  }
+
+  @override
+  void didUpdateWidget(covariant MercenarySelectScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selected.id != widget.selected.id) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelection());
+    }
+  }
+
+  void _revealSelection() {
+    if (!_controller.hasClients) return;
+    final index = gameContent.mercenaries.indexWhere(
+      (mercenary) => mercenary.id == widget.selected.id,
+    );
+    if (index < 0) return;
+    final itemExtent = MediaQuery.sizeOf(context).width < 760 ? 220.0 : 138.0;
+    _controller.animateTo(
+      (index * itemExtent).clamp(0, _controller.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => DarkBackdrop(
     child: SafeArea(
       child: Column(
@@ -131,13 +175,14 @@ class MercenarySelectScreen extends StatelessWidget {
           TitleBar(
             title: '출전 용병 선택',
             subtitle: '이번 계약에 파견할 용병을 선택하십시오',
-            onBack: onBack,
+            onBack: widget.onBack,
           ),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 760;
                 final cards = ListView.separated(
+                  controller: _controller,
                   scrollDirection: compact ? Axis.horizontal : Axis.vertical,
                   padding: const EdgeInsets.all(12),
                   itemCount: gameContent.mercenaries.length,
@@ -150,18 +195,18 @@ class MercenarySelectScreen extends StatelessWidget {
                       height: compact ? double.infinity : 128,
                       child: DeploymentMercenaryCard(
                         mercenary: mercenary,
-                        progress: mercenaryProgress[mercenary.id],
-                        selected: selected.id == mercenary.id,
-                        onTap: () => onSelect(mercenary),
+                        progress: widget.mercenaryProgress[mercenary.id],
+                        selected: widget.selected.id == mercenary.id,
+                        onTap: () => widget.onSelect(mercenary),
                       ),
                     );
                   },
                 );
                 final detail = DeploymentSummary(
-                  mercenary: selected,
-                  weapon: equippedWeapon,
-                  onEquipment: onEquipment,
-                  onDeploy: onDeploy,
+                  mercenary: widget.selected,
+                  weapon: widget.equippedWeapon,
+                  onEquipment: widget.onEquipment,
+                  onDeploy: widget.onDeploy,
                 );
                 return compact
                     ? Column(

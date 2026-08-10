@@ -121,7 +121,6 @@ class SurvivorGame extends FlameGame {
   final _visibleUnitDetails = <bool>[];
   final _unitTransforms = <RSTransform>[];
   final _unitSources = <Rect>[];
-  final _unitColors = <Color>[];
   final _unitBatchPaint = Paint()..filterQuality = FilterQuality.none;
   final _unitShadowPaint = Paint()..color = const Color(0x66000000);
   Vector2? _moveTarget;
@@ -225,7 +224,7 @@ class SurvivorGame extends FlameGame {
     _battlefieldBackground = await images.load(switch (config.condition) {
       BattlefieldCondition.moonlitNight =>
         'battlefield/north_gate_battlefield.png',
-      BattlefieldCondition.ashWind => 'battlefield/ashwind_road.png',
+      BattlefieldCondition.ashWind => 'battlefield/ashwind_road_v2.png',
       BattlefieldCondition.blackForest => 'battlefield/black_forest_route.png',
       BattlefieldCondition.whiteNight => 'battlefield/white_night_fortress.png',
       BattlefieldCondition.twilightSiege =>
@@ -550,8 +549,51 @@ class SurvivorGame extends FlameGame {
       final playerDistance = _player.distanceTo(unit.position);
       if (playerDistance > size.x * .8) continue; // Off-screen AI throttling.
       _updateRoleUnit(unit, dt);
+      _applyLocalSeparation(unit, dt);
       unit.phase += dt * (unit.elite ? 6 : 4);
     }
+  }
+
+  void _applyLocalSeparation(BattleUnit unit, double dt) {
+    final cx = _spatialGrid.cellX(unit.position.x);
+    final cy = _spatialGrid.cellY(unit.position.y);
+    final push = Vector2.zero();
+    var neighbours = 0;
+    for (var gx = cx - 1; gx <= cx + 1 && neighbours < 10; gx++) {
+      for (var gy = cy - 1; gy <= cy + 1 && neighbours < 10; gy++) {
+        for (final index in _spatialGrid.bucketAt(gx, gy)) {
+          final other = _units[index];
+          if (identical(other, unit) || other.dead || other.ally != unit.ally) {
+            continue;
+          }
+          final delta = unit.position - other.position;
+          final distance = delta.length;
+          final spacing =
+              unit.role == UnitRole.siege || other.role == UnitRole.siege
+              ? 34.0
+              : 21.0;
+          if (distance >= spacing) continue;
+          if (distance > .1) {
+            push.add(delta.normalized() * (1 - distance / spacing));
+          } else {
+            push.add(Vector2(math.cos(unit.phase), math.sin(unit.phase)));
+          }
+          neighbours++;
+          if (neighbours >= 10) break;
+        }
+      }
+    }
+    final playerDelta = unit.position - _player;
+    final playerDistance = playerDelta.length;
+    final playerSpacing = !unit.ally && unit.playerAggro ? 26.0 : 42.0;
+    if (playerDistance < playerSpacing && playerDistance > .1) {
+      push.add(playerDelta.normalized() * (1 - playerDistance / playerSpacing));
+    }
+    if (push.length2 <= .001) return;
+    unit.position.add(push.normalized() * 22 * dt);
+    unit.position
+      ..x = unit.position.x.clamp(12, size.x - 12)
+      ..y = unit.position.y.clamp(12, size.y - 12);
   }
 
   BattleUnit? _nearestOpponent(BattleUnit source, double range) {
@@ -725,7 +767,6 @@ class SurvivorGame extends FlameGame {
     _visibleUnitDetails.clear();
     _unitTransforms.clear();
     _unitSources.clear();
-    _unitColors.clear();
     for (final unit in _units) {
       if (unit.dead) continue;
       if (unit.position.x < -20 ||
@@ -777,19 +818,14 @@ class SurvivorGame extends FlameGame {
           translateY: unit.position.y - 14 + bob,
         ),
       );
-      _unitColors.add(
-        unit.hitFlash > 0
-            ? const Color(0xffffe8d5)
-            : unit.archetype?.factionColor ?? const Color(0xffffffff),
-      );
     }
     if (_unitSources.isNotEmpty) {
       canvas.drawAtlas(
         _unitAtlas,
         _unitTransforms,
         _unitSources,
-        _unitColors,
-        BlendMode.modulate,
+        null,
+        BlendMode.srcOver,
         null,
         _unitBatchPaint,
       );

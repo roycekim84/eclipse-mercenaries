@@ -401,75 +401,116 @@ class WeaponDetailPanel extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
       child: GoldPanel(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(
-            MediaQuery.sizeOf(context).height < 500 ? 12 : 16,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: GameAssetArt(
-                  asset: weaponArtAsset(weapon.id),
-                  fallbackIcon: weapon.visual.icon,
-                  fallbackColor: weapon.visual.color,
-                  size: 104,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(
+                  MediaQuery.sizeOf(context).height < 500 ? 12 : 16,
                 ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                weapon.name,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '${weapon.grade} 등급',
-                style: TextStyle(color: weapon.visual.color),
-              ),
-              Text(
-                '영구 Lv.${progress?.level ?? 1} · 성장 ${progress?.stage ?? 1}단계',
-                style: const TextStyle(color: Color(0xffc7a6df), fontSize: 11),
-              ),
-              const Divider(color: Color(0xff665536)),
-              StatRow('공격력', '${weapon.attack}'),
-              StatRow('치명타', '${weapon.crit}%'),
-              StatRow(
-                '공격속도',
-                '${weapon.speed >= 0 ? '+' : ''}${weapon.speed}%',
-              ),
-              const SizedBox(height: 10),
-              const Text('무기 특성', style: TextStyle(color: Color(0xffffd27c))),
-              Text(
-                weapon.description,
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-              const SizedBox(height: 14),
-              if (weapon.ownerId != null) const ChipLabel('고유 장비'),
-              if (signature)
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: const Color(0x553f2852),
-                    border: Border.all(color: const Color(0xff9069a5)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.auto_awesome, color: Color(0xffcaa6df)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '궁극기 활성화\n${mercenary.ultimate}',
-                          style: const TextStyle(fontSize: 11),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: GameAssetArt(
+                        asset: weaponArtAsset(weapon.id),
+                        fallbackIcon: weapon.visual.icon,
+                        fallbackColor: weapon.visual.color,
+                        size: 104,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      weapon.name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${weapon.grade} 등급',
+                      style: TextStyle(color: weapon.visual.color),
+                    ),
+                    Text(
+                      '영구 Lv.${progress?.level ?? 1} · 성장 ${progress?.stage ?? 1}단계',
+                      style: const TextStyle(
+                        color: Color(0xffc7a6df),
+                        fontSize: 11,
+                      ),
+                    ),
+                    const Divider(color: Color(0xff665536)),
+                    StatRow('공격력', '${weapon.attack}'),
+                    StatRow('치명타', '${weapon.crit}%'),
+                    StatRow(
+                      '공격속도',
+                      '${weapon.speed >= 0 ? '+' : ''}${weapon.speed}%',
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      '무기 특성',
+                      style: TextStyle(color: Color(0xffffd27c)),
+                    ),
+                    Text(
+                      weapon.description,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    if (weapon.ownerId != null) const ChipLabel('고유 장비'),
+                    if (signature)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          color: const Color(0x553f2852),
+                          border: Border.all(color: const Color(0xff9069a5)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              color: Color(0xffcaa6df),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '궁극기 활성화\n${mercenary.ultimate}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: const BoxDecoration(
+                color: Color(0xff213a55),
+                border: Border(top: BorderSide(color: Color(0xff8da6bd))),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 17,
+                    color: Color(0xffffd27c),
+                  ),
+                  SizedBox(width: 7),
+                  Text(
+                    '현재 장착 중 · 목록 선택 시 즉시 교체',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -408,6 +408,36 @@ class _InfoTab extends StatelessWidget {
           mercenary.traitDescription,
           style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(11),
+          decoration: BoxDecoration(
+            color: const Color(0x553f2852),
+            border: Border.all(color: const Color(0xff745887)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '종족 특성 · ${mercenary.race}',
+                style: const TextStyle(color: Color(0xffcda9e3), fontSize: 11),
+              ),
+              Text(
+                _raceTrait(mercenary.race),
+                style: const TextStyle(color: Colors.white60, fontSize: 10),
+              ),
+              const Divider(color: Color(0xff5e5038), height: 18),
+              Text(
+                '고유무기  ${gameContent.weapons.firstWhere((weapon) => weapon.id == mercenary.signatureWeaponId).name}',
+                style: const TextStyle(color: Color(0xffffd27c), fontSize: 11),
+              ),
+              Text(
+                '궁극기  ${mercenary.ultimate}',
+                style: const TextStyle(color: Colors.white70, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

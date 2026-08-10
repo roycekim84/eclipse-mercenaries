@@ -445,7 +445,7 @@ class BattleHud extends StatelessWidget {
                       Expanded(
                         child: Text(
                           contract.battlefield == BattlefieldType.evacuation
-                              ? '탈출 ${stats.escortEscaped} / ${stats.escortTotal}'
+                              ? '필수 탈출 ${stats.escortEscaped} / ${EvacuationRules.requiredEscaped}'
                               : '북문 ${switch (GateDefenseRules.damageStage(stats.gateHp)) {
                                   ObjectiveDamageStage.secure => '안정',
                                   ObjectiveDamageStage.damaged => '파손',

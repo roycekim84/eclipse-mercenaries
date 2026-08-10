@@ -78,7 +78,7 @@ class _EnemyCodexScreenState extends State<EnemyCodexScreen> {
                   ),
                   const Spacer(),
                   Text(
-                    '기록 완성도  ${gameContent.enemies.length} / ${gameContent.enemies.length}',
+                    '전술 기록  ${gameContent.enemies.length}종 · 전장 조우 시 상세 갱신',
                     style: const TextStyle(
                       color: Color(0xffd6bd81),
                       fontSize: 11,
@@ -231,6 +231,24 @@ class EnemyCodexCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                Positioned(
+                  right: 2,
+                  bottom: 2,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: const Color(0xee101319),
+                      border: Border.all(color: enemy.visual.color),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      enemy.visual.icon,
+                      size: 12,
+                      color: enemy.visual.color,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -340,9 +358,9 @@ class EnemyCodexDetail extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: CodexStat('체력', signed(enemy.hpBonus))),
-              Expanded(child: CodexStat('공격', signed(enemy.damageBonus))),
-              Expanded(child: CodexStat('방어', signed(enemy.defenseBonus))),
+              Expanded(child: CodexStat('체력', '${100 + enemy.hpBonus}')),
+              Expanded(child: CodexStat('공격', '${10 + enemy.damageBonus}')),
+              Expanded(child: CodexStat('방어', '${enemy.defenseBonus}')),
               Expanded(
                 child: CodexStat(
                   '속도',

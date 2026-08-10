@@ -18,8 +18,9 @@ class BattleRenderPolicy {
   bool showsShadow({required bool detailed, required bool important}) =>
       !performanceMode || detailed || important;
 
-  bool emitsSlash(int sequence) => !performanceMode || sequence.isEven;
+  bool emitsSlash(int sequence) =>
+      performanceMode ? sequence % 4 == 0 : sequence.isEven;
 
   bool emitsDamageNumber({required int sequence, required bool critical}) =>
-      !performanceMode || critical || sequence % 3 == 0;
+      critical || (performanceMode ? sequence % 4 == 0 : sequence.isEven);
 }

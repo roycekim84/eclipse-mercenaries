@@ -65,6 +65,7 @@ flutter:
     - assets/images/battlefield/
     - assets/images/items/
     - assets/images/enemies/
+    - assets/images/shop/
     - assets/config/
 
   fonts:
