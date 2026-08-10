@@ -1,0 +1,53 @@
+name: 버그 리포트
+description: 진행 불가, 화면 오류, 저장 또는 전투 문제를 알려주세요.
+title: "[Bug] "
+labels: [bug, playtest]
+body:
+  - type: dropdown
+    id: device
+    attributes:
+      label: 테스트 환경
+      options:
+        - Android 모바일 브라우저
+        - iPhone 모바일 브라우저
+        - Windows 데스크톱 브라우저
+        - macOS 데스크톱 브라우저
+        - 기타
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: 브라우저와 버전
+      placeholder: 예) Chrome 140, Safari 20
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 순서
+      description: 캠프부터 문제가 발생할 때까지의 행동을 순서대로 작성해주세요.
+      placeholder: |
+        1. 전쟁터 출전 선택
+        2. 성문 방어전 시작
+        3. 레벨업 선택 후 화면 정지
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 실제 결과와 예상 결과
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 스크린샷 또는 추가 정보
+      description: 가능하면 화면 크기, 남은 전투 시간과 선택한 용병도 적어주세요.
+  - type: checkboxes
+    id: save_notice
+    attributes:
+      label: 저장 데이터 안내
+      options:
+        - label: 제보에 비밀번호, 개인 정보 또는 민감한 브라우저 데이터를 포함하지 않았습니다.
+          required: true

@@ -1,6 +1,14 @@
-# 월식 용병단
+# 월식 용병단: Eclipse Mercenaries
 
 Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. Web을 우선 개발·검증 환경으로 사용하고 iOS와 Android를 최종 타깃으로 합니다.
+
+## 알파 Web 플레이
+
+- 게임 실행: [GitHub Pages에서 플레이](https://roycekim84.github.io/eclipse-mercenaries/)
+- 테스트 의견: [플레이테스트 피드백 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=playtest_feedback.yml)
+- 버그 제보: [버그 리포트 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=bug_report.yml)
+
+모바일에서는 가로 화면을 권장합니다. 알파 저장 데이터는 현재 브라우저의 local storage에 보관되므로 브라우저 데이터 삭제 또는 시크릿 모드 종료 시 초기화될 수 있습니다.
 
 ## 실행
 
@@ -11,7 +19,7 @@ flutter run -d chrome
 
 진행 상태는 `shared_preferences`를 통해 Web local storage와 iOS/Android 플랫폼 저장소에 자동 저장됩니다.
 
-첫 실행에서는 4단계 첫 계약 안내가 표시됩니다. 캠프 우상단 설정에서 큰 글자, 섬광 감소, 효과음, 진동, 화면 흔들림과 튜토리얼 다시 보기를 변경할 수 있습니다.
+첫 실행에서는 4단계 첫 계약 안내가 표시됩니다. 캠프 우상단 설정에서 큰 글자, 섬광 감소, 저사양 전투 모드, 효과음, 진동, 화면 흔들림과 튜토리얼 다시 보기를 변경할 수 있습니다.
 
 현재 플레이 루프는 `캠프 → 전쟁 계약 → Flame 전투 → 레벨업 → 전장 사건 선택 → 승리/후퇴/패배 → 보상 → 용병 훈련/무기 강화 → 모집/상점 → 다음 출전`입니다. 캠프에서는 3인 용병의 5개 상세 탭, 임무 보상, 대장간, 전리품 도감, 특별 용병 계약과 3종 상점을 확인할 수 있습니다.
 
@@ -35,3 +43,4 @@ flutter run -d chrome
 - 단계별 로드맵: [ROADMAP.md](ROADMAP.md)
 - 현재 진행 상황: [PROGRESS.md](PROGRESS.md)
 - 테스트 기준: [TESTING.md](TESTING.md)
+- 외부 테스트 안내: [PLAYTEST.md](PLAYTEST.md)

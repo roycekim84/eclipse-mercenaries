@@ -1,5 +1,5 @@
 name: eclipse_mercenaries
-description: "수인 용병단 로그라이트 서바이버 — 월식 용병단"
+description: "월식 용병단: Eclipse Mercenaries — 수인 용병단 로그라이트 서바이버"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

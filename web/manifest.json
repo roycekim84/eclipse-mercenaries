@@ -1,12 +1,12 @@
 {
-    "name": "eclipse_mercenaries",
-    "short_name": "eclipse_mercenaries",
+    "name": "월식 용병단: Eclipse Mercenaries",
+    "short_name": "월식 용병단",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0B0D14",
+    "theme_color": "#0B0D14",
+    "description": "수인 용병단 로그라이트 서바이버 알파",
+    "orientation": "landscape",
     "prefer_related_applications": false,
     "icons": [
         {

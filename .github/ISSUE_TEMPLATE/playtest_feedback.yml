@@ -1,0 +1,62 @@
+name: 플레이테스트 피드백
+description: 재미, 난이도, UI와 개선 의견을 남겨주세요.
+title: "[Playtest] "
+labels: [playtest, feedback]
+body:
+  - type: dropdown
+    id: device
+    attributes:
+      label: 테스트 환경
+      options:
+        - Android 모바일 브라우저
+        - iPhone 모바일 브라우저
+        - Windows 데스크톱 브라우저
+        - macOS 데스크톱 브라우저
+        - 기타
+    validations:
+      required: true
+  - type: dropdown
+    id: loop
+    attributes:
+      label: 진행한 범위
+      options:
+        - 캠프만 확인
+        - 첫 전투 진행
+        - 전투 결과와 성장까지 진행
+        - 두 번째 출전 이상 진행
+    validations:
+      required: true
+  - type: textarea
+    id: liked
+    attributes:
+      label: 가장 좋았던 점
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: 가장 불편하거나 이해하기 어려웠던 점
+    validations:
+      required: true
+  - type: textarea
+    id: combat
+    attributes:
+      label: 전투와 난이도 의견
+      description: 병사 수, 자동 공격, 이동, 사건 선택과 전투 시간에 대한 의견을 알려주세요.
+  - type: textarea
+    id: ui
+    attributes:
+      label: UI와 가독성 의견
+      description: 모바일 가로 화면에서 가려지거나 누르기 어려운 요소를 알려주세요.
+  - type: dropdown
+    id: rating
+    attributes:
+      label: 현재 알파 만족도
+      options:
+        - 5 - 다시 플레이하고 싶음
+        - 4 - 재미있음
+        - 3 - 가능성이 보임
+        - 2 - 개선이 많이 필요함
+        - 1 - 진행하기 어려움
+    validations:
+      required: true

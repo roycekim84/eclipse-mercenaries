@@ -1,0 +1,71 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout game
+        uses: actions/checkout@v6
+
+      - name: Checkout Flutter 3.44.0
+        uses: actions/checkout@v6
+        with:
+          repository: flutter/flutter
+          ref: 3.44.0
+          path: .flutter
+          fetch-depth: 1
+
+      - name: Add Flutter to PATH
+        run: echo "$GITHUB_WORKSPACE/.flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run portable tests
+        run: >-
+          flutter test
+          test/battle_render_policy_test.dart
+          test/performance_profiler_test.dart
+          test/repository_test.dart
+          test/spatial_hash_benchmark_test.dart
+          test/widget_test.dart
+
+      - name: Build release Web
+        run: flutter build web --release --base-href "/eclipse-mercenaries/"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/web
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
