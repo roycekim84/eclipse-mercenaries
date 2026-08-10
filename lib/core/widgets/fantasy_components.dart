@@ -253,34 +253,43 @@ class TitleBar extends StatelessWidget {
   final String subtitle;
   final VoidCallback onBack;
   @override
-  Widget build(BuildContext context) => Container(
-    height: 64,
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: const BoxDecoration(
-      color: Color(0xee0c0e14),
-      border: Border(bottom: BorderSide(color: Color(0xff6e5a37))),
-    ),
-    child: Row(
-      children: [
-        SmallIconButton(icon: Icons.arrow_back_ios_new, onTap: onBack),
-        const SizedBox(width: 12),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            Text(
-              subtitle,
-              style: const TextStyle(fontSize: 10, color: Color(0xffbfa875)),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).height < 500;
+    return Container(
+      height: compact ? 52 : 64,
+      padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
+      decoration: const BoxDecoration(
+        color: Color(0xee0c0e14),
+        border: Border(bottom: BorderSide(color: Color(0xff6e5a37))),
+      ),
+      child: Row(
+        children: [
+          SmallIconButton(icon: Icons.arrow_back_ios_new, onTap: onBack),
+          SizedBox(width: compact ? 8 : 12),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: compact ? 18 : 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: compact ? 9 : 10,
+                  color: const Color(0xffbfa875),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class GoldPanel extends StatelessWidget {

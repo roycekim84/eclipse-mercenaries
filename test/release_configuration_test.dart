@@ -43,4 +43,46 @@ void main() {
       expect(File(path).lengthSync(), greaterThan(0), reason: path);
     }
   });
+
+  test('Android release is locked to immersive landscape presentation', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final lightStyle = File(
+      'android/app/src/main/res/values/styles.xml',
+    ).readAsStringSync();
+    final darkStyle = File(
+      'android/app/src/main/res/values-night/styles.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('android:screenOrientation="sensorLandscape"'));
+    expect(
+      lightStyle,
+      contains('<item name="android:windowFullscreen">true</item>'),
+    );
+    expect(
+      darkStyle,
+      contains('<item name="android:windowFullscreen">true</item>'),
+    );
+  });
+
+  test('generated beta item and enemy art sets are complete', () {
+    final itemTiles = Directory(
+      'assets/images/items',
+    ).listSync().whereType<File>().where((file) => file.path.endsWith('.png'));
+    final enemyTiles = Directory(
+      'assets/images/enemies',
+    ).listSync().whereType<File>().where((file) => file.path.endsWith('.png'));
+
+    expect(itemTiles, hasLength(16));
+    expect(enemyTiles, hasLength(9));
+    expect(
+      File('assets/source/generated/weapon_atlas_source.png').existsSync(),
+      isTrue,
+    );
+    expect(
+      File('assets/source/generated/enemy_atlas_source.png').existsSync(),
+      isTrue,
+    );
+  });
 }

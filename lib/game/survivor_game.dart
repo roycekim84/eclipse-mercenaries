@@ -936,10 +936,19 @@ class SurvivorGame extends FlameGame {
   }
 
   void _drawPlayerMarker(Canvas canvas) {
+    final pulse = .72 + math.sin(_elapsed * 5).abs() * .18;
     canvas.drawCircle(
       Offset(_player.x, _player.y + 9),
       16,
       Paint()..color = const Color(0x77000000),
+    );
+    canvas.drawCircle(
+      Offset(_player.x, _player.y),
+      18,
+      Paint()
+        ..color = const Color(0xffffdf86).withValues(alpha: pulse)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
     canvas.drawCircle(
       Offset(_player.x, _player.y),

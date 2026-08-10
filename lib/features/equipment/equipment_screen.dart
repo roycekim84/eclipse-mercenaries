@@ -54,7 +54,9 @@ class EquipmentScreen extends StatelessWidget {
                                   crossAxisCount: constraints.maxWidth < 760
                                       ? 2
                                       : 3,
-                                  childAspectRatio: 1.05,
+                                  mainAxisExtent: constraints.maxHeight < 430
+                                      ? 112
+                                      : 138,
                                   crossAxisSpacing: 9,
                                   mainAxisSpacing: 9,
                                 ),
@@ -172,7 +174,7 @@ class GearLoadoutStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 76,
+    height: MediaQuery.sizeOf(context).height < 500 ? 62 : 76,
     child: Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Row(
@@ -263,30 +265,45 @@ class WeaponGridCard extends StatelessWidget {
           width: active ? 2 : 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Icon(weapon.visual.icon, color: weapon.visual.color, size: 28),
-          const Spacer(),
-          Text(
-            weapon.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          GameAssetArt(
+            asset: weaponArtAsset(weapon.id),
+            fallbackIcon: weapon.visual.icon,
+            fallbackColor: weapon.visual.color,
+            size: 48,
           ),
-          Text(
-            '${weapon.grade} · ATK ${weapon.attack}',
-            style: const TextStyle(fontSize: 10, color: Colors.white54),
-          ),
-          Text(
-            '영구 Lv.${progress?.level ?? 1} · ${progress?.stage ?? 1}단계',
-            style: const TextStyle(fontSize: 9, color: Color(0xffc7a6df)),
-          ),
-          if (weapon.ownerId != null)
-            const Text(
-              '고유 장비',
-              style: TextStyle(color: Color(0xffffc66d), fontSize: 9),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  weapon.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+                Text(
+                  '${weapon.grade} · ATK ${weapon.attack}',
+                  style: const TextStyle(fontSize: 9, color: Colors.white54),
+                ),
+                Text(
+                  '영구 Lv.${progress?.level ?? 1} · ${progress?.stage ?? 1}단계',
+                  style: const TextStyle(fontSize: 8, color: Color(0xffc7a6df)),
+                ),
+                if (weapon.ownerId != null)
+                  const Text(
+                    '고유 장비',
+                    style: TextStyle(color: Color(0xffffc66d), fontSize: 8),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     ),
@@ -384,16 +401,19 @@ class WeaponDetailPanel extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
       child: GoldPanel(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(
+            MediaQuery.sizeOf(context).height < 500 ? 12 : 16,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Icon(
-                  weapon.visual.icon,
-                  size: 84,
-                  color: weapon.visual.color,
+                child: GameAssetArt(
+                  asset: weaponArtAsset(weapon.id),
+                  fallbackIcon: weapon.visual.icon,
+                  fallbackColor: weapon.visual.color,
+                  size: 104,
                 ),
               ),
               const SizedBox(height: 14),
@@ -425,7 +445,7 @@ class WeaponDetailPanel extends StatelessWidget {
                 weapon.description,
                 style: const TextStyle(fontSize: 12, color: Colors.white70),
               ),
-              const Spacer(),
+              const SizedBox(height: 14),
               if (weapon.ownerId != null) const ChipLabel('고유 장비'),
               if (signature)
                 Container(

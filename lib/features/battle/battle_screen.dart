@@ -211,64 +211,70 @@ class BossWarningBanner extends StatelessWidget {
   final BossTelegraph warning;
 
   @override
-  Widget build(BuildContext context) => Positioned(
-    top: 42,
-    left: 0,
-    right: 0,
-    child: SafeArea(
-      child: IgnorePointer(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 390),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xe6190c12),
-              border: Border.all(color: const Color(0xffdc594c), width: 1.5),
-              boxShadow: const [
-                BoxShadow(color: Color(0x88000000), blurRadius: 12),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Color(0xffff7a66),
-                  size: 22,
-                ),
-                const SizedBox(width: 9),
-                Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${warning.bossName} · PHASE ${warning.phase} · ${warning.pattern.name}',
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xffffd0bd),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        '${warning.pattern.warning}  ${warning.secondsLeft.toStringAsFixed(1)}초',
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
+  Widget build(BuildContext context) {
+    final dense = MediaQuery.sizeOf(context).height < 500;
+    return Positioned(
+      top: dense ? 34 : 42,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        child: IgnorePointer(
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: dense ? 320 : 390),
+              padding: EdgeInsets.symmetric(
+                horizontal: dense ? 11 : 18,
+                vertical: dense ? 5 : 8,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xe6190c12),
+                border: Border.all(color: const Color(0xffdc594c), width: 1.5),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x88000000), blurRadius: 12),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xffff7a66),
+                    size: dense ? 18 : 22,
                   ),
-                ),
-              ],
+                  SizedBox(width: dense ? 6 : 9),
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${warning.bossName} · PHASE ${warning.phase} · ${warning.pattern.name}',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Color(0xffffd0bd),
+                            fontSize: dense ? 9 : 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          '${warning.pattern.warning}  ${warning.secondsLeft.toStringAsFixed(1)}초',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: dense ? 8 : 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class BattlePauseOverlay extends StatelessWidget {
@@ -357,14 +363,16 @@ class BattleHud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final seconds = stats.secondsLeft.clamp(0, 999);
-    final compact = MediaQuery.sizeOf(context).width < 900;
+    final screenSize = MediaQuery.sizeOf(context);
+    final dense = screenSize.height < 500;
+    final compact = screenSize.width < 1100 || dense;
     return Stack(
       children: [
         Positioned(
-          left: 12,
-          top: 8,
+          left: dense ? 8 : 12,
+          top: dense ? 5 : 8,
           child: SizedBox(
-            width: 230,
+            width: dense ? 205 : 230,
             child: HudPanel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,12 +380,12 @@ class BattleHud extends StatelessWidget {
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: 18,
+                        radius: dense ? 15 : 18,
                         backgroundColor: mercenary.visual.color,
                         child: Icon(
                           mercenary.visual.icon,
                           color: mercenary.visual.accent,
-                          size: 20,
+                          size: dense ? 17 : 20,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -387,9 +395,9 @@ class BattleHud extends StatelessWidget {
                           children: [
                             Text(
                               'LV.${stats.level}  ${mercenary.name}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w700,
-                                fontSize: 12,
+                                fontSize: dense ? 10 : 12,
                               ),
                             ),
                             Meter(
@@ -405,12 +413,12 @@ class BattleHud extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: dense ? 4 : 8),
                   Text(
                     '임무  ${contract.name}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Color(0xffd5bc83),
-                      fontSize: 11,
+                      fontSize: dense ? 9 : 11,
                     ),
                   ),
                   Text(switch (contract.objective) {
@@ -422,8 +430,8 @@ class BattleHud extends StatelessWidget {
                     ContractObjective.ambush => '적 병력 120명 격파',
                     ContractObjective.fortressRetake => '지휘관 격파 · 80명 소탕',
                     ContractObjective.defense => '성문 방어선 유지',
-                  }, style: const TextStyle(fontSize: 11)),
-                  const SizedBox(height: 5),
+                  }, style: TextStyle(fontSize: dense ? 9 : 11)),
+                  SizedBox(height: dense ? 2 : 5),
                   Row(
                     children: [
                       Icon(
@@ -471,34 +479,36 @@ class BattleHud extends StatelessWidget {
                         ? const Color(0xff60b875)
                         : const Color(0xffd2554e),
                   ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      CommanderStatus(
-                        ally: true,
-                        alive: stats.allyCommanderAlive,
-                      ),
-                      const SizedBox(width: 8),
-                      CommanderStatus(
-                        ally: false,
-                        alive: stats.enemyCommanderAlive,
-                      ),
-                    ],
-                  ),
+                  if (!dense) ...[
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        CommanderStatus(
+                          ally: true,
+                          alive: stats.allyCommanderAlive,
+                        ),
+                        const SizedBox(width: 8),
+                        CommanderStatus(
+                          ally: false,
+                          alive: stats.enemyCommanderAlive,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
         ),
         Positioned(
-          top: 10,
+          top: dense ? 4 : 10,
           left: 0,
           right: 0,
           child: Center(
             child: Text(
               '00:${seconds.toString().padLeft(2, '0')}',
-              style: const TextStyle(
-                fontSize: 22,
+              style: TextStyle(
+                fontSize: dense ? 19 : 22,
                 fontWeight: FontWeight.w800,
                 shadows: [Shadow(blurRadius: 8, color: Colors.black)],
               ),
@@ -730,6 +740,7 @@ class BattleMiniMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dense = MediaQuery.sizeOf(context).height < 500;
     final conditionLabel = switch (contract.condition) {
       BattlefieldCondition.ashWind => '잿바람 · 이동 -6%',
       BattlefieldCondition.blackForest => '검은숲 · 시야 제한',
@@ -738,8 +749,8 @@ class BattleMiniMap extends StatelessWidget {
       BattlefieldCondition.moonlitNight => '월광 야전 · 야행성',
     };
     return Container(
-      width: 150,
-      height: 86,
+      width: dense ? 122 : 150,
+      height: dense ? 70 : 86,
       decoration: BoxDecoration(
         color: const Color(0xcc0b0e13),
         border: Border.all(color: const Color(0xff6b5b3d)),

@@ -38,13 +38,16 @@ class ContractScreen extends StatelessWidget {
                       ),
                       ...List.generate(contracts.length, (index) {
                         final item = contracts[index];
-                        const xFactors = [.13, .32, .51, .7, .87, .48];
-                        const yFactors = [.28, .42, .23, .4, .25, .48];
+                        const xFactors = [.12, .30, .48, .66, .84, .75];
+                        const yFactors = [.18, .49, .16, .48, .18, .67];
+                        final nodeAreaHeight = (constraints.maxHeight - 112)
+                            .clamp(180.0, constraints.maxHeight)
+                            .toDouble();
                         final x = constraints.maxWidth * xFactors[index];
-                        final y = constraints.maxHeight * yFactors[index];
+                        final y = nodeAreaHeight * yFactors[index];
                         return Positioned(
-                          left: x - 95,
-                          top: y - 74,
+                          left: x - 76,
+                          top: y - 48,
                           child: ContractMarker(
                             contract: item,
                             faction: FactionRules.byId(item.factionId),
@@ -319,80 +322,101 @@ class DeploymentSummary extends StatelessWidget {
               MediaQuery.sizeOf(context).height < 500 ? 10 : 18,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  mercenary.epithet,
-                  style: TextStyle(
-                    color: mercenary.visual.accent,
-                    fontSize: 11,
-                    letterSpacing: 2,
-                  ),
-                ),
-                Text(
-                  mercenary.name,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${mercenary.race} · ${mercenary.job}   전투력 ${mercenary.power}',
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  '개인 특성 · ${mercenary.trait}',
-                  style: const TextStyle(
-                    color: Color(0xffffd27c),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  mercenary.traitDescription,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xaa0b0d12),
-                    border: Border.all(color: weapon.visual.color),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(weapon.visual.icon, color: weapon.visual.color),
-                      const SizedBox(width: 9),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            weapon.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          mercenary.epithet,
+                          style: TextStyle(
+                            color: mercenary.visual.accent,
+                            fontSize: 10,
+                            letterSpacing: 2,
                           ),
-                          Text(
-                            '${weapon.grade} · 공격력 ${weapon.attack}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white54,
-                            ),
+                        ),
+                        Text(
+                          mercenary.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        Text(
+                          '${mercenary.race} · ${mercenary.job}   전투력 ${mercenary.power}',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '개인 특성 · ${mercenary.trait}',
+                          style: const TextStyle(
+                            color: Color(0xffffd27c),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          mercenary.traitDescription,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xaa0b0d12),
+                            border: Border.all(color: weapon.visual.color),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                weapon.visual.icon,
+                                color: weapon.visual.color,
+                              ),
+                              const SizedBox(width: 9),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    weapon.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${weapon.grade} · 공격력 ${weapon.attack}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          '궁극기  ${mercenary.ultimate}',
+                          style: TextStyle(
+                            color: weapon.ownerId == mercenary.id
+                                ? const Color(0xffc7a6df)
+                                : Colors.white38,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  '궁극기  ${mercenary.ultimate}',
-                  style: TextStyle(
-                    color: weapon.ownerId == mercenary.id
-                        ? const Color(0xffc7a6df)
-                        : Colors.white38,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     Expanded(
@@ -402,7 +426,7 @@ class DeploymentSummary extends StatelessWidget {
                         onTap: onEquipment,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: FantasyButton(
                         label: '이 용병으로 출전',

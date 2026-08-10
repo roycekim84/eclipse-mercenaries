@@ -162,11 +162,47 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('전장 도감'), findsOneWidget);
-    expect(find.text('전체 12'), findsOneWidget);
-    expect(find.text('일반 8'), findsOneWidget);
-    expect(find.text('정예 2'), findsOneWidget);
-    expect(find.text('지휘관 2'), findsOneWidget);
+    expect(find.text('전체 27'), findsOneWidget);
+    expect(find.text('일반 16'), findsOneWidget);
+    expect(find.text('정예 6'), findsOneWidget);
+    expect(find.text('지휘관 5'), findsOneWidget);
     expect(find.text('바르가르 징집병'), findsWidgets);
+  });
+
+  testWidgets('Android compact landscape screens render without overflow', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1024, 461);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final shell = tester.state<GameShellState>(find.byType(GameShell));
+    for (final scene in <AppScene>[
+      AppScene.equipment,
+      AppScene.enemyCodex,
+      AppScene.forge,
+      AppScene.shop,
+      AppScene.recruitment,
+      AppScene.contracts,
+      AppScene.mercenarySelect,
+      AppScene.roster,
+    ]) {
+      shell.go(scene);
+      await tester.pumpAndSettle();
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: '$scene 화면은 1024×461에서 오버플로 없이 표시되어야 합니다.',
+      );
+    }
   });
 
   testWidgets('mercenary detail exposes five growth tabs', (tester) async {

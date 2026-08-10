@@ -14,5 +14,15 @@ abstract final class MobileOrientation {
   static Future<void> apply() async {
     if (kIsWeb) return;
     await SystemChrome.setPreferredOrientations(landscapeOrientations);
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Color(0x00000000),
+          systemNavigationBarColor: Color(0x00000000),
+          systemNavigationBarDividerColor: Color(0x00000000),
+        ),
+      );
+    }
   }
 }

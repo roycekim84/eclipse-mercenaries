@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/battle_models.dart';
 import '../../domain/game_data.dart';
 import '../../domain/enemy_catalog.dart';
 
@@ -163,6 +164,29 @@ extension EnemyVisualLookup on EnemyArchetypeSpec {
   };
 
   EnemyVisual get visual => EnemyVisual(color: factionColor, icon: abilityIcon);
+}
+
+String weaponArtAsset(String id) => 'assets/images/items/$id.png';
+
+String enemyArtAsset(EnemyArchetypeSpec enemy) {
+  if (enemy.rank == EnemyRank.boss) return 'assets/images/enemies/warlord.png';
+  if (enemy.role == UnitRole.commander) {
+    return 'assets/images/enemies/commander.png';
+  }
+  if (enemy.rank == EnemyRank.elite) {
+    return 'assets/images/enemies/frost_elite.png';
+  }
+  if (enemy.ability == EnemyAbility.flank ||
+      enemy.ability == EnemyAbility.huntMark) {
+    return 'assets/images/enemies/skirmisher.png';
+  }
+  return switch (enemy.role) {
+    UnitRole.archer => 'assets/images/enemies/archer.png',
+    UnitRole.cavalry => 'assets/images/enemies/cavalry.png',
+    UnitRole.mage => 'assets/images/enemies/mage.png',
+    UnitRole.siege => 'assets/images/enemies/siege.png',
+    _ => 'assets/images/enemies/infantry.png',
+  };
 }
 
 String enemyFactionName(EnemyFaction faction) => switch (faction) {

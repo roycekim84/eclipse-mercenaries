@@ -1,5 +1,34 @@
 part of '../../app/game_app.dart';
 
+class GameAssetArt extends StatelessWidget {
+  const GameAssetArt({
+    super.key,
+    required this.asset,
+    required this.fallbackIcon,
+    required this.fallbackColor,
+    this.size = 48,
+  });
+
+  final String asset;
+  final IconData fallbackIcon;
+  final Color fallbackColor;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: ClipRect(
+      child: Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) =>
+            Icon(fallbackIcon, color: fallbackColor, size: size * .58),
+      ),
+    ),
+  );
+}
+
 class ContractMarker extends StatelessWidget {
   const ContractMarker({
     super.key,
@@ -19,12 +48,13 @@ class ContractMarker extends StatelessWidget {
       scale: selected ? 1.08 : 1,
       duration: const Duration(milliseconds: 180),
       child: SizedBox(
-        width: 190,
+        width: 152,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 58,
-              height: 58,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 color: contract.color,
                 shape: BoxShape.circle,
@@ -38,20 +68,36 @@ class ContractMarker extends StatelessWidget {
                   BoxShadow(color: Colors.black87, blurRadius: 12),
                 ],
               ),
-              child: Icon(contract.icon, color: Colors.white),
+              child: Icon(contract.icon, color: Colors.white, size: 23),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              width: 148,
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
               color: const Color(0xdd0a0c11),
-              child: Text(
-                '${contract.name}\n${contract.battlefieldName}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                  height: 1.25,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    contract.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 9,
+                    ),
+                  ),
+                  Text(
+                    contract.battlefieldName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: contract.color.withValues(alpha: .9),
+                      fontSize: 8,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

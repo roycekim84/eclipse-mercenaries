@@ -120,11 +120,11 @@ extension BossSystem on SurvivorGame {
     final boss = _enemyCommander;
     final target = _bossPatternTarget;
     if (pattern == null || boss == null || target == null) return;
-    final pulse = .55 + math.sin(_elapsed * 10).abs() * .35;
+    final pulse = .5 + math.sin(_elapsed * 10).abs() * .28;
     final paint = Paint()
       ..color = const Color(0xffef493f).withValues(alpha: pulse)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = reducedEffects.value ? 3 : 5;
+      ..strokeWidth = reducedEffects.value ? 2.5 : 3.5;
     switch (pattern.type) {
       case BossPatternType.chargeLine:
         canvas.drawLine(
@@ -133,7 +133,7 @@ extension BossSystem on SurvivorGame {
           paint,
         );
       case BossPatternType.bombardment:
-        canvas.drawCircle(Offset(target.x, target.y), 76, paint);
+        canvas.drawCircle(Offset(target.x, target.y), 70, paint);
         canvas.drawCircle(
           Offset(target.x, target.y),
           18,

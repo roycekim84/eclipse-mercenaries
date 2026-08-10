@@ -16,7 +16,12 @@ class RosterScreen extends StatelessWidget {
     child: SafeArea(
       child: Column(
         children: [
-          TitleBar(title: '용병 명부', subtitle: '보유 용병  3 / 100', onBack: onBack),
+          TitleBar(
+            title: '용병 명부',
+            subtitle:
+                '보유 용병  ${mercenaryProgress.length} / ${gameContent.mercenaries.length}',
+            onBack: onBack,
+          ),
           const Padding(
             padding: EdgeInsets.all(12),
             child: Row(
@@ -34,9 +39,11 @@ class RosterScreen extends StatelessWidget {
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 210,
-                childAspectRatio: .76,
+                childAspectRatio: MediaQuery.sizeOf(context).height < 500
+                    ? .9
+                    : .76,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),

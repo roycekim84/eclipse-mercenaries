@@ -134,13 +134,14 @@ class _ShopScreenState extends State<ShopScreen> {
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.all(14),
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 360,
-                            childAspectRatio: 1.35,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 360,
+                        mainAxisExtent: MediaQuery.sizeOf(context).height < 500
+                            ? 154
+                            : 190,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
                       itemCount: products.length,
                       itemBuilder: (_, index) {
                         final product = products[index];
@@ -267,22 +268,24 @@ class _ShopProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GoldPanel(
     child: Padding(
-      padding: const EdgeInsets.all(13),
+      padding: EdgeInsets.all(
+        MediaQuery.sizeOf(context).height < 500 ? 10 : 13,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: const Color(0xff24202a),
                   border: Border.all(color: const Color(0xff80634a)),
                 ),
                 child: Icon(
                   _itemIcon(product.itemId),
-                  size: 30,
+                  size: 26,
                   color: const Color(0xffc7a6df),
                 ),
               ),
@@ -307,10 +310,10 @@ class _ShopProductCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           Text(
             product.description,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: Colors.white60, fontSize: 10),
           ),

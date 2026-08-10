@@ -33,102 +33,113 @@ class _EnemyCodexScreenState extends State<EnemyCodexScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => DarkBackdrop(
-    child: SafeArea(
-      child: Column(
-        children: [
-          TitleBar(
-            title: '전장 도감',
-            subtitle: '조우한 세력과 병력의 전술 정보를 열람합니다',
-            onBack: widget.onBack,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: Row(
-              children: [
-                EnemyFilterChip(
-                  label: '전체 12',
-                  selected: filter == null,
-                  onTap: () => setFilter(null),
-                ),
-                EnemyFilterChip(
-                  label: '일반 8',
-                  selected: filter == EnemyRank.common,
-                  onTap: () => setFilter(EnemyRank.common),
-                ),
-                EnemyFilterChip(
-                  label: '정예 2',
-                  selected: filter == EnemyRank.elite,
-                  onTap: () => setFilter(EnemyRank.elite),
-                ),
-                EnemyFilterChip(
-                  label: '지휘관 2',
-                  selected: filter == EnemyRank.boss,
-                  onTap: () => setFilter(EnemyRank.boss),
-                ),
-                const Spacer(),
-                Text(
-                  '기록 완성도  ${gameContent.enemies.length} / 12',
-                  style: const TextStyle(
-                    color: Color(0xffd6bd81),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
+  Widget build(BuildContext context) {
+    final commonCount = gameContent.enemies
+        .where((enemy) => enemy.rank == EnemyRank.common)
+        .length;
+    final eliteCount = gameContent.enemies
+        .where((enemy) => enemy.rank == EnemyRank.elite)
+        .length;
+    final bossCount = gameContent.enemies
+        .where((enemy) => enemy.rank == EnemyRank.boss)
+        .length;
+    return DarkBackdrop(
+      child: SafeArea(
+        child: Column(
+          children: [
+            TitleBar(
+              title: '전장 도감',
+              subtitle: '조우한 세력과 병력의 전술 정보를 열람합니다',
+              onBack: widget.onBack,
             ),
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 850;
-                final list = GridView.builder(
-                  padding: const EdgeInsets.all(14),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: compact ? 2 : 3,
-                    childAspectRatio: compact ? 2.25 : 1.65,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+              child: Row(
+                children: [
+                  EnemyFilterChip(
+                    label: '전체 ${gameContent.enemies.length}',
+                    selected: filter == null,
+                    onTap: () => setFilter(null),
                   ),
-                  itemCount: visible.length,
-                  itemBuilder: (context, index) {
-                    final enemy = visible[index];
-                    return EnemyCodexCard(
-                      enemy: enemy,
-                      selected: selected.id == enemy.id,
-                      onTap: () => setState(() => selected = enemy),
+                  EnemyFilterChip(
+                    label: '일반 $commonCount',
+                    selected: filter == EnemyRank.common,
+                    onTap: () => setFilter(EnemyRank.common),
+                  ),
+                  EnemyFilterChip(
+                    label: '정예 $eliteCount',
+                    selected: filter == EnemyRank.elite,
+                    onTap: () => setFilter(EnemyRank.elite),
+                  ),
+                  EnemyFilterChip(
+                    label: '지휘관 $bossCount',
+                    selected: filter == EnemyRank.boss,
+                    onTap: () => setFilter(EnemyRank.boss),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '기록 완성도  ${gameContent.enemies.length} / ${gameContent.enemies.length}',
+                    style: const TextStyle(
+                      color: Color(0xffd6bd81),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 850;
+                  final list = GridView.builder(
+                    padding: const EdgeInsets.all(14),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: compact ? 2 : 3,
+                      mainAxisExtent: 98,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                    ),
+                    itemCount: visible.length,
+                    itemBuilder: (context, index) {
+                      final enemy = visible[index];
+                      return EnemyCodexCard(
+                        enemy: enemy,
+                        selected: selected.id == enemy.id,
+                        onTap: () => setState(() => selected = enemy),
+                      );
+                    },
+                  );
+                  if (compact) {
+                    return Column(
+                      children: [
+                        Expanded(child: list),
+                        SizedBox(
+                          height: 205,
+                          child: EnemyCodexDetail(enemy: selected),
+                        ),
+                      ],
                     );
-                  },
-                );
-                if (compact) {
-                  return Column(
+                  }
+                  return Row(
                     children: [
-                      Expanded(child: list),
+                      Expanded(flex: 6, child: list),
                       SizedBox(
-                        height: 205,
-                        child: EnemyCodexDetail(enemy: selected),
+                        width: 390,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 14, 14, 14),
+                          child: EnemyCodexDetail(enemy: selected),
+                        ),
                       ),
                     ],
                   );
-                }
-                return Row(
-                  children: [
-                    Expanded(flex: 6, child: list),
-                    SizedBox(
-                      width: 390,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 14, 14, 14),
-                        child: EnemyCodexDetail(enemy: selected),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class EnemyFilterChip extends StatelessWidget {
@@ -201,10 +212,11 @@ class EnemyCodexCard extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(
-                  enemy.visual.icon,
-                  size: enemy.rank == EnemyRank.boss ? 48 : 40,
-                  color: enemy.visual.color,
+                GameAssetArt(
+                  asset: enemyArtAsset(enemy),
+                  fallbackIcon: enemy.visual.icon,
+                  fallbackColor: enemy.visual.color,
+                  size: 62,
                 ),
                 if (enemy.rank != EnemyRank.common)
                   Container(
@@ -224,7 +236,7 @@ class EnemyCodexCard extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(2, 8, 8, 8),
+              padding: const EdgeInsets.fromLTRB(2, 6, 8, 6),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,10 +255,10 @@ class EnemyCodexCard extends StatelessWidget {
                     '${enemyFactionName(enemy.faction)} · ${enemyRankName(enemy.rank)}',
                     style: TextStyle(fontSize: 9, color: enemy.visual.color),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     enemy.abilityDescription,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 8, color: Colors.white54),
                   ),
@@ -281,10 +293,11 @@ class EnemyCodexDetail extends StatelessWidget {
                   color: enemy.visual.color.withValues(alpha: .16),
                   border: Border.all(color: enemy.visual.color),
                 ),
-                child: Icon(
-                  enemy.visual.icon,
-                  size: 38,
-                  color: enemy.visual.color,
+                child: GameAssetArt(
+                  asset: enemyArtAsset(enemy),
+                  fallbackIcon: enemy.visual.icon,
+                  fallbackColor: enemy.visual.color,
+                  size: 64,
                 ),
               ),
               const SizedBox(width: 14),

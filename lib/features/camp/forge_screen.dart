@@ -106,7 +106,7 @@ class _ForgeWeaponList extends StatelessWidget {
     padding: const EdgeInsets.all(12),
     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
       maxCrossAxisExtent: 180,
-      childAspectRatio: 1.55,
+      mainAxisExtent: 72,
       crossAxisSpacing: 8,
       mainAxisSpacing: 8,
     ),
@@ -129,7 +129,12 @@ class _ForgeWeaponList extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(weapon.visual.icon, color: weapon.visual.color, size: 28),
+              GameAssetArt(
+                asset: weaponArtAsset(weapon.id),
+                fallbackIcon: weapon.visual.icon,
+                fallbackColor: weapon.visual.color,
+                size: 34,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -222,67 +227,88 @@ class _ForgeDetail extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  ListView(
-                    padding: const EdgeInsets.all(18),
+                  Column(
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            weapon.visual.icon,
-                            size: 64,
-                            color: weapon.visual.color,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
+                          children: [
+                            Row(
                               children: [
-                                Text(
-                                  weapon.name,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                GameAssetArt(
+                                  asset: weaponArtAsset(weapon.id),
+                                  fallbackIcon: weapon.visual.icon,
+                                  fallbackColor: weapon.visual.color,
+                                  size: 64,
                                 ),
-                                Text(
-                                  '${weapon.grade} · Lv.${progress.level} · 성장 ${progress.stage}단계',
-                                  style: TextStyle(color: weapon.visual.color),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        weapon.name,
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${weapon.grade} · Lv.${progress.level} · 성장 ${progress.stage}단계',
+                                        style: TextStyle(
+                                          color: weapon.visual.color,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Meter(
-                        value: progress.level >= 20 ? 1 : progress.xp / nextXp,
-                        color: weapon.visual.color,
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        progress.level >= 20
-                            ? 'MAX'
-                            : '무기 경험치 ${progress.xp} / $nextXp',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.white60,
+                            const SizedBox(height: 16),
+                            Meter(
+                              value: progress.level >= 20
+                                  ? 1
+                                  : progress.xp / nextXp,
+                              color: weapon.visual.color,
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              progress.level >= 20
+                                  ? 'MAX'
+                                  : '무기 경험치 ${progress.xp} / $nextXp',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.white60,
+                              ),
+                            ),
+                            const Divider(color: Color(0xff665536), height: 28),
+                            StatRow('보유 골드', '$gold'),
+                            StatRow('전장 고철', '${inventory['war_scrap'] ?? 0}'),
+                          ],
                         ),
                       ),
-                      const Divider(color: Color(0xff665536), height: 28),
-                      StatRow('보유 골드', '$gold'),
-                      StatRow('전장 고철', '${inventory['war_scrap'] ?? 0}'),
-                      const SizedBox(height: 14),
-                      FantasyButton(
-                        label: '담금질  +${CampMetaRules.forgeXp} EXP',
-                        icon: Icons.handyman,
-                        onTap: onEnhance,
-                        prominent: true,
-                      ),
-                      const SizedBox(height: 7),
-                      const Text(
-                        '소모: 700 골드 · 전장 고철 2개',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 10, color: Colors.white54),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 4, 18, 10),
+                        child: Column(
+                          children: [
+                            FantasyButton(
+                              label: '담금질  +${CampMetaRules.forgeXp} EXP',
+                              icon: Icons.handyman,
+                              onTap: onEnhance,
+                              prominent: true,
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              '소모: 700 골드 · 전장 고철 2개',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.white54,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

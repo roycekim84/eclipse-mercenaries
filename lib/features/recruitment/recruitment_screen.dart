@@ -118,91 +118,98 @@ class _RecruitLobby extends StatelessWidget {
   final VoidCallback onSingle;
   final VoidCallback onTen;
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerLeft,
-    child: SizedBox(
-      width: 470,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(42, 22, 18, 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'SPECIAL CONTRACT',
-              style: TextStyle(
-                color: Color(0xffb99ad3),
-                letterSpacing: 4,
-                fontSize: 11,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '달빛의 그림자\n루나',
-              style: TextStyle(
-                fontSize: 37,
-                height: 1.05,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 9),
-            const Text(
-              '묘족 암살자 · 고유 특성 「야행성」\n고유무기 월광쌍검과 공명 시 궁극기 활성화',
-              style: TextStyle(
-                color: Colors.white70,
-                height: 1.5,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                _CurrencyPill(
-                  icon: Icons.description_outlined,
-                  label: '계약서 $tickets',
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).height < 500;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        width: 470,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            compact ? 34 : 42,
+            compact ? 12 : 22,
+            18,
+            compact ? 12 : 30,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'SPECIAL CONTRACT',
+                style: TextStyle(
+                  color: Color(0xffb99ad3),
+                  letterSpacing: 4,
+                  fontSize: 11,
                 ),
-                const SizedBox(width: 8),
-                _CurrencyPill(
-                  icon: Icons.diamond_outlined,
-                  label: '크리스탈 $crystals',
+              ),
+              SizedBox(height: compact ? 4 : 8),
+              Text(
+                '달빛의 그림자\n루나',
+                style: TextStyle(
+                  fontSize: compact ? 30 : 37,
+                  height: 1.05,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: FantasyButton(
-                    label: '1회 계약  ${tickets > 0 ? '계약서 1' : '◆ 300'}',
-                    icon: Icons.edit_document,
-                    onTap: onSingle,
+              ),
+              SizedBox(height: compact ? 5 : 9),
+              const Text(
+                '묘족 암살자 · 고유 특성 「야행성」\n고유무기 월광쌍검과 공명 시 궁극기 활성화',
+                style: TextStyle(
+                  color: Colors.white70,
+                  height: 1.5,
+                  fontSize: 12,
+                ),
+              ),
+              SizedBox(height: compact ? 10 : 22),
+              Row(
+                children: [
+                  _CurrencyPill(
+                    icon: Icons.description_outlined,
+                    label: '계약서 $tickets',
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FantasyButton(
-                    label: '10회 계약  ◆ 2,700',
-                    icon: Icons.auto_awesome,
-                    onTap: onTen,
-                    prominent: true,
+                  const SizedBox(width: 8),
+                  _CurrencyPill(
+                    icon: Icons.diamond_outlined,
+                    label: '크리스탈 $crystals',
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 9),
-            TextButton.icon(
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (_) => const _ProbabilityDialog(),
+                ],
               ),
-              icon: const Icon(Icons.info_outline, size: 15),
-              label: const Text('계약 확률 및 중복 변환 안내'),
-            ),
-          ],
+              SizedBox(height: compact ? 7 : 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FantasyButton(
+                      label: '1회 계약  ${tickets > 0 ? '계약서 1' : '◆ 300'}',
+                      icon: Icons.edit_document,
+                      onTap: onSingle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FantasyButton(
+                      label: '10회 계약  ◆ 2,700',
+                      icon: Icons.auto_awesome,
+                      onTap: onTen,
+                      prominent: true,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: compact ? 3 : 9),
+              TextButton.icon(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => const _ProbabilityDialog(),
+                ),
+                icon: const Icon(Icons.info_outline, size: 15),
+                label: const Text('계약 확률 및 중복 변환 안내'),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _CurrencyPill extends StatelessWidget {
