@@ -49,7 +49,7 @@ class ResultScreen extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontFamily: 'serif',
+                        fontFamily: 'Cinzel',
                         color: titleColor,
                         fontSize: 42,
                         letterSpacing: 7,
@@ -67,30 +67,36 @@ class ResultScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 16,
+                      runSpacing: 6,
                       children: [
-                        Icon(
-                          evacuation
-                              ? Icons.local_shipping_outlined
-                              : Icons.castle_outlined,
-                          size: 16,
-                          color: Color(0xffd6bd81),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              evacuation
+                                  ? Icons.local_shipping_outlined
+                                  : Icons.castle_outlined,
+                              size: 16,
+                              color: Color(0xffd6bd81),
+                            ),
+                            const SizedBox(width: 7),
+                            Text(
+                              evacuation
+                                  ? '호위 탈출 ${report.escortEscaped} / ${report.escortTotal}'
+                                  : '성문 내구도 ${(report.objectiveHpRatio * 100).round()}%',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 7),
-                        Text(
-                          evacuation
-                              ? '호위 탈출 ${report.escortEscaped} / ${report.escortTotal}'
-                              : '성문 내구도 ${(report.objectiveHpRatio * 100).round()}%',
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        if (report.completedBonusIds.isNotEmpty) ...[
-                          const SizedBox(width: 16),
+                        if (report.completedBonusIds.isNotEmpty)
                           Text(
                             '전술 보너스 ${report.completedBonusIds.length}개',
                             style: const TextStyle(color: Color(0xffffd27c)),
                           ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 9),

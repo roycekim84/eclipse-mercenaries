@@ -9,6 +9,23 @@ flutter build web
 dart run tool/performance_benchmark.dart
 ```
 
+## Golden 시각 회귀
+
+기준 화면은 `test/golden/goldens`에 보관한다.
+
+- 캠프 1280×720
+- 전쟁 계약 1280×720
+- 전투 결과 1280×720
+
+일반 검증은 `flutter test`에 포함된다. 의도적으로 UI를 변경한 경우에만 아래 명령으로 기준 이미지를 갱신하고 세 PNG를 직접 확인한다.
+
+```bash
+flutter test test/golden/core_screens_golden_test.dart --update-goldens
+flutter test test/golden/core_screens_golden_test.dart
+```
+
+새 한국어 문구를 추가한 뒤 글리프가 누락되면 `tool/update_font_assets.sh`로 내장 폰트 서브셋을 갱신한다.
+
 ## 수동 Web 시나리오
 
 1. 캠프 배경, 상단 재화, 좌·우 메뉴가 가로 화면에서 겹치지 않는지 확인한다.
@@ -78,6 +95,7 @@ dart run tool/performance_benchmark.dart
 65. 전리품이 없는 결과에서도 계약 골드/경험치 반영과 다음 행동 안내가 표시되는지 확인한다.
 66. 캠프→계약→용병 선택→전투→결과→캠프 회귀 테스트가 보상을 한 번만 저장하는지 확인한다.
 67. 330/500/750/1,000 유닛 공간 그리드 벤치마크의 후보 검사율이 전체 조합의 35% 미만인지 확인한다.
+68. 캠프·전쟁 계약·결과 화면이 1280×720 Golden과 픽셀 단위로 일치하고 폰트/아이콘 대체 문자가 없는지 확인한다.
 
 ## 성능 기준
 
@@ -248,3 +266,13 @@ Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임
 - 공간 그리드 CPU 하네스에서 330/500/750/1,000 유닛 후보 검사율이 전체 조합의 9% 미만
 - release Web의 1280×720 및 844×390 캠프 레이아웃에서 overflow 없이 주요 행동 노출 확인
 - 절대 프레임 성능은 release Web 브라우저 계측 대상으로 분리하며 CPU 하네스 수치와 혼용하지 않음
+
+## 최근 검증 — 2026-08-10 M5.3
+
+- `flutter analyze`: 통과, 이슈 0건
+- `flutter test`: 58개 통과, Golden 3개 포함
+- `flutter build web --release`: 통과, Wasm dry run 통과
+- 캠프·전쟁 계약·결과 1280×720 Golden 생성 후 비갱신 재실행 일치
+- Noto Sans KR 400/700과 Cinzel 내장, 런타임 `google_fonts` 의존성 제거
+- Golden 검토 중 결과 전술 보너스 행 overflow 발견 및 반응형 Wrap으로 수정
+- release Web 1280×720 및 844×390에서 내장 한글 폰트와 캠프 overflow 0건 확인

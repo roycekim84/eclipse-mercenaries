@@ -38,6 +38,8 @@
 
 앱/도메인/게임 런타임 경계와 기능별 화면 분리가 완료됐다. 화면 파일은 Dart library part로 묶어 현재 비공개 상태 경계를 유지하며, 기능이 커질 때 독립 public widget library로 전환한다.
 
+한국어 UI는 네트워크 런타임 폰트 대신 `assets/fonts`의 Noto Sans KR 400/700 서브셋을 사용한다. 영문 대형 제목은 Cinzel을 사용한다. 알파 서브셋은 현재 Dart 소스의 한글 글리프와 기본 Latin/문장부호를 포함하며 `tool/update_font_assets.sh`가 고정된 Google Fonts revision에서 재생성한다. 이 구조로 Web/iOS/Android와 Golden 테스트의 글꼴 메트릭을 일치시킨다.
+
 ## 3. 목표 레이어
 
 ```text
@@ -295,6 +297,7 @@ AudioService가 BGM, SFX, UI, voice 채널을 관리한다. 동시 재생 상한
 - 결과 보고서 snapshot 비교 가능
 - 런 성장 RNG와 사건 RNG를 각각 `seed ^ 0x5f3759df`, `seed ^ 0x6c8e9cf5`로 분리해 한 시스템의 추출 횟수가 다른 시스템의 결과를 바꾸지 않는다.
 - 발생 사건 ID와 선택 결과는 `BattleReport.eventRecords`로 Presentation에 전달하며 런타임이 계정 재화를 직접 수정하지 않는다.
+- 캠프, 전쟁 계약, 결과 화면은 1280×720 DPR 1 Golden을 유지한다. Golden 하네스는 Noto Sans KR/Cinzel/Material Icons를 테스트 본문에서 명시적으로 로드하고 캠프 배경을 precache해 폰트·이미지 비동기 로딩 차이를 제거한다.
 
 ## 16. 성능 예산
 

@@ -14,6 +14,14 @@
 - 조명: 따뜻한 불빛과 차가운 달빛의 대비
 - 재질: 낡은 가죽, 흑철, 어두운 목재, 천막, 유황과 재
 
+## 타이포그래피
+
+- 한국어 본문/수치/UI: 프로젝트에 내장한 `NotoSansKR` Regular 400, Bold 700을 사용한다.
+- 영문 승리·등급·궁극기 제목: 고전 로마 비문 계열의 `Cinzel`을 사용한다.
+- 런타임 Google Fonts 다운로드는 사용하지 않는다. Web/iOS/Android와 Golden 테스트가 같은 글꼴 파일을 사용해야 한다.
+- Noto Sans KR은 현재 `lib`/`test`의 한글 글리프만 포함한 알파 서브셋이다. 새 문구를 추가하면 `tool/update_font_assets.sh`를 실행하고 Golden 기준 이미지를 검토한다.
+- 두 서체는 SIL Open Font License 1.1이며 라이선스 원문은 `assets/fonts/OFL-NotoSansKR.txt`, `assets/fonts/OFL-Cinzel.txt`에 보관한다.
+
 ## 루나 식별 요소
 
 긴 검은 머리, 검은 고양이 귀와 한 개의 꼬리, 보라·검정 의상, 쌍검, 달빛 모티프를 일러스트·초상·픽셀 스프라이트에 일관되게 유지한다.

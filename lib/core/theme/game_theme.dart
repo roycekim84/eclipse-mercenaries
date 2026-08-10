@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 abstract final class GamePalette {
   static const background = Color(0xff090b10);
@@ -12,14 +11,14 @@ abstract final class GamePalette {
 }
 
 ThemeData buildGameTheme() {
-  final textTheme = GoogleFonts.notoSansKrTextTheme(ThemeData.dark().textTheme);
-  return ThemeData.dark().copyWith(
+  return ThemeData(
+    brightness: Brightness.dark,
+    fontFamily: 'NotoSansKR',
     scaffoldBackgroundColor: GamePalette.background,
     colorScheme: const ColorScheme.dark(
       primary: GamePalette.gold,
       secondary: GamePalette.navy,
       surface: GamePalette.panel,
     ),
-    textTheme: textTheme,
   );
 }

@@ -1,5 +1,14 @@
 # 변경 기록
 
+## Deterministic fonts and golden visual regression — 2026-08-10
+
+- 캠프·전쟁 계약·전투 결과 1280×720 Golden 기준 이미지와 픽셀 회귀 테스트 추가
+- Noto Sans KR Regular/Bold 서브셋과 Cinzel을 앱에 내장해 Web/모바일/테스트 폰트 통일
+- 런타임 `google_fonts` 의존성과 비결정적 네트워크 폰트 로딩 제거
+- 고정 Google Fonts revision과 현재 한글 글리프로 폰트를 재생성하는 도구 추가
+- Golden 검토에서 발견한 결과 화면 전술 보너스 행 overflow를 Wrap 레이아웃으로 수정
+- M5 핵심 화면 Golden 테스트 완료
+
 ## Resilient UI states and performance harness — 2026-08-10
 
 - 공통 판타지 로딩/빈 상태/오류 패널과 행동 가능한 상태 표현 추가

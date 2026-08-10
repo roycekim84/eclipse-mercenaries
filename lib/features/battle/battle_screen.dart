@@ -200,7 +200,7 @@ class BattlePauseOverlay extends StatelessWidget {
                   const Text(
                     '전투 일시정지',
                     style: TextStyle(
-                      fontFamily: 'serif',
+                      fontFamily: 'Cinzel',
                       fontSize: 22,
                       letterSpacing: 2,
                     ),
@@ -746,7 +746,7 @@ class BattlefieldEventChoiceOverlay extends StatelessWidget {
                     Text(
                       event.title,
                       style: const TextStyle(
-                        fontFamily: 'serif',
+                        fontFamily: 'Cinzel',
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),

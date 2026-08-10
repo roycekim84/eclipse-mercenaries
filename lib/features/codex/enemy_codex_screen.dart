@@ -295,7 +295,7 @@ class EnemyCodexDetail extends StatelessWidget {
                     Text(
                       enemy.name,
                       style: const TextStyle(
-                        fontFamily: 'serif',
+                        fontFamily: 'Cinzel',
                         fontSize: 21,
                         fontWeight: FontWeight.bold,
                       ),

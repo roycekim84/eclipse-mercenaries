@@ -9,7 +9,7 @@
 - M2 전투 시스템 알파: 완료
 - M3 콘텐츠 알파: 완료
 - M4 메타 성장 알파: 완료
-- M5 알파 통합/최적화: 진행 중 · M5.2 완료
+- M5 알파 통합/최적화: 진행 중 · M5.3 완료
 - M6 모바일 출시 준비: 대기
 
 ## M0. 프로젝트 기반 — 완료
@@ -228,7 +228,7 @@ M4 종료 기준:
 
 - [x] 도메인 unit test
 - [x] 전체 루프 widget/integration test
-- [ ] 핵심 화면 golden test
+- [x] 핵심 화면 golden test
 - [x] 저장 migration/손상 복구 테스트
 - [ ] Web/iOS/Android 회귀 체크리스트
 
