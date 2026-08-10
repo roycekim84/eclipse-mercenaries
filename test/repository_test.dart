@@ -67,6 +67,24 @@ void main() {
     expect(huntCaptain.role, UnitRole.commander);
   });
 
+  test('every beta vertical-slice boss exposes three readable patterns', () {
+    for (final boss in EnemyCatalog.boss) {
+      final patterns = BossPatternCatalog.forBoss(boss.id);
+      expect(patterns, hasLength(3), reason: boss.id);
+      expect(patterns.map((pattern) => pattern.type).toSet(), hasLength(3));
+      expect(
+        patterns.every(
+          (pattern) =>
+              pattern.name.isNotEmpty &&
+              pattern.warning.isNotEmpty &&
+              pattern.telegraphSeconds >= 1.2,
+        ),
+        isTrue,
+        reason: boss.id,
+      );
+    }
+  });
+
   test('battlefield event catalog contains eight complete unique events', () {
     expect(alphaBattlefieldEvents, hasLength(8));
     expect(

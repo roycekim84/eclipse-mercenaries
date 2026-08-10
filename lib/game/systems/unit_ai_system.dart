@@ -134,10 +134,10 @@ extension UnitAiSystem on SurvivorGame {
       boss: attacker.archetype?.rank == EnemyRank.boss,
       battlefieldBonus: _enemyDamageBonus,
     );
-    _playerHp = math.max(0, _playerHp - damage);
-    _playerHitFlash = .16;
-    _playerInvulnerability = .28;
-    _emitSlash(_player, .2, CombatStyle.greatsword);
+    _damagePlayer(
+      damage,
+      invulnerabilitySeconds: BattleControlRules.contactRecoverySeconds,
+    );
   }
 
   void _moveRetreatingUnit(BattleUnit unit, double dt) {

@@ -19,6 +19,83 @@ enum EnemyAbility {
   huntMark,
 }
 
+enum BossPatternType { chargeLine, bombardment, commandWave }
+
+class BossPatternSpec {
+  const BossPatternSpec({
+    required this.type,
+    required this.name,
+    required this.warning,
+    required this.telegraphSeconds,
+  });
+
+  final BossPatternType type;
+  final String name;
+  final String warning;
+  final double telegraphSeconds;
+}
+
+class BossTelegraph {
+  const BossTelegraph({
+    required this.bossName,
+    required this.pattern,
+    required this.phase,
+    required this.secondsLeft,
+  });
+
+  final String bossName;
+  final BossPatternSpec pattern;
+  final int phase;
+  final double secondsLeft;
+}
+
+abstract final class BossPatternCatalog {
+  static const siegeMarshal = <BossPatternSpec>[
+    BossPatternSpec(
+      type: BossPatternType.chargeLine,
+      name: '파성 돌진',
+      warning: '붉은 진로를 벗어나십시오.',
+      telegraphSeconds: 1.45,
+    ),
+    BossPatternSpec(
+      type: BossPatternType.bombardment,
+      name: '흑철 포격',
+      warning: '표적 원에서 이탈하십시오.',
+      telegraphSeconds: 1.7,
+    ),
+    BossPatternSpec(
+      type: BossPatternType.commandWave,
+      name: '공성 총동원',
+      warning: '공성 증원대가 진입합니다.',
+      telegraphSeconds: 1.25,
+    ),
+  ];
+
+  static const huntCaptain = <BossPatternSpec>[
+    BossPatternSpec(
+      type: BossPatternType.bombardment,
+      name: '사냥 표식',
+      warning: '표식이 고정되기 전에 이동하십시오.',
+      telegraphSeconds: 1.55,
+    ),
+    BossPatternSpec(
+      type: BossPatternType.chargeLine,
+      name: '회색 섬광',
+      warning: '돌진 궤도를 피하십시오.',
+      telegraphSeconds: 1.2,
+    ),
+    BossPatternSpec(
+      type: BossPatternType.commandWave,
+      name: '추격대 호출',
+      warning: '호위대 측면에 증원이 도착합니다.',
+      telegraphSeconds: 1.3,
+    ),
+  ];
+
+  static List<BossPatternSpec> forBoss(String bossId) =>
+      bossId == 'hunt_captain' ? huntCaptain : siegeMarshal;
+}
+
 class EnemyArchetypeSpec {
   const EnemyArchetypeSpec({
     required this.id,

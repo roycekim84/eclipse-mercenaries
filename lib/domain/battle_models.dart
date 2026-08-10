@@ -33,6 +33,7 @@ class BattleControlState {
 abstract final class BattleControlRules {
   static const dashCooldownSeconds = 2.5;
   static const dashInvulnerabilitySeconds = .42;
+  static const contactRecoverySeconds = .72;
   static const tacticalCooldownSeconds = 14.0;
   static const tacticalDurationSeconds = 4.0;
 

@@ -26,6 +26,7 @@ void main() {
     () {
       expect(BattleControlRules.dashInvulnerabilitySeconds, greaterThan(.3));
       expect(BattleControlRules.dashInvulnerabilitySeconds, lessThan(.5));
+      expect(BattleControlRules.contactRecoverySeconds, greaterThan(.7));
       expect(BattleControlRules.contactDamage(UnitRole.infantry), 30);
       expect(
         BattleControlRules.contactDamage(UnitRole.commander, boss: true),

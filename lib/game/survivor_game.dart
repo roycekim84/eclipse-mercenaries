@@ -24,6 +24,7 @@ part 'systems/gate_defense_system.dart';
 part 'systems/evacuation_system.dart';
 part 'systems/battlefield_event_system.dart';
 part 'systems/unit_ai_system.dart';
+part 'systems/boss_system.dart';
 part 'systems/damage_system.dart';
 part 'systems/weapon_system.dart';
 part 'systems/pooled_effects_system.dart';
@@ -93,6 +94,7 @@ class SurvivorGame extends FlameGame {
   final performanceMode = ValueNotifier(false);
   final combatPaused = ValueNotifier(false);
   final controls = ValueNotifier(const BattleControlState.ready());
+  final bossTelegraph = ValueNotifier<BossTelegraph?>(null);
   final math.Random _random;
   final math.Random _upgradeRandom;
   final math.Random _eventRandom;
@@ -165,6 +167,14 @@ class SurvivorGame extends FlameGame {
   bool _pausedByLifecycle = false;
   int _slashEmissionSequence = 0;
   int _damageNumberEmissionSequence = 0;
+  double _bossPatternClock = 4.5;
+  double _bossTelegraphClock = 0;
+  int _bossPatternIndex = 0;
+  int _bossPhase = 1;
+  double _bossPhaseBannerClock = 0;
+  double _bossUiClock = 0;
+  Vector2? _bossPatternTarget;
+  BossPatternSpec? _activeBossPattern;
 
   static const _standardRenderPolicy = BattleRenderPolicy(
     performanceMode: false,
@@ -430,6 +440,7 @@ class SurvivorGame extends FlameGame {
     final aiStartMicros = _updateClock.elapsedMicroseconds;
     _rebuildGrid();
     _updateUnits(worldDt);
+    _updateBossPatterns(worldDt);
     final aiMs = (_updateClock.elapsedMicroseconds - aiStartMicros) / 1000;
     final combatStartMicros = _updateClock.elapsedMicroseconds;
     _updateCombatPools(worldDt);
@@ -599,6 +610,7 @@ class SurvivorGame extends FlameGame {
     _drawBattlefieldObjective(canvas);
     _drawUnits(canvas);
     _drawCombatPools(canvas);
+    _drawBossTelegraph(canvas);
     _drawUltimateEffect(canvas);
     _drawPlayerMarker(canvas);
     super.render(canvas);

@@ -162,6 +162,12 @@ class _BattleScreenState extends State<BattleScreen>
               ? const SizedBox.shrink()
               : EventBanner(event: event),
         ),
+        ValueListenableBuilder<BossTelegraph?>(
+          valueListenable: game.bossTelegraph,
+          builder: (context, warning, _) => warning == null
+              ? const SizedBox.shrink()
+              : BossWarningBanner(warning: warning),
+        ),
         ValueListenableBuilder<BattlefieldEventSpec?>(
           valueListenable: game.eventPrompt,
           builder: (context, prompt, _) => prompt == null
@@ -190,6 +196,72 @@ class _BattleScreenState extends State<BattleScreen>
       ],
     );
   }
+}
+
+class BossWarningBanner extends StatelessWidget {
+  const BossWarningBanner({super.key, required this.warning});
+
+  final BossTelegraph warning;
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    top: 42,
+    left: 0,
+    right: 0,
+    child: SafeArea(
+      child: IgnorePointer(
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 390),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xe6190c12),
+              border: Border.all(color: const Color(0xffdc594c), width: 1.5),
+              boxShadow: const [
+                BoxShadow(color: Color(0x88000000), blurRadius: 12),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xffff7a66),
+                  size: 22,
+                ),
+                const SizedBox(width: 9),
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${warning.bossName} · PHASE ${warning.phase} · ${warning.pattern.name}',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xffffd0bd),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        '${warning.pattern.warning}  ${warning.secondsLeft.toStringAsFixed(1)}초',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class BattlePauseOverlay extends StatelessWidget {

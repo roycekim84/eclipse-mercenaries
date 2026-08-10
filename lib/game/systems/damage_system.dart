@@ -1,6 +1,18 @@
 part of '../survivor_game.dart';
 
 extension DamageSystem on SurvivorGame {
+  void _damagePlayer(
+    int damage, {
+    double invulnerabilitySeconds = .32,
+    CombatStyle style = CombatStyle.greatsword,
+  }) {
+    if (_playerInvulnerability > 0 || _finished) return;
+    _playerHp = math.max(0, _playerHp - damage);
+    _playerHitFlash = .16;
+    _playerInvulnerability = invulnerabilitySeconds;
+    _emitSlash(_player, .2, style);
+  }
+
   DamageResult _resolveAgainstUnit(
     BattleUnit target,
     int baseDamage, {
