@@ -13,6 +13,7 @@ class BattleScreen extends StatefulWidget {
     required this.screenShakeEnabled,
     required this.inputMode,
     required this.targetPriority,
+    required this.gearBonus,
     required this.onVictory,
     required this.onExit,
   });
@@ -26,6 +27,7 @@ class BattleScreen extends StatefulWidget {
   final bool screenShakeEnabled;
   final BattleInputMode inputMode;
   final AutoTargetPriority targetPriority;
+  final GearCombatBonus gearBonus;
   final ValueChanged<BattleReport> onVictory;
   final VoidCallback onExit;
 
@@ -53,6 +55,7 @@ class _BattleScreenState extends State<BattleScreen>
         mercenaryPermanentLevel: widget.mercenaryProgress.level,
         weaponPermanentLevel: widget.weaponProgress.level,
         weaponGrowthStage: widget.weaponProgress.stage,
+        gearBonus: widget.gearBonus,
       ),
       onVictory: widget.onVictory,
       targetPriority: widget.targetPriority,

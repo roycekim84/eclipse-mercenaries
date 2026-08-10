@@ -2,6 +2,7 @@ import 'game_data.dart';
 import 'run_growth.dart';
 import 'battlefield_events.dart';
 import 'battle_rewards.dart';
+import 'camp_meta.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
@@ -134,6 +135,7 @@ class BattleConfig {
     this.mercenaryPermanentLevel,
     this.weaponPermanentLevel = 1,
     this.weaponGrowthStage = 1,
+    this.gearBonus = const GearCombatBonus.none(),
   });
 
   final MercenarySpec mercenary;
@@ -150,6 +152,7 @@ class BattleConfig {
   final int? mercenaryPermanentLevel;
   final int weaponPermanentLevel;
   final int weaponGrowthStage;
+  final GearCombatBonus gearBonus;
 }
 
 class BattleStats {

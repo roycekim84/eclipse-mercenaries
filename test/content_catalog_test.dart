@@ -17,6 +17,7 @@ void main() {
       events: const [],
       loot: const [],
       shopProducts: const [],
+      gear: alphaContentCatalog.gear,
     );
 
     final codes = ContentCatalogValidator.validate(

@@ -33,7 +33,8 @@ part 'systems/run_growth_system.dart';
 double _permanentPlayerMaxHp(BattleConfig config) {
   final level = config.mercenaryPermanentLevel ?? config.mercenary.level;
   return config.mercenary.maxHp *
-      ProgressionRules.mercenaryHpMultiplier(config.mercenary.level, level);
+      ProgressionRules.mercenaryHpMultiplier(config.mercenary.level, level) *
+      config.gearBonus.hpMultiplier;
 }
 
 class SurvivorGame extends FlameGame {
@@ -84,7 +85,8 @@ class SurvivorGame extends FlameGame {
             config.mercenaryPermanentLevel ?? mercenary.level,
         weaponLevel: config.weaponPermanentLevel,
         weaponStage: config.weaponGrowthStage,
-      );
+      ) *
+      config.gearBonus.damageMultiplier;
   double get _playerMaxHp => _permanentPlayerMaxHp(config);
   final void Function(BattleReport) onVictory;
   late final ValueNotifier<BattleStats> stats;
@@ -235,6 +237,7 @@ class SurvivorGame extends FlameGame {
           mercenary.level,
           config.mercenaryPermanentLevel ?? mercenary.level,
         ) *
+        config.gearBonus.speedMultiplier *
         (config.condition == BattlefieldCondition.ashWind ? .94 : 1);
     _playerHp = _playerMaxHp;
     _runWeapons.add(RunWeaponState(weapon));
@@ -300,7 +303,9 @@ class SurvivorGame extends FlameGame {
       ..y = _player.y.clamp(24, size.y - 24);
     _playerSprite.position = _player;
     _emitSlash(_player, .32, mercenary.style);
-    _dashCooldown = BattleControlRules.dashCooldownSeconds;
+    _dashCooldown =
+        BattleControlRules.dashCooldownSeconds *
+        config.gearBonus.dashCooldownMultiplier;
     _playerInvulnerability = BattleControlRules.dashInvulnerabilitySeconds;
     _publishControls();
   }
@@ -315,7 +320,9 @@ class SurvivorGame extends FlameGame {
       return;
     }
     _tacticalClock = BattleControlRules.tacticalDurationSeconds;
-    _tacticalCooldown = BattleControlRules.tacticalCooldownSeconds;
+    _tacticalCooldown =
+        BattleControlRules.tacticalCooldownSeconds *
+        config.gearBonus.tacticalCooldownMultiplier;
     _emitSlash(_player, .5, CombatStyle.magic);
     event.value = BattleEvent(
       '전술 명령',

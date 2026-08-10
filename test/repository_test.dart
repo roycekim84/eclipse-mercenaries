@@ -285,7 +285,8 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 7);
+      expect(migrated.schemaVersion, 8);
+      expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
@@ -330,7 +331,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 7);
+    expect(migrated.schemaVersion, 8);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
@@ -529,6 +530,24 @@ void main() {
     );
     expect(CampMetaRules.canForge(gold: 700, scrap: 2), isTrue);
     expect(CampMetaRules.canForge(gold: 700, scrap: 1), isFalse);
+  });
+
+  test('beta gear catalog fills every slot and produces bounded bonuses', () {
+    for (final slot in GearSlot.values) {
+      expect(
+        betaGearCatalog.where((gear) => gear.slot == slot).length,
+        greaterThanOrEqualTo(3),
+      );
+    }
+    final bonus = GearRules.combatBonus([
+      'veteran_plate',
+      'nightfang_charm',
+      'moonstep_hook',
+    ]);
+    expect(bonus.hpMultiplier, 1.22);
+    expect(bonus.damageMultiplier, 1.10);
+    expect(bonus.criticalChance, 7);
+    expect(bonus.dashCooldownMultiplier, .8);
   });
 
   test('battle config is an immutable session boundary', () {

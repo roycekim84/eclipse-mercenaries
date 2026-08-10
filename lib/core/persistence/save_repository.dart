@@ -14,6 +14,7 @@ class AccountSave {
     required this.crystals,
     required this.selectedMercenaryId,
     required this.equippedWeaponByMercenary,
+    required this.equippedGearByMercenary,
     required this.mercenaryProgress,
     required this.weaponProgress,
     required this.inventory,
@@ -36,6 +37,17 @@ class AccountSave {
       'luna': 'moon_blades',
       'kael': 'blood_fang',
       'sera': 'glass_flame',
+    },
+    equippedGearByMercenary: {
+      'luna:armor': 'moonweave_guard',
+      'luna:accessory': 'nightfang_charm',
+      'luna:tactical': 'moonstep_hook',
+      'kael:armor': 'black_iron_coat',
+      'kael:accessory': 'commander_medal',
+      'kael:tactical': 'smoke_charge',
+      'sera:armor': 'moonweave_guard',
+      'sera:accessory': 'windrunner_ring',
+      'sera:tactical': 'officer_map_case',
     },
     mercenaryProgress: {
       'luna': MercenaryProgress(level: 45, xp: 0, ascension: 0),
@@ -63,13 +75,14 @@ class AccountSave {
     settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 7;
+  static const currentSchemaVersion = 8;
 
   final int schemaVersion;
   final int gold;
   final int crystals;
   final String selectedMercenaryId;
   final Map<String, String> equippedWeaponByMercenary;
+  final Map<String, String> equippedGearByMercenary;
   final Map<String, MercenaryProgress> mercenaryProgress;
   final Map<String, WeaponProgress> weaponProgress;
   final Map<String, int> inventory;
@@ -87,6 +100,7 @@ class AccountSave {
     int? crystals,
     String? selectedMercenaryId,
     Map<String, String>? equippedWeaponByMercenary,
+    Map<String, String>? equippedGearByMercenary,
     Map<String, MercenaryProgress>? mercenaryProgress,
     Map<String, WeaponProgress>? weaponProgress,
     Map<String, int>? inventory,
@@ -105,6 +119,8 @@ class AccountSave {
     selectedMercenaryId: selectedMercenaryId ?? this.selectedMercenaryId,
     equippedWeaponByMercenary:
         equippedWeaponByMercenary ?? this.equippedWeaponByMercenary,
+    equippedGearByMercenary:
+        equippedGearByMercenary ?? this.equippedGearByMercenary,
     mercenaryProgress: mercenaryProgress ?? this.mercenaryProgress,
     weaponProgress: weaponProgress ?? this.weaponProgress,
     inventory: inventory ?? this.inventory,
@@ -124,6 +140,7 @@ class AccountSave {
     'crystals': crystals,
     'selectedMercenaryId': selectedMercenaryId,
     'equippedWeaponByMercenary': equippedWeaponByMercenary,
+    'equippedGearByMercenary': equippedGearByMercenary,
     'mercenaryProgress': {
       for (final entry in mercenaryProgress.entries)
         entry.key: entry.value.toJson(),
@@ -156,6 +173,10 @@ class AccountSave {
       equippedWeaponByMercenary: _stringMap(
         migrated['equippedWeaponByMercenary'],
         defaults.equippedWeaponByMercenary,
+      ),
+      equippedGearByMercenary: _stringMap(
+        migrated['equippedGearByMercenary'],
+        defaults.equippedGearByMercenary,
       ),
       mercenaryProgress: _progressMap(
         migrated['mercenaryProgress'],
@@ -307,6 +328,15 @@ abstract final class SaveMigration {
         },
       };
       version = 7;
+    }
+    if (version < 8) {
+      current = {
+        ...current,
+        'schemaVersion': 8,
+        'equippedGearByMercenary':
+            AccountSave.initial().equippedGearByMercenary,
+      };
+      version = 8;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

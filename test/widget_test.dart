@@ -97,11 +97,9 @@ void main() {
   });
 
   testWidgets('equipment screen exposes alpha weapon set', (tester) async {
+    final repository = InMemorySaveRepository();
     await tester.pumpWidget(
-      EclipseMercenariesApp(
-        saveRepository: InMemorySaveRepository(),
-        enableTutorial: false,
-      ),
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
     );
     await tester.pumpAndSettle();
 
@@ -111,6 +109,14 @@ void main() {
     expect(find.text('월광쌍검'), findsWidgets);
     expect(find.text('혈아대검'), findsOneWidget);
     expect(find.text('유리불꽃 지팡이'), findsOneWidget);
+    expect(find.text('월광천 전투복'), findsOneWidget);
+    await tester.tap(find.text('방어구'));
+    await tester.pumpAndSettle();
+    expect(find.text('방어구 교체'), findsOneWidget);
+    await tester.tap(find.text('노병의 흉갑 · 전설'));
+    await tester.pumpAndSettle();
+    final restored = await repository.load();
+    expect(restored.equippedGearByMercenary['luna:armor'], 'veteran_plate');
   });
 
   testWidgets('camp codex exposes enemy catalog and filters', (tester) async {

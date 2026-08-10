@@ -34,6 +34,7 @@ extension WeaponSystem on SurvivorGame {
         config.condition == BattlefieldCondition.moonlitNight;
     final criticalChance =
         activeWeapon.crit.toDouble() +
+        config.gearBonus.criticalChance +
         _passiveLevel('keen_eye') * 5 +
         (nocturnal ? 15 + _traitLevel * 3 : 0);
     final statusBonus = mercenary.id == 'sera' ? _traitLevel * .06 : 0.0;

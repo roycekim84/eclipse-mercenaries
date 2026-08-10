@@ -26,6 +26,7 @@ void main(List<String> arguments) {
   stdout.writeln(
     '| Shop products | ${alphaContentCatalog.shopProducts.length} |',
   );
+  stdout.writeln('| Gear | ${alphaContentCatalog.gear.length} |');
   stdout.writeln();
   stdout.writeln('## Mercenary base DPS index');
   for (final entry in snapshot.mercenaryDamagePerSecond.entries) {

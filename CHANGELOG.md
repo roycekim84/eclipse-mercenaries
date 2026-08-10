@@ -1,5 +1,12 @@
 # 변경 기록
 
+## B2 auxiliary equipment builds — 2026-08-10
+
+- 방어구·장신구·전술 도구 3슬롯과 총 9개 베타 장비 추가
+- 장비 HP·공격·이동·치명타·대시/전술 쿨다운 보정을 실제 Flame 전투에 연결
+- 판타지 슬롯 스트립·비교 다이얼로그와 용병별 즉시 장착 저장 구현
+- save schema v8 migration, 콘텐츠 감사와 장비 빌드 회귀 테스트 추가
+
 ## B1 battlefield objective damage states — 2026-08-10
 
 - 북문 성문에 안정·파손·붕괴 위험 3단계 규칙과 HUD 문구 추가

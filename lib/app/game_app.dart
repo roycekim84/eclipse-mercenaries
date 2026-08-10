@@ -647,6 +647,15 @@ class GameShellState extends State<GameShell> {
                   mercenary: selectedMercenary,
                   equipped: equippedWeapon,
                   weaponProgress: account.weaponProgress,
+                  equippedGear: {
+                    for (final slot in GearSlot.values)
+                      slot: GearRules.byId(
+                        account.equippedGearByMercenary[GearRules.key(
+                          selectedMercenary.id,
+                          slot,
+                        )]!,
+                      ),
+                  },
                   onEquip: (weapon) {
                     setState(() {
                       equippedWeapon = weapon;
@@ -658,6 +667,17 @@ class GameShellState extends State<GameShell> {
                       );
                       unawaited(_persistAccount());
                     });
+                  },
+                  onEquipGear: (slot, gear) {
+                    _updateAccount(
+                      account.copyWith(
+                        equippedGearByMercenary: {
+                          ...account.equippedGearByMercenary,
+                          GearRules.key(selectedMercenary.id, slot): gear.id,
+                        },
+                      ),
+                      '${gear.name} 장착 완료',
+                    );
                   },
                   onBack: () => go(equipmentReturn),
                 ),
@@ -711,6 +731,15 @@ class GameShellState extends State<GameShell> {
                   screenShakeEnabled: account.settings.screenShakeEnabled,
                   inputMode: account.settings.battleInputMode,
                   targetPriority: account.settings.autoTargetPriority,
+                  gearBonus: GearRules.combatBonus(
+                    GearSlot.values.map(
+                      (slot) =>
+                          account.equippedGearByMercenary[GearRules.key(
+                            selectedMercenary.id,
+                            slot,
+                          )]!,
+                    ),
+                  ),
                   onExit: () => go(AppScene.camp),
                   onVictory: finishBattle,
                 ),

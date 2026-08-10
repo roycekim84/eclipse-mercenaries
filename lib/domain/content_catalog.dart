@@ -4,6 +4,7 @@ import 'economy.dart';
 import 'enemy_catalog.dart';
 import 'game_data.dart';
 import 'progression.dart';
+import 'camp_meta.dart';
 
 const currentContentVersion = 1;
 
@@ -16,6 +17,7 @@ class GameContentCatalog {
     required this.events,
     required this.loot,
     required this.shopProducts,
+    required this.gear,
   });
 
   final int version;
@@ -25,6 +27,7 @@ class GameContentCatalog {
   final List<BattlefieldEventSpec> events;
   final List<LootItemSpec> loot;
   final List<ShopProductSpec> shopProducts;
+  final List<GearSpec> gear;
 }
 
 const alphaContentCatalog = GameContentCatalog(
@@ -35,6 +38,7 @@ const alphaContentCatalog = GameContentCatalog(
   events: alphaBattlefieldEvents,
   loot: alphaLootCatalog,
   shopProducts: alphaShopProducts,
+  gear: betaGearCatalog,
 );
 
 class ContentValidationIssue {
@@ -67,6 +71,34 @@ abstract final class ContentCatalogValidator {
     _validateIds('events', catalog.events.map((e) => e.id), issues);
     _validateIds('loot', catalog.loot.map((e) => e.id), issues);
     _validateIds('shopProducts', catalog.shopProducts.map((e) => e.id), issues);
+    _validateIds('gear', catalog.gear.map((e) => e.id), issues);
+
+    for (final slot in GearSlot.values) {
+      if (catalog.gear.where((gear) => gear.slot == slot).length < 3) {
+        issues.add(
+          ContentValidationIssue(
+            'insufficient_gear_slot',
+            'gear.${slot.name}',
+            '각 부가 장비 슬롯에는 최소 3개 선택지가 필요합니다.',
+          ),
+        );
+      }
+    }
+    for (final gear in catalog.gear) {
+      if (gear.hpPercent < -50 ||
+          gear.damagePercent < -50 ||
+          gear.speedPercent < -50 ||
+          gear.dashCooldownPercent < 0 ||
+          gear.tacticalCooldownPercent < 0) {
+        issues.add(
+          ContentValidationIssue(
+            'invalid_gear_stat',
+            'gear.${gear.id}',
+            '장비 능력치와 쿨다운 감소량이 허용 범위를 벗어났습니다.',
+          ),
+        );
+      }
+    }
 
     final mercenaryById = {
       for (final value in catalog.mercenaries) value.id: value,
