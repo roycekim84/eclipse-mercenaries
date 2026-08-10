@@ -20,6 +20,7 @@ void main() {
       shopProducts: const [],
       gear: alphaContentCatalog.gear,
       factions: alphaContentCatalog.factions,
+      operations: alphaContentCatalog.operations,
     );
 
     final codes = ContentCatalogValidator.validate(
@@ -58,5 +59,25 @@ void main() {
     expect(FactionRules.rankName(25), '정식 계약자');
     expect(FactionRules.rankName(60), '신뢰받는 전우');
     expect(FactionRules.rankName(120), '맹약 용병단');
+  });
+
+  test('war operations advance only on victory without blocking failure', () {
+    expect(alphaContentCatalog.operations, hasLength(3));
+    expect(WarOperationRules.advance(0, 'victory'), 1);
+    expect(WarOperationRules.advance(1, 'retreat'), 1);
+    expect(WarOperationRules.advance(1, 'defeat'), 1);
+    expect(WarOperationRules.advance(2, 'victory'), 2);
+  });
+
+  test('camp world reacts deterministically to the last contract outcome', () {
+    final victory = CampWorldState.resolve(
+      campaignCycle: 4,
+      outcome: 'victory',
+      contractName: '성문 방어전',
+      objectiveHpRatio: .5,
+    );
+    expect(victory.headline, contains('승전대'));
+    expect(victory.woundedCount, 3);
+    expect(victory.period, '깊은 밤');
   });
 }

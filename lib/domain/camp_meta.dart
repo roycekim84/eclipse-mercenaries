@@ -54,6 +54,104 @@ abstract final class FactionRules {
   };
 }
 
+class WarOperationSpec {
+  const WarOperationSpec({
+    required this.id,
+    required this.factionId,
+    required this.title,
+    required this.stages,
+  });
+
+  final String id;
+  final String factionId;
+  final String title;
+  final List<String> stages;
+}
+
+const betaWarOperations = <WarOperationSpec>[
+  WarOperationSpec(
+    id: 'operation_northwall',
+    factionId: 'aurum_league',
+    title: '북벽의 마지막 불씨',
+    stages: ['보급로 정찰', '북문 방어', '공성군감 추격'],
+  ),
+  WarOperationSpec(
+    id: 'operation_ashroad',
+    factionId: 'ember_principality',
+    title: '재의 길 철수령',
+    stages: ['부상병 집결', '잿바람 철수', '후위대 구출'],
+  ),
+  WarOperationSpec(
+    id: 'operation_greyknife',
+    factionId: 'grey_banner',
+    title: '회색 칼날의 증명',
+    stages: ['내통자 색출', '지휘관 암살', '전술지도 회수'],
+  ),
+];
+
+abstract final class WarOperationRules {
+  static WarOperationSpec forFaction(String factionId) => betaWarOperations
+      .firstWhere((operation) => operation.factionId == factionId);
+
+  static int advance(int currentStage, String outcome) => outcome == 'victory'
+      ? (currentStage + 1).clamp(0, 2)
+      : currentStage.clamp(0, 2);
+
+  static String stageLabel(WarOperationSpec operation, int progress) {
+    final index = progress.clamp(0, operation.stages.length - 1);
+    return '${index + 1}/${operation.stages.length} · ${operation.stages[index]}';
+  }
+}
+
+class CampWorldState {
+  const CampWorldState({
+    required this.period,
+    required this.weather,
+    required this.headline,
+    required this.detail,
+    required this.woundedCount,
+  });
+
+  factory CampWorldState.resolve({
+    required int campaignCycle,
+    String? outcome,
+    String? contractName,
+    double objectiveHpRatio = 1,
+  }) {
+    const periods = ['황혼', '깊은 밤', '새벽'];
+    const weather = ['맑음', '옅은 비', '북풍'];
+    final wounded = outcome == null
+        ? 0
+        : outcome == 'victory'
+        ? (objectiveHpRatio < .7 ? 3 : 1)
+        : outcome == 'retreat'
+        ? 5
+        : 8;
+    final headline = outcome == null
+        ? '다음 고용주를 기다리는 밤'
+        : outcome == 'victory'
+        ? '$contractName 승전대 귀환'
+        : outcome == 'retreat'
+        ? '$contractName 철수대 귀환'
+        : '$contractName 패잔병 수습 중';
+    return CampWorldState(
+      period: periods[campaignCycle % periods.length],
+      weather: weather[campaignCycle % weather.length],
+      headline: headline,
+      detail: wounded == 0
+          ? '천막마다 다음 계약을 준비하고 있습니다.'
+          : '의무소 부상자 $wounded명 · 보급품과 장비를 점검하십시오.',
+      woundedCount: wounded,
+    );
+  }
+
+  final String period;
+  final String weather;
+  final String headline;
+  final String detail;
+  final int woundedCount;
+}
+
 enum GearSlot { armor, accessory, tactical }
 
 class GearSpec {

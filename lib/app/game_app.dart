@@ -513,12 +513,20 @@ class GameShellState extends State<GameShell> {
     final weaponAfter = ProgressionRules.addWeaponXp(weaponBefore, weaponXp);
     final inventoryAdded = ProgressionRules.lootQuantities(value.lootDrops);
     final factionId = selected.factionId;
+    final operation = WarOperationRules.forFaction(factionId);
     final reputationGain = FactionRules.reputationGain(value.outcome.name);
     final nextAccount = account.copyWith(
       gold: account.gold + value.gold,
       factionReputation: {
         ...account.factionReputation,
         factionId: (account.factionReputation[factionId] ?? 0) + reputationGain,
+      },
+      operationProgress: {
+        ...account.operationProgress,
+        operation.id: WarOperationRules.advance(
+          account.operationProgress[operation.id] ?? 0,
+          value.outcome.name,
+        ),
       },
       mercenaryProgress: {
         ...account.mercenaryProgress,
@@ -606,6 +614,10 @@ class GameShellState extends State<GameShell> {
                   key: const ValueKey('camp'),
                   gold: gold,
                   crystals: crystals,
+                  lastReport: report,
+                  campaignCycle:
+                      account.recruitmentCount +
+                      account.factionReputation.values.fold(0, (a, b) => a + b),
                   onDeploy: () => go(AppScene.contracts),
                   onRoster: () => go(AppScene.roster),
                   onEquipment: () => openEquipment(AppScene.camp),
@@ -623,6 +635,7 @@ class GameShellState extends State<GameShell> {
                   key: const ValueKey('contracts'),
                   selected: selected,
                   factionReputation: account.factionReputation,
+                  operationProgress: account.operationProgress,
                   onSelect: (value) => setState(() => selected = value),
                   onBack: () => go(AppScene.camp),
                   onDeploy: () => go(AppScene.mercenarySelect),

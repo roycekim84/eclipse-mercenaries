@@ -18,6 +18,8 @@ void main() {
         child: CampScreen(
           gold: 45678,
           crystals: 3250,
+          lastReport: null,
+          campaignCycle: 30,
           onDeploy: _noop,
           onRoster: _noop,
           onEquipment: _noop,
@@ -61,6 +63,11 @@ void main() {
             'aurum_league': 18,
             'ember_principality': 8,
             'grey_banner': 4,
+          },
+          operationProgress: const {
+            'operation_northwall': 0,
+            'operation_ashroad': 0,
+            'operation_greyknife': 0,
           },
           onSelect: (_) {},
           onBack: _noop,

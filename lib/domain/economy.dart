@@ -187,3 +187,69 @@ abstract final class ShopRules {
     required int purchased,
   }) => balance >= product.price && purchased < product.purchaseLimit;
 }
+
+class EconomySnapshot {
+  const EconomySnapshot({
+    required this.day,
+    required this.gold,
+    required this.crystals,
+    required this.warSeals,
+    required this.honor,
+  });
+
+  final int day;
+  final int gold;
+  final int crystals;
+  final int warSeals;
+  final int honor;
+}
+
+class EconomySimulationResult {
+  const EconomySimulationResult({required this.days});
+
+  final List<EconomySnapshot> days;
+
+  EconomySnapshot get finalState => days.last;
+  bool get hasProgressBlock => days.any(
+    (day) =>
+        day.gold < 0 || day.crystals < 0 || day.warSeals < 0 || day.honor < 0,
+  );
+}
+
+abstract final class BetaEconomySimulator {
+  static EconomySimulationResult simulateSevenDays({
+    int startingGold = 8000,
+    int startingCrystals = 3250,
+    int startingWarSeals = 40,
+    int startingHonor = 30,
+  }) {
+    var gold = startingGold;
+    var crystals = startingCrystals;
+    var warSeals = startingWarSeals;
+    var honor = startingHonor;
+    final days = <EconomySnapshot>[];
+    for (var day = 1; day <= 7; day++) {
+      // Two ordinary contracts, one training, one forge, and planned shopping.
+      gold += 6000 - 2000 - 1400 - 1200;
+      warSeals += 12 - 8;
+      honor += 8 - 5;
+      if (day.isEven) crystals -= RecruitmentRules.singleCrystalCost;
+      if (day == 7) {
+        // Weekly contract bundle rewards participation without daily lock-in.
+        gold += 2500;
+        warSeals += 20;
+        honor += 15;
+      }
+      days.add(
+        EconomySnapshot(
+          day: day,
+          gold: gold,
+          crystals: crystals,
+          warSeals: warSeals,
+          honor: honor,
+        ),
+      );
+    }
+    return EconomySimulationResult(days: List.unmodifiable(days));
+  }
+}

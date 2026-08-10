@@ -16,6 +16,7 @@ class AccountSave {
     required this.equippedWeaponByMercenary,
     required this.equippedGearByMercenary,
     required this.factionReputation,
+    required this.operationProgress,
     required this.mercenaryProgress,
     required this.weaponProgress,
     required this.inventory,
@@ -55,6 +56,11 @@ class AccountSave {
       'ember_principality': 8,
       'grey_banner': 4,
     },
+    operationProgress: {
+      'operation_northwall': 0,
+      'operation_ashroad': 0,
+      'operation_greyknife': 0,
+    },
     mercenaryProgress: {
       'luna': MercenaryProgress(level: 45, xp: 0, ascension: 0),
       'kael': MercenaryProgress(level: 42, xp: 0, ascension: 0),
@@ -81,7 +87,7 @@ class AccountSave {
     settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 9;
+  static const currentSchemaVersion = 10;
 
   final int schemaVersion;
   final int gold;
@@ -90,6 +96,7 @@ class AccountSave {
   final Map<String, String> equippedWeaponByMercenary;
   final Map<String, String> equippedGearByMercenary;
   final Map<String, int> factionReputation;
+  final Map<String, int> operationProgress;
   final Map<String, MercenaryProgress> mercenaryProgress;
   final Map<String, WeaponProgress> weaponProgress;
   final Map<String, int> inventory;
@@ -109,6 +116,7 @@ class AccountSave {
     Map<String, String>? equippedWeaponByMercenary,
     Map<String, String>? equippedGearByMercenary,
     Map<String, int>? factionReputation,
+    Map<String, int>? operationProgress,
     Map<String, MercenaryProgress>? mercenaryProgress,
     Map<String, WeaponProgress>? weaponProgress,
     Map<String, int>? inventory,
@@ -130,6 +138,7 @@ class AccountSave {
     equippedGearByMercenary:
         equippedGearByMercenary ?? this.equippedGearByMercenary,
     factionReputation: factionReputation ?? this.factionReputation,
+    operationProgress: operationProgress ?? this.operationProgress,
     mercenaryProgress: mercenaryProgress ?? this.mercenaryProgress,
     weaponProgress: weaponProgress ?? this.weaponProgress,
     inventory: inventory ?? this.inventory,
@@ -151,6 +160,7 @@ class AccountSave {
     'equippedWeaponByMercenary': equippedWeaponByMercenary,
     'equippedGearByMercenary': equippedGearByMercenary,
     'factionReputation': factionReputation,
+    'operationProgress': operationProgress,
     'mercenaryProgress': {
       for (final entry in mercenaryProgress.entries)
         entry.key: entry.value.toJson(),
@@ -191,6 +201,10 @@ class AccountSave {
       factionReputation: _intMap(
         migrated['factionReputation'],
         defaults.factionReputation,
+      ),
+      operationProgress: _intMap(
+        migrated['operationProgress'],
+        defaults.operationProgress,
       ),
       mercenaryProgress: _progressMap(
         migrated['mercenaryProgress'],
@@ -359,6 +373,14 @@ abstract final class SaveMigration {
         'factionReputation': AccountSave.initial().factionReputation,
       };
       version = 9;
+    }
+    if (version < 10) {
+      current = {
+        ...current,
+        'schemaVersion': 10,
+        'operationProgress': AccountSave.initial().operationProgress,
+      };
+      version = 10;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

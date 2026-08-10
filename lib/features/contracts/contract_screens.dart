@@ -5,12 +5,14 @@ class ContractScreen extends StatelessWidget {
     super.key,
     required this.selected,
     required this.factionReputation,
+    required this.operationProgress,
     required this.onSelect,
     required this.onBack,
     required this.onDeploy,
   });
   final BattlefieldContract selected;
   final Map<String, int> factionReputation;
+  final Map<String, int> operationProgress;
   final ValueChanged<BattlefieldContract> onSelect;
   final VoidCallback onBack;
   final VoidCallback onDeploy;
@@ -63,6 +65,14 @@ class ContractScreen extends StatelessWidget {
                                 faction: FactionRules.byId(selected.factionId),
                                 reputation:
                                     factionReputation[selected.factionId] ?? 0,
+                                operation: WarOperationRules.forFaction(
+                                  selected.factionId,
+                                ),
+                                operationProgress:
+                                    operationProgress[WarOperationRules.forFaction(
+                                      selected.factionId,
+                                    ).id] ??
+                                    0,
                               ),
                             ),
                             const SizedBox(width: 12),

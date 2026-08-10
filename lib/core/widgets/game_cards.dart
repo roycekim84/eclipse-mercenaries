@@ -67,10 +67,14 @@ class ContractSummary extends StatelessWidget {
     required this.contract,
     required this.faction,
     required this.reputation,
+    required this.operation,
+    required this.operationProgress,
   });
   final BattlefieldContract contract;
   final FactionSpec faction;
   final int reputation;
+  final WarOperationSpec operation;
+  final int operationProgress;
   @override
   Widget build(BuildContext context) => GoldPanel(
     child: Padding(
@@ -90,6 +94,10 @@ class ContractSummary extends StatelessWidget {
                 Text(
                   '${contract.subtitle}  |  ${FactionRules.rankName(reputation)} · 평판 $reputation  |  ${faction.rewardStyle}',
                   style: const TextStyle(fontSize: 10, color: Colors.white54),
+                ),
+                Text(
+                  '${operation.title} · ${WarOperationRules.stageLabel(operation, operationProgress)}',
+                  style: const TextStyle(fontSize: 9, color: Color(0xffb795cf)),
                 ),
               ],
             ),

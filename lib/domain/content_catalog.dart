@@ -19,6 +19,7 @@ class GameContentCatalog {
     required this.shopProducts,
     required this.gear,
     required this.factions,
+    required this.operations,
   });
 
   final int version;
@@ -30,6 +31,7 @@ class GameContentCatalog {
   final List<ShopProductSpec> shopProducts;
   final List<GearSpec> gear;
   final List<FactionSpec> factions;
+  final List<WarOperationSpec> operations;
 }
 
 const alphaContentCatalog = GameContentCatalog(
@@ -42,6 +44,7 @@ const alphaContentCatalog = GameContentCatalog(
   shopProducts: alphaShopProducts,
   gear: betaGearCatalog,
   factions: betaFactions,
+  operations: betaWarOperations,
 );
 
 class ContentValidationIssue {
@@ -76,6 +79,7 @@ abstract final class ContentCatalogValidator {
     _validateIds('shopProducts', catalog.shopProducts.map((e) => e.id), issues);
     _validateIds('gear', catalog.gear.map((e) => e.id), issues);
     _validateIds('factions', catalog.factions.map((e) => e.id), issues);
+    _validateIds('operations', catalog.operations.map((e) => e.id), issues);
     if (catalog.factions.length < 3) {
       issues.add(
         const ContentValidationIssue(
@@ -84,6 +88,27 @@ abstract final class ContentCatalogValidator {
           '베타 계약에는 최소 3개 세력이 필요합니다.',
         ),
       );
+    }
+    final factionIds = catalog.factions.map((faction) => faction.id).toSet();
+    for (final operation in catalog.operations) {
+      if (!factionIds.contains(operation.factionId)) {
+        issues.add(
+          ContentValidationIssue(
+            'missing_operation_faction',
+            'operations.${operation.id}.factionId',
+            '${operation.factionId} 세력이 없습니다.',
+          ),
+        );
+      }
+      if (operation.stages.length < 3) {
+        issues.add(
+          ContentValidationIssue(
+            'insufficient_operation_stages',
+            'operations.${operation.id}.stages',
+            '작전은 최소 3단계 계약으로 구성해야 합니다.',
+          ),
+        );
+      }
     }
 
     for (final slot in GearSlot.values) {

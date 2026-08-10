@@ -285,7 +285,7 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 9);
+      expect(migrated.schemaVersion, 10);
       expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
@@ -331,7 +331,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 9);
+    expect(migrated.schemaVersion, 10);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
@@ -484,6 +484,16 @@ void main() {
       ),
       isFalse,
     );
+  });
+
+  test('seven day beta economy neither blocks nor inflates resources', () {
+    final simulation = BetaEconomySimulator.simulateSevenDays();
+    expect(simulation.days, hasLength(7));
+    expect(simulation.hasProgressBlock, isFalse);
+    expect(simulation.finalState.gold, inInclusiveRange(8000, 25000));
+    expect(simulation.finalState.crystals, greaterThanOrEqualTo(2000));
+    expect(simulation.finalState.warSeals, lessThan(100));
+    expect(simulation.finalState.honor, lessThan(100));
   });
 
   test('camp mission rules connect inventory and weapon growth', () {
