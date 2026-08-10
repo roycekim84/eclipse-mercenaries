@@ -133,14 +133,17 @@ extension PooledEffectsSystem on SurvivorGame {
   void _impactProjectile(PooledProjectile projectile, BattleUnit target) {
     if (!projectile.appliesDamage) return;
     switch (projectile.pattern) {
-      case WeaponPattern.chainFlame:
+      case WeaponPattern.chainFlame || WeaponPattern.featherChain:
+        final isFlame = projectile.pattern == WeaponPattern.chainFlame;
         _damageEnemy(
           target,
           projectile.damage,
-          kind: DamageKind.magical,
+          kind: isFlame ? DamageKind.magical : DamageKind.physical,
           criticalChance: projectile.criticalChance,
-          status: StatusEffectType.burn,
-          statusChance: .32 + (mercenary.id == 'sera' ? _traitLevel * .06 : 0),
+          status: isFlame ? StatusEffectType.burn : StatusEffectType.bleed,
+          statusChance: isFlame
+              ? .32 + (mercenary.id == 'sera' ? _traitLevel * .06 : 0)
+              : .18,
         );
         if (projectile.chainRemaining > 0) {
           final next = _nearestEnemyFrom(

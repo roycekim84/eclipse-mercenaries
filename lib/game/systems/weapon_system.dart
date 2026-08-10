@@ -12,6 +12,14 @@ extension WeaponSystem on SurvivorGame {
       WeaponPattern.emberBurst => 350.0,
       WeaponPattern.spearLine => 300.0,
       WeaponPattern.shadowPierce => 390.0,
+      WeaponPattern.rapidVolley => 440.0,
+      WeaponPattern.shieldOrbit => 190.0,
+      WeaponPattern.runeMine => 350.0,
+      WeaponPattern.featherChain => 380.0,
+      WeaponPattern.halberdSweep => 270.0,
+      WeaponPattern.crescentWave => 400.0,
+      WeaponPattern.frostTotem => 320.0,
+      WeaponPattern.spiritFamiliar => 370.0,
     };
     final target = _preferredEnemyFrom(
       _player,
@@ -131,6 +139,92 @@ extension WeaponSystem on SurvivorGame {
           speed: 560,
           criticalChance: 0,
           appliesDamage: false,
+        );
+      case WeaponPattern.rapidVolley:
+        for (var i = 0; i < 3; i++) {
+          _launchProjectile(
+            origin: _player,
+            target: target,
+            pattern: activeWeapon.pattern,
+            damage: math.max(1, (baseDamage * .58).round()),
+            speed: 500 + i * 35,
+            criticalChance: criticalChance,
+          );
+        }
+      case WeaponPattern.shieldOrbit:
+        for (final unit in _enemiesNear(_player, 94).take(12)) {
+          _damageEnemy(
+            unit,
+            baseDamage,
+            criticalChance: criticalChance,
+            multiplier: 1.15,
+            showFx: identical(unit, target),
+          );
+        }
+        _emitSlash(_player, .42, CombatStyle.greatsword);
+      case WeaponPattern.runeMine:
+        for (final unit in _enemiesNear(target.position, 92).take(10)) {
+          _damageEnemy(
+            unit,
+            baseDamage,
+            kind: DamageKind.magical,
+            criticalChance: criticalChance,
+            status: StatusEffectType.burn,
+            statusChance: .26,
+            showFx: identical(unit, target),
+          );
+        }
+      case WeaponPattern.featherChain:
+        _launchProjectile(
+          origin: _player,
+          target: target,
+          pattern: activeWeapon.pattern,
+          damage: baseDamage,
+          speed: 470,
+          criticalChance: criticalChance,
+          chainRemaining: 3,
+        );
+      case WeaponPattern.halberdSweep:
+        for (final unit in _enemiesNear(target.position, 105).take(11)) {
+          _damageEnemy(
+            unit,
+            baseDamage,
+            criticalChance: criticalChance,
+            multiplier: 1.18,
+            showFx: identical(unit, target),
+          );
+        }
+        _emitSlash(target.position, .38, CombatStyle.greatsword);
+      case WeaponPattern.crescentWave:
+        _strikeLine(
+          target: target,
+          length: 410,
+          halfWidth: 34,
+          limit: 9,
+          damage: baseDamage,
+          criticalChance: criticalChance,
+          multiplier: 1.05,
+        );
+      case WeaponPattern.frostTotem:
+        for (final unit in _enemiesNear(target.position, 115).take(12)) {
+          _damageEnemy(
+            unit,
+            math.max(1, (baseDamage * .7).round()),
+            kind: DamageKind.magical,
+            criticalChance: criticalChance,
+            status: StatusEffectType.slow,
+            statusChance: .75,
+            showFx: identical(unit, target),
+          );
+        }
+      case WeaponPattern.spiritFamiliar:
+        _launchProjectile(
+          origin: _player,
+          target: target,
+          pattern: activeWeapon.pattern,
+          damage: baseDamage + 1,
+          speed: 390,
+          criticalChance: criticalChance,
         );
     }
     if (_xp >= _nextXp && !_pausedForChoice) _levelUp();

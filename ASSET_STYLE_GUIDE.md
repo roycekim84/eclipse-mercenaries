@@ -1,5 +1,14 @@
 # 이미지 에셋 스타일 기획서
 
+## B3 신규 용병 5인 제작 기록
+
+- 생성 방식: built-in image generation, `stylized-concept`
+- 기준 이미지: 프로젝트 최우선 10화면 레퍼런스의 다크 판타지 JRPG 렌더·금색 프레임·인간형 수인 방향
+- 원본 시트: `assets/images/beta_mercenary_lineup.png`
+- 분리 초상: `nyra_vale.png`, `aurel_hart.png`, `vesta_corven.png`, `rask_draven.png`, `iris_noctis.png`
+- 최종 프롬프트 핵심: 5개 균등 패널, 토끼 척후병/사슴 성기사/조류 전술사/파충류 창병/환수 마검사, 인간 얼굴·인간 체형, 전신과 대표 무기 노출, 남색·금색·보라색 다크 판타지, 텍스트·로고·워터마크 금지
+- 유지 규칙: 초상→픽셀 시트 전환 시 머리색, 귀/뿔/깃/비늘, 대표색, 무기 실루엣을 바꾸지 않는다.
+
 ## 구현 자산 기록 — 북문 성문 방어전
 
 - 파일: `assets/images/battlefield/north_gate_battlefield.png`

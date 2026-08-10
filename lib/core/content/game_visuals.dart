@@ -55,6 +55,41 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     portraitAsset: 'assets/images/sera_inarion.png',
     battleSpriteAsset: 'characters/sera_battle_sheet.png',
   ),
+  'nyra': MercenaryVisual(
+    color: Color(0xff183c43),
+    accent: Color(0xff62d1c5),
+    icon: Icons.cruelty_free,
+    portraitAsset: 'assets/images/nyra_vale.png',
+    battleSpriteAsset: 'characters/luna_battle_sheet.png',
+  ),
+  'aurel': MercenaryVisual(
+    color: Color(0xff454331),
+    accent: Color(0xffffd477),
+    icon: Icons.shield_outlined,
+    portraitAsset: 'assets/images/aurel_hart.png',
+    battleSpriteAsset: 'characters/kael_battle_sheet.png',
+  ),
+  'vesta': MercenaryVisual(
+    color: Color(0xff4a2631),
+    accent: Color(0xffd99180),
+    icon: Icons.menu_book_outlined,
+    portraitAsset: 'assets/images/vesta_corven.png',
+    battleSpriteAsset: 'characters/sera_battle_sheet.png',
+  ),
+  'rask': MercenaryVisual(
+    color: Color(0xff263b30),
+    accent: Color(0xff8eb47a),
+    icon: Icons.push_pin,
+    portraitAsset: 'assets/images/rask_draven.png',
+    battleSpriteAsset: 'characters/kael_battle_sheet.png',
+  ),
+  'iris': MercenaryVisual(
+    color: Color(0xff302b52),
+    accent: Color(0xffa794ef),
+    icon: Icons.diamond_outlined,
+    portraitAsset: 'assets/images/iris_noctis.png',
+    battleSpriteAsset: 'characters/sera_battle_sheet.png',
+  ),
 };
 
 const _weaponVisuals = <String, WeaponVisual>{
@@ -72,6 +107,32 @@ const _weaponVisuals = <String, WeaponVisual>{
   ),
   'guard_spear': WeaponVisual(icon: Icons.push_pin, color: Color(0xff516a75)),
   'shadow_knife': WeaponVisual(icon: Icons.bolt, color: Color(0xff55466f)),
+  'gale_string': WeaponVisual(
+    icon: Icons.architecture,
+    color: Color(0xff398b85),
+  ),
+  'sunwall_aegis': WeaponVisual(
+    icon: Icons.shield_outlined,
+    color: Color(0xffb89542),
+  ),
+  'corvus_codex': WeaponVisual(
+    icon: Icons.menu_book_outlined,
+    color: Color(0xff8b455b),
+  ),
+  'verdigris_halberd': WeaponVisual(
+    icon: Icons.push_pin,
+    color: Color(0xff45684d),
+  ),
+  'noctis_crescent': WeaponVisual(
+    icon: Icons.nightlight_round,
+    color: Color(0xff7461bd),
+  ),
+  'frost_standard': WeaponVisual(icon: Icons.ac_unit, color: Color(0xff6392a8)),
+  'spirit_lantern': WeaponVisual(
+    icon: Icons.local_fire_department_outlined,
+    color: Color(0xff6b9b91),
+  ),
+  'storm_feathers': WeaponVisual(icon: Icons.air, color: Color(0xff8c718c)),
 };
 
 extension MercenaryVisualLookup on MercenarySpec {
@@ -119,5 +180,10 @@ IconData gameIcon(String id) => switch (id) {
   'luna' => Icons.pets,
   'kael' => Icons.change_history,
   'sera' => Icons.auto_awesome,
+  'nyra' => Icons.cruelty_free,
+  'aurel' => Icons.shield_outlined,
+  'vesta' => Icons.menu_book_outlined,
+  'rask' => Icons.push_pin,
+  'iris' => Icons.diamond_outlined,
   _ => _weaponVisuals[id]?.icon ?? Icons.auto_awesome,
 };

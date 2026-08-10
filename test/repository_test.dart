@@ -20,9 +20,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const content = StaticGameContentRepository();
 
-  test('alpha content IDs resolve through the repository', () {
-    expect(content.mercenaries, hasLength(3));
-    expect(content.weapons, hasLength(8));
+  test('beta content IDs resolve through the repository', () {
+    expect(content.mercenaries, hasLength(8));
+    expect(content.weapons, hasLength(16));
     expect(content.enemies, hasLength(12));
     expect(content.mercenaryById('kael').race, '늑대족');
     expect(content.weaponById('glass_flame').ownerId, 'sera');
@@ -449,8 +449,8 @@ void main() {
   test('recruitment rolls are deterministic and respect currency gates', () {
     expect(RecruitmentRules.roll(startIndex: 0, count: 3), [
       'sera',
-      'luna',
       'kael',
+      'luna',
     ]);
     expect(
       RecruitmentRules.canRecruit(count: 1, crystals: 0, tickets: 1),
@@ -757,7 +757,7 @@ void main() {
     expect(resisted.appliedStatus, StatusEffectType.none);
   });
 
-  test('all eight alpha weapons expose distinct attack patterns', () {
+  test('all sixteen beta weapons expose distinct attack patterns', () {
     expect(content.weapons, hasLength(WeaponPattern.values.length));
     expect(
       content.weapons.map((weapon) => weapon.pattern).toSet(),

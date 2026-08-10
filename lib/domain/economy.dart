@@ -151,7 +151,16 @@ abstract final class RecruitmentRules {
   static const singleCrystalCost = 300;
   static const tenCrystalCost = 2700;
   static const duplicateTokenReward = 10;
-  static const _pool = ['luna', 'kael', 'sera'];
+  static const _pool = [
+    'luna',
+    'kael',
+    'sera',
+    'nyra',
+    'aurel',
+    'vesta',
+    'rask',
+    'iris',
+  ];
 
   static List<String> roll({required int startIndex, required int count}) => [
     for (var i = 0; i < count; i++)
