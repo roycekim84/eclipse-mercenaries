@@ -1,5 +1,12 @@
 # 변경 기록
 
+## B6 mobile and store hardening — 2026-08-10
+
+- 0.9.0+9 제품 식별자, 표시명, 딥링크와 네이티브 가로 정책 고정
+- 생성형 루나 앱 아이콘, adaptive/iOS icon set, 다크 스플래시와 스토어 캡처 추가
+- 앱 내부 개인정보 패널, 공개 정책·약관·스토어 등록·출시 체크리스트 초안 추가
+- Android release와 iOS unsigned 산출물을 만드는 모바일 CI 추가
+
 ## B5 diagnostics and safe balance manifest — 2026-08-10
 
 - 전투 재현·성능 진단 최근 20건과 설정 화면 요약 추가

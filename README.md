@@ -2,7 +2,7 @@
 
 Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. Web을 우선 개발·검증 환경으로 사용하고 iOS와 Android를 최종 타깃으로 합니다.
 
-## 알파 Web 플레이
+## 베타 Web 플레이
 
 - 게임 실행: [GitHub Pages에서 플레이](https://roycekim84.github.io/eclipse-mercenaries/)
 - 테스트 의견: [플레이테스트 피드백 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=playtest_feedback.yml)
@@ -43,6 +43,10 @@ flutter run -d chrome
 - 단계별 로드맵: [ROADMAP.md](ROADMAP.md)
 - 알파 이후 베타 구현 로드맵: [BETA_IMPLEMENTATION_ROADMAP.md](BETA_IMPLEMENTATION_ROADMAP.md)
 - B0 알파 플레이테스트 감사표: [ALPHA_PLAYTEST_AUDIT.md](ALPHA_PLAYTEST_AUDIT.md)
+- 스토어 등록 정보: [STORE_LISTING.md](STORE_LISTING.md)
+- 개인정보처리방침: [PRIVACY.md](PRIVACY.md)
+- 베타 이용약관: [TERMS.md](TERMS.md)
+- B6 출시 체크리스트: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
 - 콘텐츠·밸런스 기준선: [BALANCE_BASELINE.md](BALANCE_BASELINE.md)
 - 현재 진행 상황: [PROGRESS.md](PROGRESS.md)
 - 테스트 기준: [TESTING.md](TESTING.md)

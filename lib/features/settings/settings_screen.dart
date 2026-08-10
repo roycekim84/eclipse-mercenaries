@@ -114,6 +114,7 @@ class SettingsScreen extends StatelessWidget {
                         onChanged(settings.copyWith(autoTargetPriority: value)),
                   ),
                   _BattleDiagnosticsTile(diagnostics: diagnostics),
+                  const _PrivacyTile(),
                   GoldPanel(
                     child: Padding(
                       padding: const EdgeInsets.all(13),
@@ -162,6 +163,69 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    ),
+  );
+}
+
+class _PrivacyTile extends StatelessWidget {
+  const _PrivacyTile();
+
+  @override
+  Widget build(BuildContext context) => GoldPanel(
+    child: InkWell(
+      onTap: () => showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('개인정보 및 베타 정책'),
+          content: const SingleChildScrollView(
+            child: Text(
+              '현재 베타는 회원가입, 광고, 실제 결제, 외부 분석 SDK와 '
+              '개인정보 자동 전송을 사용하지 않습니다. 진행·설정과 최근 전투 '
+              '진단 최대 20건은 이 기기 또는 브라우저에만 저장됩니다. 앱 또는 '
+              '사이트 데이터를 삭제하면 함께 제거됩니다.\n\n'
+              '정식 방침: github.com/roycekim84/eclipse-mercenaries/blob/main/PRIVACY.md\n'
+              '지원: github.com/roycekim84/eclipse-mercenaries/issues',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(13),
+        child: Row(
+          children: [
+            Icon(
+              Icons.privacy_tip_outlined,
+              color: Color(0xffd8bd7b),
+              size: 28,
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '개인정보 및 베타 정책',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    '수집 없음 · 로컬 저장 · 실제 결제 없음',
+                    style: TextStyle(color: Colors.white60, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.white38),
+          ],
+        ),
       ),
     ),
   );

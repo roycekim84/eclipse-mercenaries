@@ -1,4 +1,4 @@
-package com.mercenary.eclipse.eclipse_mercenaries
+package com.roycekim.eclipsemercenaries
 
 import io.flutter.embedding.android.FlutterActivity
 

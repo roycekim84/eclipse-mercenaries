@@ -66,6 +66,24 @@ macOS의 파일 동기화 경로에서 iOS framework에 Finder 확장 속성이 
 - 변조되거나 허용 범위를 벗어난 밸런스 manifest는 거부하고 마지막 검증본, 그마저 없으면 내장 기본값을 선택한다.
 - 손상된 주 저장은 백업에서 복구하고 복구본을 다시 주 저장에 기록한다.
 
+## B6 출시 후보 자동 검증
+
+- `0.9.0+9`, `com.roycekim.eclipsemercenaries`, 양쪽 가로 방향, 딥링크와 표시명을 정적으로 확인한다.
+- 앱 아이콘 전 규격, Android adaptive icon, 다크 스플래시와 2208×1242 스크린샷 3종의 존재·크기를 확인한다.
+- `flutter build apk --release`와 `flutter build ios --release --no-codesign`으로 서명 경계 이전의 네이티브 컴파일을 확인한다.
+- `dart run tool/long_run_memory_benchmark.dart`와 고정 spatial-grid 테스트로 장시간 반복·고정 풀 예산을 확인한다.
+- 실기기·외부 사용자·기기 등급별 측정과 TestFlight/Play Console 설치는 사용자 지시에 따라 수행하지 않는다.
+
+2026-08-10 기준 결과:
+
+- `flutter analyze`: 이슈 0건
+- `flutter test`: 85개 통과, Golden 3개 포함
+- 콘텐츠 감사: 용병 8 / 무기 16 / 적 27 / 사건 24 / 장비 9, 참조 오류 0건
+- 1,000유닛·18,000프레임 장시간 하네스: 392ms, warm-up 이후 RSS -0.03MB, 버킷 264 고정
+- Android release APK: 성공, 89.1MB (`build/app/outputs/flutter-apk/app-release.apk`)
+- iOS no-codesign: 확장 속성 없는 `/tmp` 작업공간에서 성공, Runner.app 59.9MB
+- Web Pages base-href release: 성공
+
 - 가상 스틱을 누르고 끌면 노브와 플레이어가 같은 방향으로 움직이고 해제 즉시 멈춰야 한다.
 - 화면 터치 이동과 가상 스틱 입력이 동시에 남아 플레이어가 계속 이동하지 않아야 한다.
 - 대시는 2.5초 쿨다운 동안 재사용되지 않고 화면 경계 밖으로 이동하지 않아야 한다.
