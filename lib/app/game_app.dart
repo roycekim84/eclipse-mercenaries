@@ -93,10 +93,10 @@ class GameShell extends StatefulWidget {
   final bool enableTutorial;
 
   @override
-  State<GameShell> createState() => _GameShellState();
+  State<GameShell> createState() => GameShellState();
 }
 
-class _GameShellState extends State<GameShell> {
+class GameShellState extends State<GameShell> {
   late final SaveRepository _saveRepository;
   AppScene scene = AppScene.camp;
   BattlefieldContract selected = contracts.first;
@@ -183,6 +183,22 @@ class _GameShellState extends State<GameShell> {
       if (!mounted) return;
       setState(() {
         saveNotice = '자동 저장에 실패했습니다. 현재 실행의 진행 상태는 유지됩니다.';
+      });
+    }
+  }
+
+  Future<void> retrySave() async {
+    try {
+      await _saveRepository.save(account);
+      if (!mounted) return;
+      setState(() {
+        saveNotice = null;
+        actionNotice = '진행 상태를 안전하게 저장했습니다.';
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        saveNotice = '저장 재시도에 실패했습니다. 연결 상태와 저장 공간을 확인해 주세요.';
       });
     }
   }
@@ -550,11 +566,15 @@ class _GameShellState extends State<GameShell> {
     if (_account == null) {
       return Scaffold(
         body: DarkBackdrop(
-          child: Semantics(
-            label: '용병단 저장 데이터를 불러오는 중',
-            liveRegion: true,
-            child: const Center(
-              child: CircularProgressIndicator(color: Color(0xffc49a54)),
+          child: const Center(
+            child: SizedBox(
+              width: 330,
+              child: GameStatePanel(
+                icon: Icons.shield_outlined,
+                title: '용병단 기록 불러오는 중',
+                message: '캠프 장부와 출전 준비 상태를 확인하고 있습니다.',
+                loading: true,
+              ),
             ),
           ),
         ),
@@ -591,6 +611,7 @@ class _GameShellState extends State<GameShell> {
                   onShop: () => go(AppScene.shop),
                   onSettings: () => go(AppScene.settings),
                   statusNotice: saveNotice,
+                  onRetrySave: retrySave,
                 ),
                 AppScene.contracts => ContractScreen(
                   key: const ValueKey('contracts'),
@@ -694,6 +715,7 @@ class _GameShellState extends State<GameShell> {
                   report: report!,
                   growthReceipt: growthReceipt!,
                   saveNotice: saveNotice,
+                  onRetrySave: retrySave,
                   onCamp: () => go(AppScene.camp),
                   onReplay: startBattle,
                 ),

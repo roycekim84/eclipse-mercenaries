@@ -6,12 +6,14 @@ class ResultScreen extends StatelessWidget {
     required this.report,
     required this.growthReceipt,
     this.saveNotice,
+    this.onRetrySave,
     required this.onCamp,
     required this.onReplay,
   });
   final BattleReport report;
   final GrowthReceipt growthReceipt;
   final String? saveNotice;
+  final VoidCallback? onRetrySave;
   final VoidCallback onCamp;
   final VoidCallback onReplay;
   @override
@@ -129,21 +131,11 @@ class ResultScreen extends StatelessWidget {
                     _PermanentGrowthPanel(receipt: growthReceipt),
                     if (saveNotice != null) ...[
                       const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0x663b1719),
-                          border: Border.all(color: const Color(0xff9e554e)),
-                        ),
-                        child: Text(
-                          saveNotice!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xffe6a197),
-                            fontSize: 10,
-                          ),
-                        ),
+                      StatusBanner(
+                        message: saveNotice!,
+                        isError: true,
+                        actionLabel: onRetrySave == null ? null : '저장 재시도',
+                        onAction: onRetrySave,
                       ),
                     ],
                     const SizedBox(height: 16),
@@ -156,9 +148,11 @@ class ResultScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     if (report.lootDrops.isEmpty)
-                      const Text(
-                        '회수한 전리품이 없습니다.',
-                        style: TextStyle(color: Colors.white38, fontSize: 11),
+                      const GameStatePanel(
+                        icon: Icons.inventory_2_outlined,
+                        title: '회수한 전리품 없음',
+                        message:
+                            '계약 골드와 경험치는 정상 반영되었습니다.\n다음 전장에서는 정예와 사건 목표를 노려보세요.',
                       )
                     else
                       Wrap(

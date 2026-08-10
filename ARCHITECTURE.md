@@ -25,6 +25,7 @@
 - `domain/enemy_catalog.dart`: 8 일반·2 정예·2 보스 원형, 세력·능력·드롭 데이터
 - `domain/battlefield_events.dart`: 8종 사건 정의, 선택 명세와 결정론적 가중치 추출 규칙
 - `domain/battle_rewards.dart`: 보상 출처별 계산, 결과 보존율, loot table과 MVP 순수 규칙
+- `domain/spatial_hash_benchmark.dart`: 전장과 같은 96px 그리드/인접 셀 탐색의 결정론적 CPU 성능 하네스
 - `game/survivor_game.dart`: 전투 세션 조합, 이동, 자동 공격, 경험치, 레벨업, 사건
 - `game/systems/run_growth_system.dart`: 다중 무기 타이머, 선택 적용과 HUD 빌드 스냅샷
 - `game/systems/gate_defense_system.dart`: 성문 목표, 진영 배치, 공성 피해, 승패/결과
@@ -268,6 +269,8 @@ SaveGame
 
 `GameSettings`는 첫 계약 안내 완료, 효과음, 진동, 화면 흔들림, 섬광 감소, 큰 글자 상태를 타입으로 보관한다. 앱 셸은 시스템 글자 배율과 앱 큰 글자 배율을 조합해 1.0~1.3 범위에서 렌더하고, 섬광 감소는 전투 시작 시 Flame `reducedEffects` 초기값에 반영한다. 튜토리얼은 앱 셸 오버레이로 표시하며 완료 즉시 저장한다.
 
+공통 `GameStatePanel`은 로딩·빈 목록·복구 가능한 오류의 제목, 설명, 행동 구조를 통일한다. 저장 실패는 메모리의 최신 계정 스냅샷을 유지하고 캠프/결과의 `StatusBanner`에서 같은 repository 저장을 다시 시도한다. 재시도 성공 시 오류를 제거하며 실패 시 사용자 행동이 가능한 안내를 유지한다.
+
 ## 13. 자산 로딩
 
 - 캠프 진입: 공통 UI와 캠프 필수 자산
@@ -306,6 +309,8 @@ AudioService가 BGM, SFX, UI, voice 채널을 관리한다. 동시 재생 상한
 - 동시 SFX voice: 24
 - 전투 중 큰 이미지 decode 금지
 - 프레임당 신규 객체 allocation 최소화
+
+`tool/performance_benchmark.dart`는 전투 런타임의 96px 셀과 반경 2셀 탐색을 그대로 사용해 330/500/750/1,000 유닛의 이동·그리드 재구축·상대 탐색을 120 프레임 반복한다. 출력하는 CPU P95와 전체 조합 대비 후보 검사율은 코드 회귀 비교용이며, 실제 FPS·GPU 렌더·GC 평가는 release Web의 결과 화면 계측과 DevTools 프로파일을 별도로 사용한다.
 
 ## 17. 오류 처리
 

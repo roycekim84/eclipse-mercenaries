@@ -16,6 +16,7 @@ class CampScreen extends StatelessWidget {
     required this.onShop,
     required this.onSettings,
     required this.statusNotice,
+    required this.onRetrySave,
   });
   final int gold;
   final int crystals;
@@ -30,6 +31,7 @@ class CampScreen extends StatelessWidget {
   final VoidCallback onShop;
   final VoidCallback onSettings;
   final String? statusNotice;
+  final VoidCallback onRetrySave;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,12 @@ class CampScreen extends StatelessWidget {
           children: [
             TopBar(gold: gold, crystals: crystals, onSettings: onSettings),
             if (statusNotice != null)
-              StatusBanner(message: statusNotice!, isError: true),
+              StatusBanner(
+                message: statusNotice!,
+                isError: true,
+                actionLabel: '저장 재시도',
+                onAction: onRetrySave,
+              ),
             Expanded(
               child: LayoutBuilder(
                 builder: (_, constraints) {

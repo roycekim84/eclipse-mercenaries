@@ -119,28 +119,43 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(14),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 360,
-                  childAspectRatio: 1.35,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: products.length,
-                itemBuilder: (_, index) {
-                  final product = products[index];
-                  final purchased = widget.purchaseCounts[product.id] ?? 0;
-                  final soldOut = purchased >= product.purchaseLimit;
-                  return _ShopProductCard(
-                    product: product,
-                    purchased: purchased,
-                    soldOut: soldOut,
-                    owned: widget.inventory[product.itemId] ?? 0,
-                    onTap: () => _confirmPurchase(context, product),
-                  );
-                },
-              ),
+              child: products.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: GameStatePanel(
+                          icon: Icons.storefront_outlined,
+                          title: '입고 대기 중',
+                          message: '이 교환소에는 현재 구매 가능한 보급품이 없습니다.',
+                          actionLabel: '목록 갱신',
+                          onAction: widget.onRefresh,
+                        ),
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(14),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 360,
+                            childAspectRatio: 1.35,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: products.length,
+                      itemBuilder: (_, index) {
+                        final product = products[index];
+                        final purchased =
+                            widget.purchaseCounts[product.id] ?? 0;
+                        final soldOut = purchased >= product.purchaseLimit;
+                        return _ShopProductCard(
+                          product: product,
+                          purchased: purchased,
+                          soldOut: soldOut,
+                          owned: widget.inventory[product.itemId] ?? 0,
+                          onTap: () => _confirmPurchase(context, product),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

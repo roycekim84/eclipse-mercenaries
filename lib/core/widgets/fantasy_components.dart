@@ -115,9 +115,17 @@ class TopBar extends StatelessWidget {
 }
 
 class StatusBanner extends StatelessWidget {
-  const StatusBanner({super.key, required this.message, this.isError = false});
+  const StatusBanner({
+    super.key,
+    required this.message,
+    this.isError = false,
+    this.actionLabel,
+    this.onAction,
+  });
   final String message;
   final bool isError;
+  final String? actionLabel;
+  final VoidCallback? onAction;
   @override
   Widget build(BuildContext context) => Semantics(
     liveRegion: true,
@@ -140,7 +148,95 @@ class StatusBanner extends StatelessWidget {
               style: const TextStyle(color: Color(0xffffdf9a), fontSize: 11),
             ),
           ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: onAction,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xffffd27c),
+                minimumSize: const Size(0, 30),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(actionLabel!, style: const TextStyle(fontSize: 11)),
+            ),
+          ],
         ],
+      ),
+    ),
+  );
+}
+
+class GameStatePanel extends StatelessWidget {
+  const GameStatePanel({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+    this.loading = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: loading,
+    label: '$title. $message',
+    child: GoldPanel(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (loading)
+              const SizedBox.square(
+                dimension: 30,
+                child: CircularProgressIndicator(
+                  color: Color(0xffc49a54),
+                  strokeWidth: 2.5,
+                ),
+              )
+            else
+              Icon(icon, size: 32, color: const Color(0xffd6bd81)),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xffffd27c),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 11,
+                height: 1.45,
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 190,
+                child: FantasyButton(
+                  label: actionLabel!,
+                  icon: Icons.refresh,
+                  onTap: onAction!,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     ),
   );

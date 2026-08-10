@@ -212,6 +212,87 @@ void main() {
     expect(restored.shopPurchaseCounts['ration_pack'], 1);
   });
 
+  testWidgets('save failure offers an actionable retry from camp', (
+    tester,
+  ) async {
+    final repository = _FlakySaveRepository();
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('섬광 줄이기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+    await tester.pumpAndSettle();
+
+    expect(find.text('저장 재시도'), findsOneWidget);
+    repository.shouldFail = false;
+    await tester.tap(find.text('저장 재시도'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('저장 재시도'), findsNothing);
+    expect(repository.value.settings.reducedFlash, isTrue);
+  });
+
+  testWidgets('alpha loop reaches result and returns rewards to camp', (
+    tester,
+  ) async {
+    final repository = InMemorySaveRepository();
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('전쟁터 출전'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('계약 수락 · 출전'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이 용병으로 출전'));
+    await tester.pump();
+    final reward = BattleRewardRules.calculate(
+      contractGold: 3000,
+      contractXp: 1200,
+      kills: 12,
+      completedObjectives: 1,
+      eventGold: 0,
+      eventXp: 0,
+      eventMultiplier: 1,
+      preservationRate: 1,
+    );
+    await tester
+        .state<GameShellState>(find.byType(GameShell))
+        .finishBattle(
+          BattleReport(
+            time: '00:45',
+            kills: 12,
+            gold: reward.keptGold,
+            xp: reward.keptXp,
+            contractName: '성문 방어전',
+            rewardBreakdown: reward,
+            lootDrops: const [],
+            award: const BattleAward(
+              title: '계약 완수',
+              detail: '북문 방어선을 유지했습니다.',
+              honors: [],
+            ),
+          ),
+        );
+    await tester.pumpAndSettle();
+
+    expect(find.text('VICTORY'), findsOneWidget);
+    expect(find.text('보상 명세'), findsOneWidget);
+    await tester.ensureVisible(find.text('캠프로 귀환'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('캠프로 귀환'));
+    await tester.pumpAndSettle();
+    expect(find.text('전쟁터 출전'), findsOneWidget);
+    final restored = await repository.load();
+    expect(restored.gold, greaterThan(45678));
+  });
+
   testWidgets('result screen exposes reward loot and MVP details', (
     tester,
   ) async {
@@ -278,4 +359,85 @@ void main() {
     expect(find.text('보상 명세'), findsOneWidget);
     expect(find.text('희귀 · 장교의 전술지도'), findsOneWidget);
   });
+
+  testWidgets('result screen explains a valid empty loot state', (
+    tester,
+  ) async {
+    final reward = BattleRewardRules.calculate(
+      contractGold: 3000,
+      contractXp: 1200,
+      kills: 0,
+      completedObjectives: 0,
+      eventGold: 0,
+      eventXp: 0,
+      eventMultiplier: 1,
+      preservationRate: 1,
+    );
+    final report = BattleReport(
+      time: '00:45',
+      kills: 0,
+      gold: reward.keptGold,
+      xp: reward.keptXp,
+      contractName: '성문 방어전',
+      rewardBreakdown: reward,
+      lootDrops: const [],
+      award: const BattleAward(
+        title: '계약 완수',
+        detail: '전열을 유지했습니다.',
+        honors: [],
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ResultScreen(
+          report: report,
+          growthReceipt: const GrowthReceipt(
+            mercenaryId: 'luna',
+            mercenaryBefore: MercenaryProgress(level: 45, xp: 0, ascension: 0),
+            mercenaryAfter: MercenaryProgress(
+              level: 45,
+              xp: 1200,
+              ascension: 0,
+            ),
+            mercenaryXpGained: 1200,
+            weaponId: 'moon_blades',
+            weaponBefore: WeaponProgress(level: 1, xp: 0, stage: 1),
+            weaponAfter: WeaponProgress(level: 2, xp: 250, stage: 1),
+            weaponXpGained: 600,
+            inventoryAdded: {},
+          ),
+          onCamp: () {},
+          onReplay: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('회수한 전리품 없음'), findsOneWidget);
+    expect(find.textContaining('계약 골드와 경험치는 정상 반영'), findsOneWidget);
+  });
+}
+
+class _FlakySaveRepository implements SaveRepository {
+  AccountSave value = AccountSave.initial();
+  bool shouldFail = true;
+
+  @override
+  SaveLoadSource lastLoadSource = SaveLoadSource.initial;
+
+  @override
+  Future<AccountSave> load() async => value;
+
+  @override
+  Future<AccountSave> reset() async {
+    value = AccountSave.initial();
+    return value;
+  }
+
+  @override
+  Future<void> save(AccountSave value) async {
+    if (shouldFail) throw StateError('simulated save failure');
+    this.value = value;
+  }
 }
