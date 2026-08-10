@@ -164,6 +164,15 @@
 - 수정 이후 신규 브라우저 warning/error 0건
 - 전투 제어 규칙 테스트 3개와 관련 위젯/콘텐츠 테스트 21개 통과
 
+## 최근 구현 — 2026-08-10 B1 전투 조작 설정
+
+- 혼합/가상 스틱/화면 터치 입력 모드와 거리/정예/목표 위협 표적 우선순위 추가
+- 설정 선택을 save schema v7에 저장하고 기존 schema v1~v6을 안전한 기본값으로 이관
+- 입력 모드는 Flutter 터치 계층과 조이스틱 표시를, 표적 우선순위는 Flame 무기 탐색을 직접 변경
+- 정예/목표 표적이 사거리 안에 없으면 가까운 적으로 대체해 공격 중단 방지
+- 844×390 Web 설정 화면에서 2열 판타지 패널, 가상 스틱/목표 위협 터치 선택과 저장 배너를 확인했으며 console warning/error 0건
+- `flutter analyze`, 전체 71개 테스트와 Pages base-href release Web 빌드 통과
+
 ## 최근 검증 — 2026-08-10 M5.6
 
 - 공개 저장소: `https://github.com/roycekim84/eclipse-mercenaries`

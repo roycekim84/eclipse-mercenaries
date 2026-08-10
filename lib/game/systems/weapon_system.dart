@@ -13,9 +13,11 @@ extension WeaponSystem on SurvivorGame {
       WeaponPattern.spearLine => 300.0,
       WeaponPattern.shadowPierce => 390.0,
     };
-    final target = activeWeapon.pattern == WeaponPattern.longBow
-        ? _farthestEnemyFrom(_player, range)
-        : _nearestEnemyFrom(_player, range);
+    final target = _preferredEnemyFrom(
+      _player,
+      range,
+      preferFarthest: activeWeapon.pattern == WeaponPattern.longBow,
+    );
     if (target == null) return;
     _playerSprite.playAttack();
     final baseDamage =
@@ -197,6 +199,36 @@ extension WeaponSystem on SurvivorGame {
       }
     }
     return nearest;
+  }
+
+  BattleUnit? _preferredEnemyFrom(
+    Vector2 center,
+    double range, {
+    bool preferFarthest = false,
+  }) {
+    if (targetPriority == AutoTargetPriority.nearest) {
+      return preferFarthest
+          ? _farthestEnemyFrom(center, range)
+          : _nearestEnemyFrom(center, range);
+    }
+    BattleUnit? preferred;
+    var preferredDistance = double.infinity;
+    for (final unit in _units) {
+      if (unit.dead || unit.ally) continue;
+      final distance = unit.position.distanceTo(center);
+      if (distance > range) continue;
+      final matches = switch (targetPriority) {
+        AutoTargetPriority.nearest => true,
+        AutoTargetPriority.elite =>
+          unit.elite || unit.role == UnitRole.commander,
+        AutoTargetPriority.objectiveThreat => unit.objectiveAggro,
+      };
+      if (matches && distance < preferredDistance) {
+        preferred = unit;
+        preferredDistance = distance;
+      }
+    }
+    return preferred ?? _nearestEnemyFrom(center, range);
   }
 
   BattleUnit? _farthestEnemyFrom(Vector2 center, double range) {

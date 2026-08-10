@@ -2,6 +2,7 @@ import 'package:eclipse_mercenaries/app/game_app.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
+import 'package:eclipse_mercenaries/domain/game_settings.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,7 +39,9 @@ void main() {
     expect(restored.settings.tutorialCompleted, isTrue);
   });
 
-  testWidgets('accessibility and performance settings persist', (tester) async {
+  testWidgets('accessibility, controls, and performance settings persist', (
+    tester,
+  ) async {
     final repository = InMemorySaveRepository();
     await tester.pumpWidget(
       EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
@@ -52,6 +55,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('저사양 전투 모드'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('가상 스틱'));
+    await tester.tap(find.text('가상 스틱'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('목표 위협'));
+    await tester.tap(find.text('목표 위협'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('큰 글자'));
     await tester.pumpAndSettle();
 
@@ -59,6 +68,11 @@ void main() {
     expect(restored.settings.reducedFlash, isTrue);
     expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);
+    expect(restored.settings.battleInputMode, BattleInputMode.virtualStick);
+    expect(
+      restored.settings.autoTargetPriority,
+      AutoTargetPriority.objectiveThreat,
+    );
   });
 
   testWidgets('contract flows into mercenary selection', (tester) async {

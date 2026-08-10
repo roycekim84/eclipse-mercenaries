@@ -12,6 +12,7 @@ import '../domain/battle_rewards.dart';
 import '../domain/combat_rules.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/game_data.dart';
+import '../domain/game_settings.dart';
 import '../domain/progression.dart';
 import '../domain/run_growth.dart';
 import '../domain/reusable_spatial_grid.dart';
@@ -35,10 +36,13 @@ double _permanentPlayerMaxHp(BattleConfig config) {
 }
 
 class SurvivorGame extends FlameGame {
-  SurvivorGame({required this.config, required this.onVictory})
-    : _random = math.Random(config.seed),
-      _upgradeRandom = math.Random(config.seed ^ 0x5f3759df),
-      _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
+  SurvivorGame({
+    required this.config,
+    required this.onVictory,
+    this.targetPriority = AutoTargetPriority.nearest,
+  }) : _random = math.Random(config.seed),
+       _upgradeRandom = math.Random(config.seed ^ 0x5f3759df),
+       _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
     stats = ValueNotifier(
       BattleStats(
         hp: _permanentPlayerMaxHp(config),
@@ -67,6 +71,7 @@ class SurvivorGame extends FlameGame {
     );
   }
   final BattleConfig config;
+  final AutoTargetPriority targetPriority;
   MercenarySpec get mercenary => config.mercenary;
   WeaponSpec get weapon => config.weapon;
   double get _permanentDamageMultiplier =>

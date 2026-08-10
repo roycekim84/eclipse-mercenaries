@@ -267,7 +267,7 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 6);
+      expect(migrated.schemaVersion, 7);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
@@ -312,9 +312,11 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 6);
+    expect(migrated.schemaVersion, 7);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
+    expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
+    expect(migrated.settings.autoTargetPriority, AutoTargetPriority.nearest);
   });
 
   test('mercenary and weapon permanent growth crosses level thresholds', () {
@@ -421,6 +423,8 @@ void main() {
     expect(settings.screenShakeEnabled, isTrue);
     expect(settings.reducedFlash, isFalse);
     expect(settings.performanceMode, isFalse);
+    expect(settings.battleInputMode, BattleInputMode.hybrid);
+    expect(settings.autoTargetPriority, AutoTargetPriority.nearest);
   });
 
   test('recruitment rolls are deterministic and respect currency gates', () {

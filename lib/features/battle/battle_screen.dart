@@ -10,6 +10,8 @@ class BattleScreen extends StatefulWidget {
     required this.weaponProgress,
     required this.reducedEffects,
     required this.performanceMode,
+    required this.inputMode,
+    required this.targetPriority,
     required this.onVictory,
     required this.onExit,
   });
@@ -20,6 +22,8 @@ class BattleScreen extends StatefulWidget {
   final WeaponProgress weaponProgress;
   final bool reducedEffects;
   final bool performanceMode;
+  final BattleInputMode inputMode;
+  final AutoTargetPriority targetPriority;
   final ValueChanged<BattleReport> onVictory;
   final VoidCallback onExit;
 
@@ -49,6 +53,7 @@ class _BattleScreenState extends State<BattleScreen>
         weaponGrowthStage: widget.weaponProgress.stage,
       ),
       onVictory: widget.onVictory,
+      targetPriority: widget.targetPriority,
     );
     game.reducedEffects.value = widget.reducedEffects;
     game.performanceMode.value = widget.performanceMode;
@@ -75,16 +80,17 @@ class _BattleScreenState extends State<BattleScreen>
     return Stack(
       children: [
         Positioned.fill(child: GameWidget(game: game)),
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onPanStart: (d) => game.setMoveTarget(d.localPosition),
-            onPanUpdate: (d) => game.setMoveTarget(d.localPosition),
-            onPanEnd: (_) => game.clearMoveTarget(),
-            onTapDown: (d) => game.setMoveTarget(d.localPosition),
-            onTapUp: (_) => game.clearMoveTarget(),
+        if (widget.inputMode != BattleInputMode.virtualStick)
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanStart: (d) => game.setMoveTarget(d.localPosition),
+              onPanUpdate: (d) => game.setMoveTarget(d.localPosition),
+              onPanEnd: (_) => game.clearMoveTarget(),
+              onTapDown: (d) => game.setMoveTarget(d.localPosition),
+              onTapUp: (_) => game.clearMoveTarget(),
+            ),
           ),
-        ),
         SafeArea(
           child: ValueListenableBuilder<BattleStats>(
             valueListenable: game.stats,
@@ -101,6 +107,7 @@ class _BattleScreenState extends State<BattleScreen>
                 onTactical: game.triggerTacticalAction,
                 onMove: game.setMoveDirection,
                 onMoveEnd: game.clearMoveDirection,
+                showJoystick: widget.inputMode != BattleInputMode.touch,
               ),
             ),
           ),
@@ -254,6 +261,7 @@ class BattleHud extends StatelessWidget {
     required this.onTactical,
     required this.onMove,
     required this.onMoveEnd,
+    required this.showJoystick,
   });
   final BattlefieldContract contract;
   final MercenarySpec mercenary;
@@ -265,6 +273,7 @@ class BattleHud extends StatelessWidget {
   final VoidCallback onTactical;
   final ValueChanged<Offset> onMove;
   final VoidCallback onMoveEnd;
+  final bool showJoystick;
 
   @override
   Widget build(BuildContext context) {
@@ -409,11 +418,12 @@ class BattleHud extends StatelessWidget {
             ),
           ),
         ),
-        Positioned(
-          left: 12,
-          bottom: 12,
-          child: BattleJoystick(onMove: onMove, onEnd: onMoveEnd),
-        ),
+        if (showJoystick)
+          Positioned(
+            left: 12,
+            bottom: 12,
+            child: BattleJoystick(onMove: onMove, onEnd: onMoveEnd),
+          ),
         Positioned(
           right: 14,
           bottom: 10,

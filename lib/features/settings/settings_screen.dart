@@ -83,6 +83,34 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: (value) =>
                         onChanged(settings.copyWith(largeText: value)),
                   ),
+                  _ChoiceSettingTile<BattleInputMode>(
+                    icon: Icons.gamepad_outlined,
+                    title: '전투 이동 조작',
+                    description: '손에 맞는 이동 방식을 선택합니다.',
+                    value: settings.battleInputMode,
+                    options: BattleInputMode.values,
+                    labelFor: (value) => switch (value) {
+                      BattleInputMode.hybrid => '혼합',
+                      BattleInputMode.virtualStick => '가상 스틱',
+                      BattleInputMode.touch => '화면 터치',
+                    },
+                    onChanged: (value) =>
+                        onChanged(settings.copyWith(battleInputMode: value)),
+                  ),
+                  _ChoiceSettingTile<AutoTargetPriority>(
+                    icon: Icons.filter_center_focus,
+                    title: '자동 공격 우선순위',
+                    description: '우선 공격할 적의 전술 기준입니다.',
+                    value: settings.autoTargetPriority,
+                    options: AutoTargetPriority.values,
+                    labelFor: (value) => switch (value) {
+                      AutoTargetPriority.nearest => '거리',
+                      AutoTargetPriority.elite => '정예',
+                      AutoTargetPriority.objectiveThreat => '목표 위협',
+                    },
+                    onChanged: (value) =>
+                        onChanged(settings.copyWith(autoTargetPriority: value)),
+                  ),
                   GoldPanel(
                     child: Padding(
                       padding: const EdgeInsets.all(13),
@@ -195,6 +223,85 @@ class _SettingTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    ),
+  );
+}
+
+class _ChoiceSettingTile<T> extends StatelessWidget {
+  const _ChoiceSettingTile({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.value,
+    required this.options,
+    required this.labelFor,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final T value;
+  final List<T> options;
+  final String Function(T value) labelFor;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) => GoldPanel(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xffd8bd7b), size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: const TextStyle(color: Colors.white60, fontSize: 10),
+                ),
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 5,
+                  children: [
+                    for (final option in options)
+                      ChoiceChip(
+                        label: Text(labelFor(option)),
+                        selected: option == value,
+                        onSelected: (_) => onChanged(option),
+                        labelStyle: TextStyle(
+                          color: option == value
+                              ? const Color(0xffffe4a3)
+                              : Colors.white60,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        selectedColor: const Color(0xff5c416f),
+                        backgroundColor: const Color(0xff171922),
+                        side: BorderSide(
+                          color: option == value
+                              ? const Color(0xffd1aa58)
+                              : const Color(0xff46404a),
+                        ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     ),
   );

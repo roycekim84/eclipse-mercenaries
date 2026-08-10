@@ -63,7 +63,7 @@ class AccountSave {
     settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 6;
+  static const currentSchemaVersion = 7;
 
   final int schemaVersion;
   final int gold;
@@ -291,6 +291,22 @@ abstract final class SaveMigration {
         'settings': {...settings, 'performanceMode': false},
       };
       version = 6;
+    }
+    if (version < 7) {
+      final rawSettings = current['settings'];
+      final settings = rawSettings is Map
+          ? Map<String, Object?>.from(rawSettings)
+          : const GameSettings.defaults().toJson();
+      current = {
+        ...current,
+        'schemaVersion': 7,
+        'settings': {
+          ...settings,
+          'battleInputMode': BattleInputMode.hybrid.name,
+          'autoTargetPriority': AutoTargetPriority.nearest.name,
+        },
+      };
+      version = 7;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');
