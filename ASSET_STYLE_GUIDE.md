@@ -1,5 +1,18 @@
 # 이미지 에셋 스타일 기획서
 
+## 구현 자산 기록 — 북문 성문 방어전
+
+- 파일: `assets/images/battlefield/north_gate_battlefield.png`
+- 규격: 1672×941 PNG, 16:9 가로, 탑다운 픽셀 아트
+- 제작: built-in image generation, 첨부 10화면을 분위기·팔레트·완성도 레퍼런스로 사용
+- 좌표 정합: 성벽과 성문은 왼쪽, 아군 방어 구역 25%, 중앙 교전로, 오른쪽 적 진입 방향
+- 구성: 월광, 진흙, 참호, 목책, 파손 잔해, 천막, 제한된 화염과 안개
+- 가독성: 중앙은 500개 유닛과 VFX가 겹쳐도 읽히도록 저대비·개방 공간 유지
+- 금지 요소: 이미지 내 캐릭터, HUD, 텍스트, 로고, 워터마크
+- 런타임: 성문 방어전 Flame 지형 레이어에 단일 `drawImageRect`로 렌더하고 목표/유닛/VFX를 위에 합성
+
+최종 생성 프롬프트 요약: `premium 16:9 top-down JRPG pixel battlefield, vertical fortress on the left, left-side defense versus right-side attack, moonlit mud and trenches, open readable center, no units or UI`.
+
 ## 구현 자산 기록 — 특별 용병 계약 배너
 
 - 파일: `assets/images/recruitment_luna_banner.png`

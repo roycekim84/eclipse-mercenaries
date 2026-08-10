@@ -1,7 +1,9 @@
 import '../../domain/game_data.dart';
 import '../../domain/enemy_catalog.dart';
+import '../../domain/content_catalog.dart';
 
 abstract interface class GameContentRepository {
+  int get contentVersion;
   List<MercenarySpec> get mercenaries;
   List<WeaponSpec> get weapons;
   List<EnemyArchetypeSpec> get enemies;
@@ -13,6 +15,9 @@ abstract interface class GameContentRepository {
 
 class StaticGameContentRepository implements GameContentRepository {
   const StaticGameContentRepository();
+
+  @override
+  int get contentVersion => alphaContentCatalog.version;
 
   @override
   List<MercenarySpec> get mercenaries => alphaMercenaries;

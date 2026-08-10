@@ -8,6 +8,8 @@ body:
     attributes:
       label: 테스트 환경
       options:
+        - Android 앱 빌드
+        - iPhone/iPad 앱 빌드
         - Android 모바일 브라우저
         - iPhone 모바일 브라우저
         - Windows 데스크톱 브라우저
@@ -18,10 +20,23 @@ body:
   - type: input
     id: browser
     attributes:
-      label: 브라우저와 버전
-      placeholder: 예) Chrome 140, Safari 20
+      label: 앱 빌드 또는 브라우저와 버전
+      placeholder: 예) Beta 0.1.0+12, Chrome 140, Safari 20
     validations:
       required: true
+  - type: input
+    id: device_model
+    attributes:
+      label: 기기 모델, OS, 화면 크기
+      placeholder: 예) Galaxy S24 / Android 16 / 20:9 가로
+    validations:
+      required: true
+  - type: input
+    id: battle_context
+    attributes:
+      label: 전투 재현 정보
+      description: 가능한 경우 seed, 전장, 용병, 무기와 남은 시간을 적어주세요.
+      placeholder: 예) seed 19 / 성문 방어전 / 루나 / 월광쌍검 / 03:21
   - type: textarea
     id: steps
     attributes:

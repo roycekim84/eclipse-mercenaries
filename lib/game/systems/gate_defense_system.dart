@@ -284,35 +284,6 @@ extension GateDefenseSystem on SurvivorGame {
       );
     }
 
-    final wall = Paint()..color = const Color(0xff5d5b52);
-    final darkStone = Paint()..color = const Color(0xff343630);
-    final timber = Paint()..color = const Color(0xff49372a);
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(_gatePosition.x - 23, _gatePosition.y),
-        width: 34,
-        height: 196,
-      ),
-      wall,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(_gatePosition.x + 25, _gatePosition.y),
-        width: 44,
-        height: 112,
-      ),
-      timber,
-    );
-    for (var i = -2; i <= 2; i++) {
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(_gatePosition.x + 25 + i * 8, _gatePosition.y),
-          width: 3,
-          height: 108,
-        ),
-        darkStone,
-      );
-    }
     final hpRatio = (_gateHp / GateDefenseRules.maxGateHp).clamp(0.0, 1.0);
     canvas.drawRect(
       Rect.fromLTWH(_gatePosition.x - 38, _gatePosition.y - 118, 96, 8),

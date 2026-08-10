@@ -36,10 +36,14 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      - name: Validate content catalog and balance baseline
+        run: dart run tool/content_audit.dart
+
       - name: Run portable tests
         run: >-
           flutter test
           test/battle_render_policy_test.dart
+          test/content_catalog_test.dart
           test/performance_profiler_test.dart
           test/repository_test.dart
           test/spatial_hash_benchmark_test.dart

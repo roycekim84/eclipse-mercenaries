@@ -228,6 +228,38 @@ const alphaLootTable = <LootItemSpec>[
   ),
 ];
 
+const alphaRareLootTable = <LootItemSpec>[
+  LootItemSpec(
+    id: 'nameless_spur',
+    name: '이름 없는 박차',
+    rarity: LootRarity.rare,
+    description: '휘장을 버린 기사가 남긴 결투의 증표다.',
+  ),
+  LootItemSpec(
+    id: 'blood_ember',
+    name: '응고된 혈화',
+    rarity: LootRarity.rare,
+    description: '혈송 사제의 마력이 굳어 만들어진 불씨다.',
+  ),
+  LootItemSpec(
+    id: 'marshal_seal',
+    name: '공성군감의 인장',
+    rarity: LootRarity.epic,
+    description: '제국 공성군의 지휘권을 증명하는 인장이다.',
+  ),
+  LootItemSpec(
+    id: 'hunter_insignia',
+    name: '추격대장의 표식',
+    rarity: LootRarity.epic,
+    description: '회색단 최정예 추격대를 꺾은 증거다.',
+  ),
+];
+
+const alphaLootCatalog = <LootItemSpec>[
+  ...alphaLootTable,
+  ...alphaRareLootTable,
+];
+
 abstract final class BattleLootRules {
   static List<LootDrop> resolve({
     required int seed,
@@ -288,17 +320,20 @@ abstract final class BattleLootRules {
   }
 
   static LootDrop _specialDrop(String id) {
-    const names = {
-      'nameless_spur': '이름 없는 박차',
-      'blood_ember': '응고된 혈화',
-      'marshal_seal': '공성군감의 인장',
-      'hunter_insignia': '추격대장의 표식',
-    };
-    final boss = id == 'marshal_seal' || id == 'hunter_insignia';
+    final item = alphaRareLootTable.firstWhere(
+      (candidate) => candidate.id == id,
+      orElse: () => LootItemSpec(
+        id: id,
+        name: id,
+        rarity: LootRarity.rare,
+        description: '등록되지 않은 특수 전리품',
+      ),
+    );
+    final boss = item.rarity == LootRarity.epic;
     return LootDrop(
       id: id,
-      name: names[id] ?? id,
-      rarity: boss ? LootRarity.epic : LootRarity.rare,
+      name: item.name,
+      rarity: item.rarity,
       quantity: 1,
       source: boss ? '적 지휘관' : '정예 처치',
     );

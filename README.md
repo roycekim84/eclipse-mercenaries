@@ -42,6 +42,8 @@ flutter run -d chrome
 - 화면별 UI/UX 명세: [UI_UX_SPEC.md](UI_UX_SPEC.md)
 - 단계별 로드맵: [ROADMAP.md](ROADMAP.md)
 - 알파 이후 베타 구현 로드맵: [BETA_IMPLEMENTATION_ROADMAP.md](BETA_IMPLEMENTATION_ROADMAP.md)
+- B0 알파 플레이테스트 감사표: [ALPHA_PLAYTEST_AUDIT.md](ALPHA_PLAYTEST_AUDIT.md)
+- 콘텐츠·밸런스 기준선: [BALANCE_BASELINE.md](BALANCE_BASELINE.md)
 - 현재 진행 상황: [PROGRESS.md](PROGRESS.md)
 - 테스트 기준: [TESTING.md](TESTING.md)
 - 외부 테스트 안내: [PLAYTEST.md](PLAYTEST.md)

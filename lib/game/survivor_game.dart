@@ -116,6 +116,7 @@ class SurvivorGame extends FlameGame {
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
   late final Image _unitAtlas;
+  Image? _battlefieldBackground;
   BattleUnit? _allyCommander;
   BattleUnit? _enemyCommander;
   late Vector2 _gatePosition;
@@ -192,6 +193,11 @@ class SurvivorGame extends FlameGame {
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
     _unitAtlas = await images.load('battlefield/unit_role_batch.png');
+    if (config.battlefield == BattlefieldType.gateDefense) {
+      _battlefieldBackground = await images.load(
+        'battlefield/north_gate_battlefield.png',
+      );
+    }
     final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
     _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
       ..position = _player.clone();
@@ -490,6 +496,21 @@ class SurvivorGame extends FlameGame {
   }
 
   void _drawTerrain(Canvas canvas) {
+    final background = _battlefieldBackground;
+    if (background != null) {
+      canvas.drawImageRect(
+        background,
+        Rect.fromLTWH(
+          0,
+          0,
+          background.width.toDouble(),
+          background.height.toDouble(),
+        ),
+        Offset.zero & Size(size.x, size.y),
+        Paint()..filterQuality = FilterQuality.none,
+      );
+      return;
+    }
     final policy = _renderPolicy;
     canvas.drawRect(
       Offset.zero & Size(size.x, size.y),

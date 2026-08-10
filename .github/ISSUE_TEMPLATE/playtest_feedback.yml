@@ -8,11 +8,28 @@ body:
     attributes:
       label: 테스트 환경
       options:
+        - Android 앱 빌드
+        - iPhone/iPad 앱 빌드
         - Android 모바일 브라우저
         - iPhone 모바일 브라우저
         - Windows 데스크톱 브라우저
         - macOS 데스크톱 브라우저
         - 기타
+    validations:
+      required: true
+  - type: input
+    id: device_model
+    attributes:
+      label: 기기 모델과 OS
+      description: 성능과 화면 문제를 재현하는 데 사용합니다.
+      placeholder: 예) Galaxy S24 / Android 16, iPhone 15 / iOS 20
+    validations:
+      required: true
+  - type: input
+    id: viewport
+    attributes:
+      label: 화면 크기 또는 화면비
+      placeholder: 예) 844×390, 20:9 가로, 1280×720
     validations:
       required: true
   - type: dropdown
@@ -43,6 +60,24 @@ body:
     attributes:
       label: 전투와 난이도 의견
       description: 병사 수, 자동 공격, 이동, 사건 선택과 전투 시간에 대한 의견을 알려주세요.
+  - type: dropdown
+    id: exit_reason
+    attributes:
+      label: 전투를 중단했거나 다시 출전하지 않은 주된 이유
+      options:
+        - 끝까지 진행했고 다시 출전함
+        - 목표나 조작을 이해하기 어려움
+        - 전투가 단조롭거나 너무 김
+        - 난이도가 너무 높거나 낮음
+        - 화면이 복잡하거나 성능이 낮음
+        - 성장·보상 매력이 부족함
+        - 시간 부족 또는 외부 사유
+  - type: input
+    id: battle_seed
+    attributes:
+      label: 전투 seed 또는 추가 재현 정보
+      description: 결과 화면이나 디버그 정보에 seed가 보이면 적어주세요.
+      placeholder: 예) seed 19 / 루나 / 월광쌍검 / 성문 방어전
   - type: textarea
     id: ui
     attributes:
