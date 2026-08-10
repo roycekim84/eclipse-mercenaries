@@ -114,11 +114,26 @@
 - `월식 용병단: Eclipse Mercenaries` 정식 프로젝트 제목과 공개 GitHub 저장소
 - main push마다 검증·release 빌드·배포하는 GitHub Pages workflow
 - 공개 Web 알파 테스트 주소와 버그/플레이테스트 Issue Form
+- Web은 방향 제어에서 제외하고 iOS/Android는 양쪽 가로로 고정하는 플랫폼 정책
+- Android 게임 카테고리·sensorLandscape와 iPhone/iPad 가로 전용·전체 화면 네이티브 설정
+- 프로토타입 부채 진단, B0~B7 에픽, 베타 수량·품질·종료 기준을 담은 상세 구현 로드맵
 
-## 다음 작업
+## 다음 작업 — 베타 B0
 
-- 실제 Web/모바일 DevTools GPU·GC trace와 기기 발열 검증
-- iOS/Android 네이티브 회귀 체크리스트와 기기 빌드 검증
+- 공개 알파 플레이테스트 10명 관찰표와 P0/P1/P2 부채 분류
+- iOS/Android 실제 기기의 가로·SafeArea·발열·중단 복구 기준선 측정
+- 콘텐츠 카탈로그 무결성 검사와 밸런스 스냅샷 도구
+- 성문 방어전 8~10분 전선 단계와 조작/보스 수직 슬라이스 설계
+
+## 최근 검증 — 2026-08-10 베타 B0 시작
+
+- `flutter analyze`: 통과, 이슈 0건
+- `flutter test`: 전체 64개 통과, 모바일 가로 정책 테스트 포함
+- `flutter build web --release --base-href "/eclipse-mercenaries/"`: 통과, Web 방향 제어 제외
+- `flutter build apk --debug`: 통과
+- `flutter build ios --debug --no-codesign`: 비동기화 임시 작업공간에서 통과
+- Android Manifest와 iOS Info.plist XML/plist 구문 검증 통과
+- Documents 동기화 경로의 iOS 빌드는 Finder 확장 속성으로 codesign이 거부되어 `TESTING.md`에 전용 빌드 경로 주의사항 기록
 
 ## 최근 검증 — 2026-08-10 M5.6
 

@@ -1,5 +1,15 @@
 # 변경 기록
 
+## Mobile landscape policy and beta implementation roadmap — 2026-08-10
+
+- Web은 브라우저 방향을 유지하고 iOS/Android만 양쪽 가로로 고정하는 플랫폼 초기화 추가
+- Android 게임 카테고리와 `sensorLandscape`, iPhone/iPad 가로 전용과 iPad 전체 화면 설정 적용
+- iOS 플러그인용 CocoaPods 프로젝트 통합과 lockfile을 생성해 네이티브 빌드 재현성 확보
+- 알파가 프로토타입처럼 보이는 원인을 전장·전투·메타·콘텐츠·오디오·모바일 관점에서 진단
+- B0 진단부터 B7 클로즈드 베타 안정화까지 단계별 구현 에픽, 선행 조건, 완료 기준 작성
+- 베타 목표를 용병 8명, 무기 16개, 전장 5개, 사건 24개와 모바일 품질 관문으로 구체화
+- 기존 문서 인덱스, 기본 로드맵, UI/UX, 아키텍처, 테스트와 진행 문서를 새 베타 기준에 연결
+
 ## Public Web alpha and GitHub Pages — 2026-08-10
 
 - 프로젝트 정식 제목을 `월식 용병단: Eclipse Mercenaries`로 통일

@@ -8,7 +8,7 @@ Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. W
 - 테스트 의견: [플레이테스트 피드백 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=playtest_feedback.yml)
 - 버그 제보: [버그 리포트 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=bug_report.yml)
 
-모바일에서는 가로 화면을 권장합니다. 알파 저장 데이터는 현재 브라우저의 local storage에 보관되므로 브라우저 데이터 삭제 또는 시크릿 모드 종료 시 초기화될 수 있습니다.
+iOS/Android 출시 빌드는 양쪽 가로 방향으로 고정됩니다. Web은 방향을 강제하지 않고 반응형 테스트 환경으로 유지합니다. 알파 저장 데이터는 현재 브라우저의 local storage에 보관되므로 브라우저 데이터 삭제 또는 시크릿 모드 종료 시 초기화될 수 있습니다.
 
 ## 실행
 
@@ -41,6 +41,7 @@ flutter run -d chrome
 - 이미지 에셋 스타일: [ASSET_STYLE_GUIDE.md](ASSET_STYLE_GUIDE.md)
 - 화면별 UI/UX 명세: [UI_UX_SPEC.md](UI_UX_SPEC.md)
 - 단계별 로드맵: [ROADMAP.md](ROADMAP.md)
+- 알파 이후 베타 구현 로드맵: [BETA_IMPLEMENTATION_ROADMAP.md](BETA_IMPLEMENTATION_ROADMAP.md)
 - 현재 진행 상황: [PROGRESS.md](PROGRESS.md)
 - 테스트 기준: [TESTING.md](TESTING.md)
 - 외부 테스트 안내: [PLAYTEST.md](PLAYTEST.md)

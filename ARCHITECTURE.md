@@ -1,5 +1,13 @@
 # 기술 아키텍처
 
+## 플랫폼 표시 방향
+
+- Web은 임베드와 반응형 테스트를 위해 브라우저 방향을 강제하지 않는다.
+- iOS/Android는 앱 시작 전 `MobileOrientation.apply()`로 Landscape Left/Right만 요청한다.
+- Android Manifest는 게임 카테고리와 `sensorLandscape`를 선언한다.
+- iOS Info.plist는 iPhone/iPad 모두 두 가로 방향만 선언하고 iPad 전체 화면을 요구한다.
+- 런타임 요청과 네이티브 선언을 함께 유지해 Flutter 첫 프레임 전후의 세로 노출과 회전 불일치를 줄인다.
+
 ## 1. 목표
 
 - Flutter 메뉴 UI와 Flame 전투의 책임을 명확히 분리한다.
