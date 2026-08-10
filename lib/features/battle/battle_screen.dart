@@ -8,6 +8,7 @@ class BattleScreen extends StatefulWidget {
     required this.weapon,
     required this.mercenaryProgress,
     required this.weaponProgress,
+    required this.reducedEffects,
     required this.onVictory,
     required this.onExit,
   });
@@ -16,6 +17,7 @@ class BattleScreen extends StatefulWidget {
   final WeaponSpec weapon;
   final MercenaryProgress mercenaryProgress;
   final WeaponProgress weaponProgress;
+  final bool reducedEffects;
   final ValueChanged<BattleReport> onVictory;
   final VoidCallback onExit;
 
@@ -46,6 +48,7 @@ class _BattleScreenState extends State<BattleScreen>
       ),
       onVictory: widget.onVictory,
     );
+    game.reducedEffects.value = widget.reducedEffects;
     WidgetsBinding.instance.addObserver(this);
   }
 

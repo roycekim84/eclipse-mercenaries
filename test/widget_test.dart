@@ -9,7 +9,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('camp renders primary actions', (tester) async {
     await tester.pumpWidget(
-      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -18,9 +21,51 @@ void main() {
     expect(find.text('대장간'), findsOneWidget);
   });
 
+  testWidgets('first launch tutorial completes and persists', (tester) async {
+    final repository = InMemorySaveRepository();
+    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('독립 용병단의 단장'), findsOneWidget);
+    await tester.tap(find.text('다음'));
+    await tester.pumpAndSettle();
+    expect(find.text('첫 전쟁 계약'), findsOneWidget);
+    await tester.tap(find.text('건너뛰기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('독립 용병단의 단장'), findsNothing);
+    final restored = await repository.load();
+    expect(restored.settings.tutorialCompleted, isTrue);
+  });
+
+  testWidgets('accessibility settings persist reduced flash and large text', (
+    tester,
+  ) async {
+    final repository = InMemorySaveRepository();
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('환경 설정'), findsOneWidget);
+    await tester.tap(find.text('섬광 줄이기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('큰 글자'));
+    await tester.pumpAndSettle();
+
+    final restored = await repository.load();
+    expect(restored.settings.reducedFlash, isTrue);
+    expect(restored.settings.largeText, isTrue);
+  });
+
   testWidgets('contract flows into mercenary selection', (tester) async {
     await tester.pumpWidget(
-      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -38,7 +83,10 @@ void main() {
 
   testWidgets('equipment screen exposes alpha weapon set', (tester) async {
     await tester.pumpWidget(
-      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -52,7 +100,10 @@ void main() {
 
   testWidgets('camp codex exposes enemy catalog and filters', (tester) async {
     await tester.pumpWidget(
-      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -69,7 +120,10 @@ void main() {
 
   testWidgets('mercenary detail exposes five growth tabs', (tester) async {
     await tester.pumpWidget(
-      EclipseMercenariesApp(saveRepository: InMemorySaveRepository()),
+      EclipseMercenariesApp(
+        saveRepository: InMemorySaveRepository(),
+        enableTutorial: false,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -93,7 +147,9 @@ void main() {
     tester,
   ) async {
     final repository = InMemorySaveRepository();
-    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('임무'));
@@ -112,7 +168,9 @@ void main() {
     tester,
   ) async {
     final repository = InMemorySaveRepository();
-    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('용병 모집'));
@@ -134,7 +192,9 @@ void main() {
     tester,
   ) async {
     final repository = InMemorySaveRepository();
-    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('상점'));

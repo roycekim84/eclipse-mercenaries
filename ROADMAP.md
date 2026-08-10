@@ -211,10 +211,10 @@ M4 종료 기준:
 ### 품질
 
 - [ ] 모든 핵심 화면 normal/loading/empty/error 상태
-- [ ] 반응형 UI와 SafeArea QA
-- [ ] 접근성 라벨, 색 외 상태 표시, 텍스트 확대
-- [ ] 튜토리얼과 첫 계약 안내
-- [ ] 오디오, 진동, 화면 흔들림 옵션
+- [x] 반응형 UI와 SafeArea QA
+- [x] 접근성 라벨, 색 외 상태 표시, 텍스트 확대
+- [x] 튜토리얼과 첫 계약 안내
+- [x] 오디오, 진동, 화면 흔들림 옵션
 
 ### 성능
 
@@ -226,10 +226,10 @@ M4 종료 기준:
 
 ### 테스트
 
-- [ ] 도메인 unit test
+- [x] 도메인 unit test
 - [ ] 전체 루프 widget/integration test
 - [ ] 핵심 화면 golden test
-- [ ] 저장 migration/손상 복구 테스트
+- [x] 저장 migration/손상 복구 테스트
 - [ ] Web/iOS/Android 회귀 체크리스트
 
 M5 종료 기준:

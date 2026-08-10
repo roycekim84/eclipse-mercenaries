@@ -39,56 +39,109 @@ class DarkBackdrop extends StatelessWidget {
 }
 
 class TopBar extends StatelessWidget {
-  const TopBar({super.key, required this.gold, required this.crystals});
+  const TopBar({
+    super.key,
+    required this.gold,
+    required this.crystals,
+    required this.onSettings,
+  });
   final int gold;
   final int crystals;
+  final VoidCallback onSettings;
   @override
-  Widget build(BuildContext context) => Container(
-    height: 58,
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: const BoxDecoration(
-      color: Color(0xdd0b0d12),
-      border: Border(bottom: BorderSide(color: Color(0xff665535))),
-    ),
-    child: Row(
-      children: [
-        const CircleAvatar(
-          radius: 19,
-          backgroundColor: Color(0xff4f3821),
-          child: Icon(Icons.pets, color: Color(0xffddb870)),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (_, constraints) {
+      final compact = constraints.maxWidth < 620;
+      return Container(
+        height: 58,
+        padding: EdgeInsets.symmetric(horizontal: compact ? 7 : 12),
+        decoration: const BoxDecoration(
+          color: Color(0xdd0b0d12),
+          border: Border(bottom: BorderSide(color: Color(0xff665535))),
         ),
-        const SizedBox(width: 9),
-        const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              '월영 Lv.15',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            const CircleAvatar(
+              radius: 19,
+              backgroundColor: Color(0xff4f3821),
+              child: Icon(Icons.pets, color: Color(0xffddb870)),
             ),
-            Text(
-              '단장 랭크 B',
-              style: TextStyle(fontSize: 10, color: Colors.white54),
+            SizedBox(width: compact ? 5 : 9),
+            if (!compact)
+              const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '월영 Lv.15',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '단장 랭크 B',
+                    style: TextStyle(fontSize: 10, color: Colors.white54),
+                  ),
+                ],
+              ),
+            const Spacer(),
+            Currency(
+              icon: Icons.monetization_on,
+              value: '$gold',
+              color: Color(0xffffc95d),
+            ),
+            const SizedBox(width: 8),
+            Currency(
+              icon: Icons.diamond,
+              value: '$crystals',
+              color: Color(0xff6baee8),
+            ),
+            if (!compact) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.mail_outline, size: 19),
+            ],
+            SizedBox(width: compact ? 4 : 10),
+            Semantics(
+              button: true,
+              label: '환경 설정 열기',
+              child: SmallIconButton(
+                icon: Icons.settings_outlined,
+                onTap: onSettings,
+              ),
             ),
           ],
         ),
-        const Spacer(),
-        Currency(
-          icon: Icons.monetization_on,
-          value: '$gold',
-          color: Color(0xffffc95d),
-        ),
-        const SizedBox(width: 8),
-        Currency(
-          icon: Icons.diamond,
-          value: '$crystals',
-          color: Color(0xff6baee8),
-        ),
-        const SizedBox(width: 8),
-        const Icon(Icons.mail_outline, size: 19),
-        const SizedBox(width: 10),
-        const Icon(Icons.settings_outlined, size: 19),
-      ],
+      );
+    },
+  );
+}
+
+class StatusBanner extends StatelessWidget {
+  const StatusBanner({super.key, required this.message, this.isError = false});
+  final String message;
+  final bool isError;
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    label: message,
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      color: isError ? const Color(0xff512b2b) : const Color(0xff3b2d18),
+      child: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.info_outline,
+            size: 16,
+            color: const Color(0xffffd27c),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Color(0xffffdf9a), fontSize: 11),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -179,45 +232,49 @@ class FantasyButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool prominent;
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: prominent
-                ? const [Color(0xff263f5e), Color(0xff15253b)]
-                : const [Color(0xff372a20), Color(0xff191512)],
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: prominent
+                  ? const [Color(0xff263f5e), Color(0xff15253b)]
+                  : const [Color(0xff372a20), Color(0xff191512)],
+            ),
+            border: Border.all(
+              color: prominent
+                  ? const Color(0xff7691ad)
+                  : const Color(0xff8b7045),
+            ),
+            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 7)],
           ),
-          border: Border.all(
-            color: prominent
-                ? const Color(0xff7691ad)
-                : const Color(0xff8b7045),
-          ),
-          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 7)],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: const Color(0xffd8bd7b), size: 20),
-              const SizedBox(width: 9),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: const Color(0xffd8bd7b), size: 20),
+                const SizedBox(width: 9),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -238,39 +295,43 @@ class NavButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool badge;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 7),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: const Color(0xcc11141a),
-            border: Border.all(color: const Color(0xff57482f)),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 18, color: const Color(0xffd0b375)),
-                    Text(label, style: const TextStyle(fontSize: 10)),
-                  ],
-                ),
-              ),
-              if (badge)
-                const Positioned(
-                  right: 4,
-                  top: 3,
-                  child: CircleAvatar(
-                    radius: 5,
-                    backgroundColor: Color(0xffc34d3f),
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: badge ? '$label, 새 알림 있음' : label,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xcc11141a),
+              border: Border.all(color: const Color(0xff57482f)),
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 18, color: const Color(0xffd0b375)),
+                      Text(label, style: const TextStyle(fontSize: 10)),
+                    ],
                   ),
                 ),
-            ],
+                if (badge)
+                  const Positioned(
+                    right: 4,
+                    top: 3,
+                    child: CircleAvatar(
+                      radius: 5,
+                      backgroundColor: Color(0xffc34d3f),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

@@ -15,6 +15,7 @@ import '../domain/camp_meta.dart';
 import '../domain/enemy_catalog.dart';
 import '../domain/economy.dart';
 import '../domain/game_data.dart';
+import '../domain/game_settings.dart';
 import '../domain/progression.dart';
 import '../domain/run_growth.dart';
 import '../game/survivor_game.dart';
@@ -35,13 +36,20 @@ part '../features/mercenaries/mercenary_screens.dart';
 part '../features/results/result_screen.dart';
 part '../features/recruitment/recruitment_screen.dart';
 part '../features/shop/shop_screen.dart';
+part '../features/settings/settings_screen.dart';
+part '../features/tutorial/tutorial_overlay.dart';
 
 const gameContent = StaticGameContentRepository();
 
 class EclipseMercenariesApp extends StatelessWidget {
-  const EclipseMercenariesApp({super.key, this.saveRepository});
+  const EclipseMercenariesApp({
+    super.key,
+    this.saveRepository,
+    this.enableTutorial = true,
+  });
 
   final SaveRepository? saveRepository;
+  final bool enableTutorial;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +57,10 @@ class EclipseMercenariesApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: '월식 용병단',
       theme: buildGameTheme(),
-      home: GameShell(saveRepository: saveRepository),
+      home: GameShell(
+        saveRepository: saveRepository,
+        enableTutorial: enableTutorial,
+      ),
     );
   }
 }
@@ -68,12 +79,18 @@ enum AppScene {
   missions,
   recruitment,
   shop,
+  settings,
 }
 
 class GameShell extends StatefulWidget {
-  const GameShell({super.key, this.saveRepository});
+  const GameShell({
+    super.key,
+    this.saveRepository,
+    required this.enableTutorial,
+  });
 
   final SaveRepository? saveRepository;
+  final bool enableTutorial;
 
   @override
   State<GameShell> createState() => _GameShellState();
@@ -92,10 +109,24 @@ class _GameShellState extends State<GameShell> {
   bool _rewardApplied = false;
   String? saveNotice;
   String? actionNotice;
+  int tutorialStep = 0;
 
   AccountSave get account => _account!;
   int get gold => account.gold;
   int get crystals => account.crystals;
+
+  void updateSettings(GameSettings settings) {
+    _updateAccount(account.copyWith(settings: settings), '환경 설정을 저장했습니다.');
+  }
+
+  void completeTutorial() {
+    _updateAccount(
+      account.copyWith(
+        settings: account.settings.copyWith(tutorialCompleted: true),
+      ),
+      '첫 계약 안내를 완료했습니다.',
+    );
+  }
 
   @override
   void initState() {
@@ -517,182 +548,239 @@ class _GameShellState extends State<GameShell> {
   @override
   Widget build(BuildContext context) {
     if (_account == null) {
-      return const Scaffold(
+      return Scaffold(
         body: DarkBackdrop(
-          child: Center(
-            child: CircularProgressIndicator(color: Color(0xffc49a54)),
+          child: Semantics(
+            label: '용병단 저장 데이터를 불러오는 중',
+            liveRegion: true,
+            child: const Center(
+              child: CircularProgressIndicator(color: Color(0xffc49a54)),
+            ),
           ),
         ),
       );
     }
-    return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 320),
-        child: switch (scene) {
-          AppScene.camp => CampScreen(
-            key: const ValueKey('camp'),
-            gold: gold,
-            crystals: crystals,
-            onDeploy: () => go(AppScene.contracts),
-            onRoster: () => go(AppScene.roster),
-            onEquipment: () => openEquipment(AppScene.camp),
-            onCodex: () => go(AppScene.enemyCodex),
-            onForge: () => go(AppScene.forge),
-            onMissions: () => go(AppScene.missions),
-            missionBadge: claimableMissionCount,
-            onRecruitment: () => go(AppScene.recruitment),
-            onShop: () => go(AppScene.shop),
-          ),
-          AppScene.contracts => ContractScreen(
-            key: const ValueKey('contracts'),
-            selected: selected,
-            onSelect: (value) => setState(() => selected = value),
-            onBack: () => go(AppScene.camp),
-            onDeploy: () => go(AppScene.mercenarySelect),
-          ),
-          AppScene.mercenarySelect => MercenarySelectScreen(
-            key: const ValueKey('mercenary-select'),
-            selected: selectedMercenary,
-            equippedWeapon: equippedWeapon,
-            mercenaryProgress: account.mercenaryProgress,
-            onSelect: (mercenary) {
-              setState(() {
-                selectedMercenary = mercenary;
-                equippedWeapon = gameContent.weaponById(
-                  account.equippedWeaponByMercenary[mercenary.id] ??
-                      mercenary.signatureWeaponId,
-                );
-                _account = account.copyWith(selectedMercenaryId: mercenary.id);
-                unawaited(_persistAccount());
-              });
-            },
-            onBack: () => go(AppScene.contracts),
-            onEquipment: () => openEquipment(AppScene.mercenarySelect),
-            onDeploy: startBattle,
-          ),
-          AppScene.equipment => EquipmentScreen(
-            key: const ValueKey('equipment'),
-            mercenary: selectedMercenary,
-            equipped: equippedWeapon,
-            weaponProgress: account.weaponProgress,
-            onEquip: (weapon) {
-              setState(() {
-                equippedWeapon = weapon;
-                _account = account.copyWith(
-                  equippedWeaponByMercenary: {
-                    ...account.equippedWeaponByMercenary,
-                    selectedMercenary.id: weapon.id,
-                  },
-                );
-                unawaited(_persistAccount());
-              });
-            },
-            onBack: () => go(equipmentReturn),
-          ),
-          AppScene.roster => RosterScreen(
-            key: const ValueKey('roster'),
-            onBack: () => go(AppScene.camp),
-            mercenaryProgress: account.mercenaryProgress,
-            onSelect: (mercenary) {
-              setState(() {
-                selectedMercenary = mercenary;
-                scene = AppScene.detail;
-              });
-            },
-          ),
-          AppScene.detail => MercenaryDetailScreen(
-            key: const ValueKey('detail'),
-            mercenary: selectedMercenary,
-            progress: account.mercenaryProgress[selectedMercenary.id]!,
-            equippedWeapon: gameContent.weaponById(
-              account.equippedWeaponByMercenary[selectedMercenary.id] ??
-                  selectedMercenary.signatureWeaponId,
-            ),
-            weaponProgress: account.weaponProgress,
-            inventory: account.inventory,
-            gold: gold,
-            notice: actionNotice,
-            onTrain: () => trainMercenary(selectedMercenary),
-            onAscend: () => ascendMercenary(selectedMercenary),
-            onEquipment: () => openEquipment(AppScene.detail),
-            onBack: () => go(AppScene.roster),
-          ),
-          AppScene.battle => BattleScreen(
-            key: ValueKey('battle-${DateTime.now().millisecondsSinceEpoch}'),
-            contract: selected,
-            mercenary: selectedMercenary,
-            weapon: equippedWeapon,
-            mercenaryProgress:
-                account.mercenaryProgress[selectedMercenary.id] ??
-                MercenaryProgress(
-                  level: selectedMercenary.level,
-                  xp: 0,
-                  ascension: 0,
+    final media = MediaQuery.of(context);
+    final baseScale = media.textScaler.scale(1);
+    final preferredScale = baseScale * (account.settings.largeText ? 1.15 : 1);
+    final effectiveScale = preferredScale.clamp(1.0, 1.3).toDouble();
+    final showTutorial =
+        widget.enableTutorial &&
+        !account.settings.tutorialCompleted &&
+        scene == AppScene.camp;
+    return MediaQuery(
+      data: media.copyWith(textScaler: TextScaler.linear(effectiveScale)),
+      child: Scaffold(
+        body: Stack(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 320),
+              child: switch (scene) {
+                AppScene.camp => CampScreen(
+                  key: const ValueKey('camp'),
+                  gold: gold,
+                  crystals: crystals,
+                  onDeploy: () => go(AppScene.contracts),
+                  onRoster: () => go(AppScene.roster),
+                  onEquipment: () => openEquipment(AppScene.camp),
+                  onCodex: () => go(AppScene.enemyCodex),
+                  onForge: () => go(AppScene.forge),
+                  onMissions: () => go(AppScene.missions),
+                  missionBadge: claimableMissionCount,
+                  onRecruitment: () => go(AppScene.recruitment),
+                  onShop: () => go(AppScene.shop),
+                  onSettings: () => go(AppScene.settings),
+                  statusNotice: saveNotice,
                 ),
-            weaponProgress:
-                account.weaponProgress[equippedWeapon.id] ??
-                const WeaponProgress(level: 1, xp: 0, stage: 1),
-            onExit: () => go(AppScene.camp),
-            onVictory: finishBattle,
-          ),
-          AppScene.result => ResultScreen(
-            key: const ValueKey('result'),
-            report: report!,
-            growthReceipt: growthReceipt!,
-            saveNotice: saveNotice,
-            onCamp: () => go(AppScene.camp),
-            onReplay: startBattle,
-          ),
-          AppScene.enemyCodex => EnemyCodexScreen(
-            key: const ValueKey('enemy-codex'),
-            onBack: () => go(AppScene.camp),
-          ),
-          AppScene.forge => ForgeScreen(
-            key: const ValueKey('forge'),
-            weapons: gameContent.weapons,
-            progress: account.weaponProgress,
-            inventory: account.inventory,
-            gold: gold,
-            notice: actionNotice,
-            onEnhance: forgeWeapon,
-            onCraft: craftTemperedIron,
-            onDismantle: dismantleTemperedIron,
-            onBack: () => go(AppScene.camp),
-          ),
-          AppScene.missions => MissionScreen(
-            key: const ValueKey('missions'),
-            inventory: account.inventory,
-            weaponProgress: account.weaponProgress,
-            claimedMissionIds: account.claimedMissionIds,
-            notice: actionNotice,
-            onClaim: claimMission,
-            onBack: () => go(AppScene.camp),
-          ),
-          AppScene.recruitment => RecruitmentScreen(
-            key: const ValueKey('recruitment'),
-            crystals: crystals,
-            tickets: account.inventory['contract_ticket'] ?? 0,
-            mercenaryCopies: account.mercenaryCopies,
-            notice: actionNotice,
-            onRecruit: recruitMercenaries,
-            onRoster: () => go(AppScene.roster),
-            onBack: () => go(AppScene.camp),
-          ),
-          AppScene.shop => ShopScreen(
-            key: const ValueKey('shop'),
-            gold: gold,
-            crystals: crystals,
-            warSeals: account.warSeals,
-            honor: account.honor,
-            inventory: account.inventory,
-            purchaseCounts: account.shopPurchaseCounts,
-            refreshCount: account.shopRefreshCount,
-            notice: actionNotice,
-            onPurchase: purchaseShopProduct,
-            onRefresh: refreshShop,
-            onBack: () => go(AppScene.camp),
-          ),
-        },
+                AppScene.contracts => ContractScreen(
+                  key: const ValueKey('contracts'),
+                  selected: selected,
+                  onSelect: (value) => setState(() => selected = value),
+                  onBack: () => go(AppScene.camp),
+                  onDeploy: () => go(AppScene.mercenarySelect),
+                ),
+                AppScene.mercenarySelect => MercenarySelectScreen(
+                  key: const ValueKey('mercenary-select'),
+                  selected: selectedMercenary,
+                  equippedWeapon: equippedWeapon,
+                  mercenaryProgress: account.mercenaryProgress,
+                  onSelect: (mercenary) {
+                    setState(() {
+                      selectedMercenary = mercenary;
+                      equippedWeapon = gameContent.weaponById(
+                        account.equippedWeaponByMercenary[mercenary.id] ??
+                            mercenary.signatureWeaponId,
+                      );
+                      _account = account.copyWith(
+                        selectedMercenaryId: mercenary.id,
+                      );
+                      unawaited(_persistAccount());
+                    });
+                  },
+                  onBack: () => go(AppScene.contracts),
+                  onEquipment: () => openEquipment(AppScene.mercenarySelect),
+                  onDeploy: startBattle,
+                ),
+                AppScene.equipment => EquipmentScreen(
+                  key: const ValueKey('equipment'),
+                  mercenary: selectedMercenary,
+                  equipped: equippedWeapon,
+                  weaponProgress: account.weaponProgress,
+                  onEquip: (weapon) {
+                    setState(() {
+                      equippedWeapon = weapon;
+                      _account = account.copyWith(
+                        equippedWeaponByMercenary: {
+                          ...account.equippedWeaponByMercenary,
+                          selectedMercenary.id: weapon.id,
+                        },
+                      );
+                      unawaited(_persistAccount());
+                    });
+                  },
+                  onBack: () => go(equipmentReturn),
+                ),
+                AppScene.roster => RosterScreen(
+                  key: const ValueKey('roster'),
+                  onBack: () => go(AppScene.camp),
+                  mercenaryProgress: account.mercenaryProgress,
+                  onSelect: (mercenary) {
+                    setState(() {
+                      selectedMercenary = mercenary;
+                      scene = AppScene.detail;
+                    });
+                  },
+                ),
+                AppScene.detail => MercenaryDetailScreen(
+                  key: const ValueKey('detail'),
+                  mercenary: selectedMercenary,
+                  progress: account.mercenaryProgress[selectedMercenary.id]!,
+                  equippedWeapon: gameContent.weaponById(
+                    account.equippedWeaponByMercenary[selectedMercenary.id] ??
+                        selectedMercenary.signatureWeaponId,
+                  ),
+                  weaponProgress: account.weaponProgress,
+                  inventory: account.inventory,
+                  gold: gold,
+                  notice: actionNotice,
+                  onTrain: () => trainMercenary(selectedMercenary),
+                  onAscend: () => ascendMercenary(selectedMercenary),
+                  onEquipment: () => openEquipment(AppScene.detail),
+                  onBack: () => go(AppScene.roster),
+                ),
+                AppScene.battle => BattleScreen(
+                  key: ValueKey(
+                    'battle-${DateTime.now().millisecondsSinceEpoch}',
+                  ),
+                  contract: selected,
+                  mercenary: selectedMercenary,
+                  weapon: equippedWeapon,
+                  mercenaryProgress:
+                      account.mercenaryProgress[selectedMercenary.id] ??
+                      MercenaryProgress(
+                        level: selectedMercenary.level,
+                        xp: 0,
+                        ascension: 0,
+                      ),
+                  weaponProgress:
+                      account.weaponProgress[equippedWeapon.id] ??
+                      const WeaponProgress(level: 1, xp: 0, stage: 1),
+                  reducedEffects: account.settings.reducedFlash,
+                  onExit: () => go(AppScene.camp),
+                  onVictory: finishBattle,
+                ),
+                AppScene.result => ResultScreen(
+                  key: const ValueKey('result'),
+                  report: report!,
+                  growthReceipt: growthReceipt!,
+                  saveNotice: saveNotice,
+                  onCamp: () => go(AppScene.camp),
+                  onReplay: startBattle,
+                ),
+                AppScene.enemyCodex => EnemyCodexScreen(
+                  key: const ValueKey('enemy-codex'),
+                  onBack: () => go(AppScene.camp),
+                ),
+                AppScene.forge => ForgeScreen(
+                  key: const ValueKey('forge'),
+                  weapons: gameContent.weapons,
+                  progress: account.weaponProgress,
+                  inventory: account.inventory,
+                  gold: gold,
+                  notice: actionNotice,
+                  onEnhance: forgeWeapon,
+                  onCraft: craftTemperedIron,
+                  onDismantle: dismantleTemperedIron,
+                  onBack: () => go(AppScene.camp),
+                ),
+                AppScene.missions => MissionScreen(
+                  key: const ValueKey('missions'),
+                  inventory: account.inventory,
+                  weaponProgress: account.weaponProgress,
+                  claimedMissionIds: account.claimedMissionIds,
+                  notice: actionNotice,
+                  onClaim: claimMission,
+                  onBack: () => go(AppScene.camp),
+                ),
+                AppScene.recruitment => RecruitmentScreen(
+                  key: const ValueKey('recruitment'),
+                  crystals: crystals,
+                  tickets: account.inventory['contract_ticket'] ?? 0,
+                  mercenaryCopies: account.mercenaryCopies,
+                  notice: actionNotice,
+                  onRecruit: recruitMercenaries,
+                  onRoster: () => go(AppScene.roster),
+                  onBack: () => go(AppScene.camp),
+                ),
+                AppScene.shop => ShopScreen(
+                  key: const ValueKey('shop'),
+                  gold: gold,
+                  crystals: crystals,
+                  warSeals: account.warSeals,
+                  honor: account.honor,
+                  inventory: account.inventory,
+                  purchaseCounts: account.shopPurchaseCounts,
+                  refreshCount: account.shopRefreshCount,
+                  notice: actionNotice,
+                  onPurchase: purchaseShopProduct,
+                  onRefresh: refreshShop,
+                  onBack: () => go(AppScene.camp),
+                ),
+                AppScene.settings => SettingsScreen(
+                  key: const ValueKey('settings'),
+                  settings: account.settings,
+                  notice: actionNotice,
+                  onChanged: updateSettings,
+                  onReplayTutorial: () {
+                    setState(() {
+                      tutorialStep = 0;
+                      scene = AppScene.camp;
+                      _account = account.copyWith(
+                        settings: account.settings.copyWith(
+                          tutorialCompleted: false,
+                        ),
+                      );
+                      unawaited(_persistAccount());
+                    });
+                  },
+                  onBack: () => go(AppScene.camp),
+                ),
+              },
+            ),
+            if (showTutorial)
+              TutorialOverlay(
+                step: tutorialStep,
+                onNext: () {
+                  if (tutorialStep >= tutorialSteps.length - 1) {
+                    completeTutorial();
+                  } else {
+                    setState(() => tutorialStep++);
+                  }
+                },
+                onSkip: completeTutorial,
+              ),
+          ],
+        ),
       ),
     );
   }

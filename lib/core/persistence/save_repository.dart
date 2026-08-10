@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/game_settings.dart';
 import '../../domain/progression.dart';
 
 enum SaveLoadSource { primary, backup, initial }
@@ -23,6 +24,7 @@ class AccountSave {
     required this.mercenaryCopies,
     required this.shopPurchaseCounts,
     required this.shopRefreshCount,
+    required this.settings,
   });
 
   factory AccountSave.initial() => const AccountSave(
@@ -58,9 +60,10 @@ class AccountSave {
     mercenaryCopies: {'luna': 1, 'kael': 1, 'sera': 1},
     shopPurchaseCounts: {},
     shopRefreshCount: 0,
+    settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 4;
+  static const currentSchemaVersion = 5;
 
   final int schemaVersion;
   final int gold;
@@ -77,6 +80,7 @@ class AccountSave {
   final Map<String, int> mercenaryCopies;
   final Map<String, int> shopPurchaseCounts;
   final int shopRefreshCount;
+  final GameSettings settings;
 
   AccountSave copyWith({
     int? gold,
@@ -93,6 +97,7 @@ class AccountSave {
     Map<String, int>? mercenaryCopies,
     Map<String, int>? shopPurchaseCounts,
     int? shopRefreshCount,
+    GameSettings? settings,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
     gold: gold ?? this.gold,
@@ -110,6 +115,7 @@ class AccountSave {
     mercenaryCopies: mercenaryCopies ?? this.mercenaryCopies,
     shopPurchaseCounts: shopPurchaseCounts ?? this.shopPurchaseCounts,
     shopRefreshCount: shopRefreshCount ?? this.shopRefreshCount,
+    settings: settings ?? this.settings,
   );
 
   Map<String, Object> toJson() => {
@@ -134,6 +140,7 @@ class AccountSave {
     'mercenaryCopies': mercenaryCopies,
     'shopPurchaseCounts': shopPurchaseCounts,
     'shopRefreshCount': shopRefreshCount,
+    'settings': settings.toJson(),
   };
 
   factory AccountSave.fromJson(Map<String, Object?> raw) {
@@ -171,6 +178,7 @@ class AccountSave {
       ),
       shopPurchaseCounts: _intMap(migrated['shopPurchaseCounts']),
       shopRefreshCount: (migrated['shopRefreshCount'] as num?)?.toInt() ?? 0,
+      settings: GameSettings.fromJson(migrated['settings']),
     );
   }
 
@@ -263,6 +271,14 @@ abstract final class SaveMigration {
         'shopRefreshCount': 0,
       };
       version = 4;
+    }
+    if (version < 5) {
+      current = {
+        ...current,
+        'schemaVersion': 5,
+        'settings': const GameSettings.defaults().toJson(),
+      };
+      version = 5;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

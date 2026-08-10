@@ -1,5 +1,16 @@
 # 변경 기록
 
+## Alpha onboarding and accessibility — 2026-08-10
+
+- 독립 용병단부터 후퇴/보상 보존까지 설명하는 4단계 첫 계약 안내 구현
+- 튜토리얼 완료/건너뛰기 저장과 환경 설정의 다시 보기 연결
+- 효과음·진동·화면 흔들림·섬광 감소·큰 글자 설정 화면 추가
+- save schema v5와 기존 v1~v4 설정 migration 추가
+- 섬광 감소 설정을 Flame reduced effects 초기 상태에 연결
+- 공통 메뉴/button semantics, loading/live status 접근성 정보 추가
+- 844×390 모바일 가로 캠프 compact 레이아웃과 설정 스크롤 QA
+- M5 품질 항목 중 반응형·접근성·튜토리얼·연출 옵션 완료
+
 ## Recruitment and three-currency shops — 2026-08-10
 
 - 기존 루나 원화를 정체성 레퍼런스로 사용한 16:9 특별 계약 배너 생성

@@ -12,6 +12,7 @@ import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
 import 'package:eclipse_mercenaries/domain/economy.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
+import 'package:eclipse_mercenaries/domain/game_settings.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:eclipse_mercenaries/domain/run_growth.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -266,7 +267,7 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 4);
+      expect(migrated.schemaVersion, 5);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
@@ -274,6 +275,7 @@ void main() {
       expect(migrated.claimedMissionIds, isEmpty);
       expect(migrated.mercenaryCopies['luna'], 1);
       expect(migrated.warSeals, 120);
+      expect(migrated.settings.tutorialCompleted, isFalse);
     },
   );
 
@@ -363,6 +365,11 @@ void main() {
       recruitmentCount: 11,
       mercenaryCopies: {'luna': 4, 'kael': 5, 'sera': 5},
       shopPurchaseCounts: {'ration_pack': 2},
+      settings: const GameSettings.defaults().copyWith(
+        tutorialCompleted: true,
+        reducedFlash: true,
+        largeText: true,
+      ),
     );
 
     await repository.save(updated);
@@ -376,6 +383,22 @@ void main() {
     expect(restored.recruitmentCount, 11);
     expect(restored.mercenaryCopies['kael'], 5);
     expect(restored.shopPurchaseCounts['ration_pack'], 2);
+    expect(restored.settings.tutorialCompleted, isTrue);
+    expect(restored.settings.reducedFlash, isTrue);
+    expect(restored.settings.largeText, isTrue);
+  });
+
+  test('game settings deserialize missing fields with accessible defaults', () {
+    final settings = GameSettings.fromJson({
+      'tutorialCompleted': true,
+      'soundEnabled': false,
+    });
+
+    expect(settings.tutorialCompleted, isTrue);
+    expect(settings.soundEnabled, isFalse);
+    expect(settings.hapticsEnabled, isTrue);
+    expect(settings.screenShakeEnabled, isTrue);
+    expect(settings.reducedFlash, isFalse);
   });
 
   test('recruitment rolls are deterministic and respect currency gates', () {
