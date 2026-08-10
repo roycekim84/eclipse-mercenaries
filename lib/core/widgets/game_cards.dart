@@ -4,10 +4,12 @@ class ContractMarker extends StatelessWidget {
   const ContractMarker({
     super.key,
     required this.contract,
+    required this.faction,
     required this.selected,
     required this.onTap,
   });
   final BattlefieldContract contract;
+  final FactionSpec faction;
   final bool selected;
   final VoidCallback onTap;
   @override
@@ -43,10 +45,12 @@ class ContractMarker extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               color: const Color(0xdd0a0c11),
               child: Text(
-                contract.name,
+                '${contract.name}\n${faction.name}',
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  fontSize: 10,
+                  height: 1.25,
                 ),
               ),
             ),
@@ -58,8 +62,15 @@ class ContractMarker extends StatelessWidget {
 }
 
 class ContractSummary extends StatelessWidget {
-  const ContractSummary({super.key, required this.contract});
+  const ContractSummary({
+    super.key,
+    required this.contract,
+    required this.faction,
+    required this.reputation,
+  });
   final BattlefieldContract contract;
+  final FactionSpec faction;
+  final int reputation;
   @override
   Widget build(BuildContext context) => GoldPanel(
     child: Padding(
@@ -73,11 +84,11 @@ class ContractSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  contract.name,
+                  '${contract.name} · ${faction.name}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  contract.subtitle,
+                  '${contract.subtitle}  |  ${FactionRules.rankName(reputation)} · 평판 $reputation  |  ${faction.rewardStyle}',
                   style: const TextStyle(fontSize: 10, color: Colors.white54),
                 ),
               ],

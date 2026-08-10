@@ -1,6 +1,59 @@
 import 'battle_rewards.dart';
 import 'progression.dart';
 
+class FactionSpec {
+  const FactionSpec({
+    required this.id,
+    required this.name,
+    required this.rewardStyle,
+    required this.description,
+  });
+
+  final String id;
+  final String name;
+  final String rewardStyle;
+  final String description;
+}
+
+const betaFactions = <FactionSpec>[
+  FactionSpec(
+    id: 'aurum_league',
+    name: '아우룸 자유연맹',
+    rewardStyle: '골드·보급',
+    description: '북부 도시들의 방어 동맹. 독립 용병단을 적극 고용한다.',
+  ),
+  FactionSpec(
+    id: 'ember_principality',
+    name: '잿불 공국',
+    rewardStyle: '마력 재료·장비',
+    description: '화산 지대의 마도 국가. 철수와 호위 계약을 중시한다.',
+  ),
+  FactionSpec(
+    id: 'grey_banner',
+    name: '회색 깃발 의회',
+    rewardStyle: '명예·희귀 지도',
+    description: '용병 회사들의 느슨한 의회. 위험한 특수 계약을 중개한다.',
+  ),
+];
+
+abstract final class FactionRules {
+  static FactionSpec byId(String id) =>
+      betaFactions.firstWhere((faction) => faction.id == id);
+
+  static int reputationGain(String outcome) => switch (outcome) {
+    'victory' => 12,
+    'retreat' => 5,
+    _ => 2,
+  };
+
+  static String rankName(int reputation) => switch (reputation) {
+    >= 120 => '맹약 용병단',
+    >= 60 => '신뢰받는 전우',
+    >= 25 => '정식 계약자',
+    _ => '낯선 칼날',
+  };
+}
+
 enum GearSlot { armor, accessory, tactical }
 
 class GearSpec {

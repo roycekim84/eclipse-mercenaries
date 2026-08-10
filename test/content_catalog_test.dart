@@ -1,6 +1,7 @@
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
 import 'package:eclipse_mercenaries/domain/content_catalog.dart';
 import 'package:eclipse_mercenaries/domain/game_data.dart';
+import 'package:eclipse_mercenaries/domain/camp_meta.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -18,6 +19,7 @@ void main() {
       loot: const [],
       shopProducts: const [],
       gear: alphaContentCatalog.gear,
+      factions: alphaContentCatalog.factions,
     );
 
     final codes = ContentCatalogValidator.validate(
@@ -45,5 +47,16 @@ void main() {
     expect(first.mercenaryDamagePerSecond, hasLength(alphaMercenaries.length));
     expect(first.weaponPowerIndex, hasLength(alphaWeapons.length));
     expect(first.weaponLevelOneToTwentyXp, greaterThan(0));
+  });
+
+  test('faction reputation has deterministic ranks and battle gains', () {
+    expect(alphaContentCatalog.factions, hasLength(3));
+    expect(FactionRules.reputationGain('victory'), 12);
+    expect(FactionRules.reputationGain('retreat'), 5);
+    expect(FactionRules.reputationGain('defeat'), 2);
+    expect(FactionRules.rankName(24), '낯선 칼날');
+    expect(FactionRules.rankName(25), '정식 계약자');
+    expect(FactionRules.rankName(60), '신뢰받는 전우');
+    expect(FactionRules.rankName(120), '맹약 용병단');
   });
 }

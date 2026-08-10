@@ -18,6 +18,7 @@ class GameContentCatalog {
     required this.loot,
     required this.shopProducts,
     required this.gear,
+    required this.factions,
   });
 
   final int version;
@@ -28,6 +29,7 @@ class GameContentCatalog {
   final List<LootItemSpec> loot;
   final List<ShopProductSpec> shopProducts;
   final List<GearSpec> gear;
+  final List<FactionSpec> factions;
 }
 
 const alphaContentCatalog = GameContentCatalog(
@@ -39,6 +41,7 @@ const alphaContentCatalog = GameContentCatalog(
   loot: alphaLootCatalog,
   shopProducts: alphaShopProducts,
   gear: betaGearCatalog,
+  factions: betaFactions,
 );
 
 class ContentValidationIssue {
@@ -72,6 +75,16 @@ abstract final class ContentCatalogValidator {
     _validateIds('loot', catalog.loot.map((e) => e.id), issues);
     _validateIds('shopProducts', catalog.shopProducts.map((e) => e.id), issues);
     _validateIds('gear', catalog.gear.map((e) => e.id), issues);
+    _validateIds('factions', catalog.factions.map((e) => e.id), issues);
+    if (catalog.factions.length < 3) {
+      issues.add(
+        const ContentValidationIssue(
+          'insufficient_factions',
+          'factions',
+          '베타 계약에는 최소 3개 세력이 필요합니다.',
+        ),
+      );
+    }
 
     for (final slot in GearSlot.values) {
       if (catalog.gear.where((gear) => gear.slot == slot).length < 3) {

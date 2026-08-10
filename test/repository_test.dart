@@ -285,7 +285,7 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 8);
+      expect(migrated.schemaVersion, 9);
       expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
@@ -331,7 +331,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 8);
+    expect(migrated.schemaVersion, 9);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);

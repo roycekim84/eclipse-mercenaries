@@ -57,6 +57,11 @@ void main() {
       _GoldenShell(
         child: ContractScreen(
           selected: contracts.first,
+          factionReputation: const {
+            'aurum_league': 18,
+            'ember_principality': 8,
+            'grey_banner': 4,
+          },
           onSelect: (_) {},
           onBack: _noop,
           onDeploy: _noop,

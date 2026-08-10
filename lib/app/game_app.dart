@@ -512,8 +512,14 @@ class GameShellState extends State<GameShell> {
     final weaponXp = (value.xp / 2).round();
     final weaponAfter = ProgressionRules.addWeaponXp(weaponBefore, weaponXp);
     final inventoryAdded = ProgressionRules.lootQuantities(value.lootDrops);
+    final factionId = selected.factionId;
+    final reputationGain = FactionRules.reputationGain(value.outcome.name);
     final nextAccount = account.copyWith(
       gold: account.gold + value.gold,
+      factionReputation: {
+        ...account.factionReputation,
+        factionId: (account.factionReputation[factionId] ?? 0) + reputationGain,
+      },
       mercenaryProgress: {
         ...account.mercenaryProgress,
         selectedMercenary.id: mercenaryAfter,
@@ -616,6 +622,7 @@ class GameShellState extends State<GameShell> {
                 AppScene.contracts => ContractScreen(
                   key: const ValueKey('contracts'),
                   selected: selected,
+                  factionReputation: account.factionReputation,
                   onSelect: (value) => setState(() => selected = value),
                   onBack: () => go(AppScene.camp),
                   onDeploy: () => go(AppScene.mercenarySelect),
@@ -844,6 +851,7 @@ class GameShellState extends State<GameShell> {
 class BattlefieldContract {
   const BattlefieldContract({
     required this.id,
+    required this.factionId,
     required this.battlefield,
     required this.condition,
     required this.name,
@@ -855,6 +863,7 @@ class BattlefieldContract {
     required this.icon,
   });
   final String id;
+  final String factionId;
   final BattlefieldType battlefield;
   final BattlefieldCondition condition;
   final String name;
@@ -869,6 +878,7 @@ class BattlefieldContract {
 const contracts = [
   BattlefieldContract(
     id: 'north_gate_defense',
+    factionId: 'aurum_league',
     battlefield: BattlefieldType.gateDefense,
     condition: BattlefieldCondition.moonlitNight,
     name: '성문 방어전',
@@ -881,6 +891,7 @@ const contracts = [
   ),
   BattlefieldContract(
     id: 'ashwind_evacuation',
+    factionId: 'ember_principality',
     battlefield: BattlefieldType.evacuation,
     condition: BattlefieldCondition.ashWind,
     name: '철수전',
@@ -893,6 +904,7 @@ const contracts = [
   ),
   BattlefieldContract(
     id: 'commander_assassination',
+    factionId: 'grey_banner',
     battlefield: BattlefieldType.gateDefense,
     condition: BattlefieldCondition.moonlitNight,
     name: '적 지휘관 암살',

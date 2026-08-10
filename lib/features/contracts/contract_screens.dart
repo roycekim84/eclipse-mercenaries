@@ -4,11 +4,13 @@ class ContractScreen extends StatelessWidget {
   const ContractScreen({
     super.key,
     required this.selected,
+    required this.factionReputation,
     required this.onSelect,
     required this.onBack,
     required this.onDeploy,
   });
   final BattlefieldContract selected;
+  final Map<String, int> factionReputation;
   final ValueChanged<BattlefieldContract> onSelect;
   final VoidCallback onBack;
   final VoidCallback onDeploy;
@@ -43,6 +45,7 @@ class ContractScreen extends StatelessWidget {
                           top: y - 74,
                           child: ContractMarker(
                             contract: item,
+                            faction: FactionRules.byId(item.factionId),
                             selected: selected == item,
                             onTap: () => onSelect(item),
                           ),
@@ -55,7 +58,12 @@ class ContractScreen extends StatelessWidget {
                         child: Row(
                           children: [
                             Expanded(
-                              child: ContractSummary(contract: selected),
+                              child: ContractSummary(
+                                contract: selected,
+                                faction: FactionRules.byId(selected.factionId),
+                                reputation:
+                                    factionReputation[selected.factionId] ?? 0,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             SizedBox(
