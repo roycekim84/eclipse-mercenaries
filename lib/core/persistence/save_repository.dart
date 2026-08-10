@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/battle_diagnostics.dart';
 import '../../domain/game_settings.dart';
 import '../../domain/progression.dart';
 
@@ -27,6 +28,7 @@ class AccountSave {
     required this.mercenaryCopies,
     required this.shopPurchaseCounts,
     required this.shopRefreshCount,
+    required this.battleDiagnostics,
     required this.settings,
   });
 
@@ -126,10 +128,11 @@ class AccountSave {
     },
     shopPurchaseCounts: {},
     shopRefreshCount: 0,
+    battleDiagnostics: [],
     settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 10;
+  static const currentSchemaVersion = 11;
 
   final int schemaVersion;
   final int gold;
@@ -149,6 +152,7 @@ class AccountSave {
   final Map<String, int> mercenaryCopies;
   final Map<String, int> shopPurchaseCounts;
   final int shopRefreshCount;
+  final List<BattleDiagnosticRecord> battleDiagnostics;
   final GameSettings settings;
 
   AccountSave copyWith({
@@ -169,6 +173,7 @@ class AccountSave {
     Map<String, int>? mercenaryCopies,
     Map<String, int>? shopPurchaseCounts,
     int? shopRefreshCount,
+    List<BattleDiagnosticRecord>? battleDiagnostics,
     GameSettings? settings,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
@@ -191,6 +196,7 @@ class AccountSave {
     mercenaryCopies: mercenaryCopies ?? this.mercenaryCopies,
     shopPurchaseCounts: shopPurchaseCounts ?? this.shopPurchaseCounts,
     shopRefreshCount: shopRefreshCount ?? this.shopRefreshCount,
+    battleDiagnostics: battleDiagnostics ?? this.battleDiagnostics,
     settings: settings ?? this.settings,
   );
 
@@ -219,6 +225,9 @@ class AccountSave {
     'mercenaryCopies': mercenaryCopies,
     'shopPurchaseCounts': shopPurchaseCounts,
     'shopRefreshCount': shopRefreshCount,
+    'battleDiagnostics': battleDiagnostics
+        .map((record) => record.toJson())
+        .toList(),
     'settings': settings.toJson(),
   };
 
@@ -269,6 +278,7 @@ class AccountSave {
       ),
       shopPurchaseCounts: _intMap(migrated['shopPurchaseCounts']),
       shopRefreshCount: (migrated['shopRefreshCount'] as num?)?.toInt() ?? 0,
+      battleDiagnostics: _diagnostics(migrated['battleDiagnostics']),
       settings: GameSettings.fromJson(migrated['settings']),
     );
   }
@@ -317,6 +327,18 @@ class AccountSave {
       }
     }
     return result;
+  }
+
+  static List<BattleDiagnosticRecord> _diagnostics(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map(
+          (record) => BattleDiagnosticRecord.fromJson(
+            Map<String, Object?>.from(record),
+          ),
+        )
+        .toList();
   }
 }
 
@@ -423,6 +445,14 @@ abstract final class SaveMigration {
         'operationProgress': AccountSave.initial().operationProgress,
       };
       version = 10;
+    }
+    if (version < 11) {
+      current = {
+        ...current,
+        'schemaVersion': 11,
+        'battleDiagnostics': <Object>[],
+      };
+      version = 11;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');

@@ -5,8 +5,10 @@ import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
 import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
+import 'package:eclipse_mercenaries/domain/battle_diagnostics.dart';
 import 'package:eclipse_mercenaries/domain/battlefield_events.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
+import 'package:eclipse_mercenaries/domain/balance_manifest.dart';
 import 'package:eclipse_mercenaries/domain/camp_meta.dart';
 import 'package:eclipse_mercenaries/domain/combat_rules.dart';
 import 'package:eclipse_mercenaries/domain/enemy_catalog.dart';
@@ -309,7 +311,8 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 10);
+      expect(migrated.schemaVersion, 11);
+      expect(migrated.battleDiagnostics, isEmpty);
       expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
       expect(migrated.gold, 12345);
       expect(migrated.mercenaryProgress['kael']?.level, 42);
@@ -355,7 +358,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 10);
+    expect(migrated.schemaVersion, 11);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
@@ -453,6 +456,94 @@ void main() {
     expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);
   });
+
+  test('battle diagnostics round trip and retain only the latest twenty', () {
+    final report = BattleReport(
+      time: '03:21',
+      kills: 77,
+      gold: 10,
+      xp: 20,
+      contractName: '성문 방어전',
+      peakActiveUnits: 512,
+      frameTimeP95Ms: 15.7,
+      rewardBreakdown: const RewardBreakdown(
+        contractGold: 10,
+        objectiveGold: 0,
+        combatGold: 0,
+        eventGold: 0,
+        contractXp: 20,
+        objectiveXp: 0,
+        combatXp: 0,
+        eventXp: 0,
+        rewardMultiplier: 1,
+        preservationRate: 1,
+        keptGold: 10,
+        keptXp: 20,
+      ),
+      lootDrops: const [],
+      award: const BattleAward(title: '루나', detail: 'MVP', honors: []),
+    );
+    var records = <BattleDiagnosticRecord>[];
+    for (var seed = 0; seed < 24; seed++) {
+      records = BattleDiagnosticRules.append(
+        records,
+        BattleDiagnosticRecord.fromReport(
+          report: report,
+          contentVersion: 1,
+          seed: seed,
+          contractId: 'gate_defense',
+          mercenaryId: 'luna',
+          weaponId: 'moon_blades',
+          recordedAt: DateTime.utc(2026, 8, 10),
+        ),
+      );
+    }
+
+    final restored = AccountSave.fromJson(
+      AccountSave.initial().copyWith(battleDiagnostics: records).toJson(),
+    );
+
+    expect(restored.battleDiagnostics, hasLength(20));
+    expect(restored.battleDiagnostics.first.seed, 4);
+    expect(restored.battleDiagnostics.last.seed, 23);
+    expect(
+      restored.battleDiagnostics.last.terminationReason,
+      'objective_completed',
+    );
+    expect(restored.battleDiagnostics.last.frameTimeP95Ms, 15.7);
+  });
+
+  test(
+    'balance manifest rejects invalid remote data and uses safe fallback',
+    () {
+      final valid = jsonEncode({
+        'version': 'beta-2',
+        'enemyHpMultiplier': 1.1,
+        'rewardMultiplier': .9,
+        'spawnMultiplier': 1.2,
+        'signature': BalanceManifest.signatureFor('beta-2|1.1|0.9|1.2'),
+      });
+      final tampered = jsonEncode({
+        'version': 'beta-3',
+        'enemyHpMultiplier': 99,
+        'rewardMultiplier': 99,
+        'spawnMultiplier': 99,
+        'signature': 'invalid',
+      });
+
+      expect(BalanceManifestRules.resolve(remoteJson: valid).source, 'remote');
+      final fallback = BalanceManifestRules.resolve(
+        remoteJson: tampered,
+        lastKnownGoodJson: valid,
+      );
+      expect(fallback.source, 'last_known_good');
+      expect(fallback.manifest.version, 'beta-2');
+      expect(
+        BalanceManifestRules.resolve(remoteJson: tampered).source,
+        'bundled',
+      );
+    },
+  );
 
   test('game settings deserialize missing fields with accessible defaults', () {
     final settings = GameSettings.fromJson({

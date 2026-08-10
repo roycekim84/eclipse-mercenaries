@@ -1,5 +1,12 @@
 # 변경 기록
 
+## B5 diagnostics and safe balance manifest — 2026-08-10
+
+- 전투 재현·성능 진단 최근 20건과 설정 화면 요약 추가
+- save schema v11 이관 및 진단 JSON 왕복·고정 용량 테스트 추가
+- 무결성·안전 범위를 검사하는 밸런스 manifest와 다단계 fallback 규칙 추가
+- 베타 오프라인/개인정보/결제 운영 범위를 제품 문서에 확정
+
 ## B4 narrow web guidance and UI audio feedback — 2026-08-10
 
 - 세로/좁은 Web 비차단 가로 화면 권장 배너와 접근성 live-region 추가

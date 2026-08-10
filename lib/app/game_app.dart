@@ -10,6 +10,7 @@ import '../core/audio/game_audio_feedback.dart';
 import '../core/persistence/save_repository.dart';
 import '../core/theme/game_theme.dart';
 import '../domain/battle_models.dart';
+import '../domain/battle_diagnostics.dart';
 import '../domain/battlefield_events.dart';
 import '../domain/battle_rewards.dart';
 import '../domain/camp_meta.dart';
@@ -547,6 +548,17 @@ class GameShellState extends State<GameShell> {
         for (final entry in inventoryAdded.entries)
           entry.key: (account.inventory[entry.key] ?? 0) + entry.value,
       },
+      battleDiagnostics: BattleDiagnosticRules.append(
+        account.battleDiagnostics,
+        BattleDiagnosticRecord.fromReport(
+          report: value,
+          contentVersion: gameContent.contentVersion,
+          seed: 19,
+          contractId: selected.id,
+          mercenaryId: selectedMercenary.id,
+          weaponId: equippedWeapon.id,
+        ),
+      ),
     );
     try {
       await _saveRepository.save(nextAccount);
@@ -832,6 +844,7 @@ class GameShellState extends State<GameShell> {
                 AppScene.settings => SettingsScreen(
                   key: const ValueKey('settings'),
                   settings: account.settings,
+                  diagnostics: account.battleDiagnostics,
                   notice: actionNotice,
                   onChanged: updateSettings,
                   onReplayTutorial: () {

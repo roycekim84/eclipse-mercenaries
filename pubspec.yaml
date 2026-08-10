@@ -63,6 +63,7 @@ flutter:
     - assets/images/
     - assets/images/characters/
     - assets/images/battlefield/
+    - assets/config/
 
   fonts:
     - family: NotoSansKR
