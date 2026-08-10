@@ -20,4 +20,25 @@ void main() {
     expect(BattleControlRules.tacticalCooldownSeconds, 14);
     expect(BattleControlRules.tacticalDurationSeconds, 4);
   });
+
+  test(
+    'dash grants a short response window and contact damage scales by rank',
+    () {
+      expect(BattleControlRules.dashInvulnerabilitySeconds, greaterThan(.3));
+      expect(BattleControlRules.dashInvulnerabilitySeconds, lessThan(.5));
+      expect(BattleControlRules.contactDamage(UnitRole.infantry), 30);
+      expect(
+        BattleControlRules.contactDamage(UnitRole.commander, boss: true),
+        70,
+      );
+      expect(
+        BattleControlRules.contactDamage(
+          UnitRole.cavalry,
+          elite: true,
+          battlefieldBonus: 3,
+        ),
+        48,
+      );
+    },
+  );
 }

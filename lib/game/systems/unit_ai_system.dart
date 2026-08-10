@@ -24,6 +24,15 @@ extension UnitAiSystem on SurvivorGame {
       return;
     }
 
+    if (!unit.ally && unit.playerAggro) {
+      final playerDistance = unit.position.distanceTo(_player);
+      if (playerDistance <= 38) {
+        unit.stance = UnitStance.advance;
+        if (unit.attackClock <= 0) _attackPlayer(unit);
+        return;
+      }
+    }
+
     final attackRange = UnitRoleRules.attackRange(unit.role);
     final searchRange = math.max(150.0, attackRange + 55);
     final opponent = _nearestOpponent(unit, searchRange);
@@ -108,6 +117,27 @@ extension UnitAiSystem on SurvivorGame {
         if (++splashes >= (ability == EnemyAbility.bloodNova ? 4 : 2)) break;
       }
     }
+  }
+
+  void _attackPlayer(BattleUnit attacker) {
+    final interval = switch (attacker.role) {
+      UnitRole.cavalry => 1.15,
+      UnitRole.commander => .95,
+      UnitRole.mage || UnitRole.archer => 1.35,
+      _ => 1.05,
+    };
+    attacker.attackClock = interval;
+    if (_playerInvulnerability > 0) return;
+    final damage = BattleControlRules.contactDamage(
+      attacker.role,
+      elite: attacker.archetype?.rank == EnemyRank.elite,
+      boss: attacker.archetype?.rank == EnemyRank.boss,
+      battlefieldBonus: _enemyDamageBonus,
+    );
+    _playerHp = math.max(0, _playerHp - damage);
+    _playerHitFlash = .16;
+    _playerInvulnerability = .28;
+    _emitSlash(_player, .2, CombatStyle.greatsword);
   }
 
   void _moveRetreatingUnit(BattleUnit unit, double dt) {

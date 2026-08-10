@@ -141,6 +141,9 @@ class SurvivorGame extends FlameGame {
   double _ultimateCharge = 0;
   double _ultimateClock = 0;
   double _dashCooldown = 0;
+  double _playerInvulnerability = 0;
+  double _playerHitFlash = 0;
+  late double _playerHp;
   double _tacticalCooldown = 0;
   double _tacticalClock = 0;
   bool _ultimateImpactApplied = false;
@@ -219,6 +222,7 @@ class SurvivorGame extends FlameGame {
           config.mercenaryPermanentLevel ?? mercenary.level,
         ) *
         (config.condition == BattlefieldCondition.ashWind ? .94 : 1);
+    _playerHp = _playerMaxHp;
     _runWeapons.add(RunWeaponState(weapon));
     stats.value = BattleStats(
       hp: _playerMaxHp,
@@ -283,6 +287,7 @@ class SurvivorGame extends FlameGame {
     _playerSprite.position = _player;
     _emitSlash(_player, .32, mercenary.style);
     _dashCooldown = BattleControlRules.dashCooldownSeconds;
+    _playerInvulnerability = BattleControlRules.dashInvulnerabilitySeconds;
     _publishControls();
   }
 
@@ -389,6 +394,8 @@ class SurvivorGame extends FlameGame {
     }
     _advanceUltimate(dt);
     _dashCooldown = math.max(0, _dashCooldown - worldDt);
+    _playerInvulnerability = math.max(0, _playerInvulnerability - worldDt);
+    _playerHitFlash = math.max(0, _playerHitFlash - worldDt);
     _tacticalCooldown = math.max(0, _tacticalCooldown - worldDt);
     final tacticalWasActive = _tacticalClock > 0;
     _tacticalClock = math.max(0, _tacticalClock - worldDt);
@@ -448,6 +455,12 @@ class SurvivorGame extends FlameGame {
       );
     }
     final secondsLeft = (config.durationSeconds - _elapsed).ceil();
+    if (_playerHp <= 0) {
+      _finishBattle(BattleOutcome.defeat);
+      _publishStats();
+      _publishControls();
+      return;
+    }
     final objectiveOutcome = config.battlefield == BattlefieldType.evacuation
         ? EvacuationRules.resolve(
             alive: _escortAlive,
@@ -511,7 +524,7 @@ class SurvivorGame extends FlameGame {
 
   void _publishStats() {
     final next = BattleStats(
-      hp: _playerMaxHp,
+      hp: _playerHp,
       level: _level,
       xp: _xp,
       nextXp: _nextXp,
@@ -532,6 +545,7 @@ class SurvivorGame extends FlameGame {
     );
     final old = stats.value;
     if (old.level != next.level ||
+        (old.hp - next.hp).abs() > .5 ||
         old.kills != next.kills ||
         old.secondsLeft != next.secondsLeft ||
         (old.gateHp - next.gateHp).abs() > .5 ||
@@ -863,9 +877,13 @@ class SurvivorGame extends FlameGame {
       Offset(_player.x, _player.y),
       14,
       Paint()
-        ..color = mercenary.visual.accent.withValues(alpha: .45)
+        ..color = _playerHitFlash > 0
+            ? const Color(0xffffe8df)
+            : mercenary.visual.accent.withValues(
+                alpha: _playerInvulnerability > 0 ? .9 : .45,
+              )
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+        ..strokeWidth = _playerInvulnerability > 0 ? 4 : 3,
     );
   }
 }

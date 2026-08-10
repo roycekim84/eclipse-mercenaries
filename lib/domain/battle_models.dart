@@ -32,11 +32,35 @@ class BattleControlState {
 
 abstract final class BattleControlRules {
   static const dashCooldownSeconds = 2.5;
+  static const dashInvulnerabilitySeconds = .42;
   static const tacticalCooldownSeconds = 14.0;
   static const tacticalDurationSeconds = 4.0;
 
   static double dashDistance(double movementSpeed) =>
       (movementSpeed * .72).clamp(92, 132).toDouble();
+
+  static int contactDamage(
+    UnitRole role, {
+    bool elite = false,
+    bool boss = false,
+    int battlefieldBonus = 0,
+  }) {
+    final base = switch (role) {
+      UnitRole.commander => 52,
+      UnitRole.cavalry => 38,
+      UnitRole.mage => 34,
+      UnitRole.archer => 28,
+      UnitRole.siege => 62,
+      UnitRole.shield => 24,
+      UnitRole.infantry => 30,
+    };
+    final rankMultiplier = boss
+        ? 1.35
+        : elite
+        ? 1.18
+        : 1.0;
+    return (base * rankMultiplier + battlefieldBonus).round();
+  }
 }
 
 abstract final class UnitRoleRules {
