@@ -285,6 +285,7 @@ extension GateDefenseSystem on SurvivorGame {
     }
 
     final hpRatio = (_gateHp / GateDefenseRules.maxGateHp).clamp(0.0, 1.0);
+    final damageStage = GateDefenseRules.damageStage(_gateHp);
     canvas.drawRect(
       Rect.fromLTWH(_gatePosition.x - 38, _gatePosition.y - 118, 96, 8),
       Paint()..color = const Color(0xaa050608),
@@ -309,6 +310,35 @@ extension GateDefenseSystem on SurvivorGame {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
+
+    if (damageStage != ObjectiveDamageStage.secure) {
+      final crackPaint = Paint()
+        ..color = damageStage == ObjectiveDamageStage.critical
+            ? const Color(0xfff28a62)
+            : const Color(0xffa88b70)
+        ..strokeWidth = damageStage == ObjectiveDamageStage.critical ? 3 : 2
+        ..style = PaintingStyle.stroke;
+      final crack = Path()
+        ..moveTo(_gatePosition.x - 8, _gatePosition.y - 90)
+        ..lineTo(_gatePosition.x + 4, _gatePosition.y - 62)
+        ..lineTo(_gatePosition.x - 3, _gatePosition.y - 34)
+        ..lineTo(_gatePosition.x + 13, _gatePosition.y - 8);
+      canvas.drawPath(crack, crackPaint);
+      if (damageStage == ObjectiveDamageStage.critical) {
+        for (var i = 0; i < (_reducedVisualLoad ? 2 : 5); i++) {
+          final phase = _elapsed * (1.1 + i * .13) + i * 1.7;
+          final smoke = Offset(
+            _gatePosition.x - 12 + math.sin(phase) * (7 + i * 2),
+            _gatePosition.y - 62 - (phase * 13) % 72,
+          );
+          canvas.drawCircle(
+            smoke,
+            7 + i * 1.4,
+            Paint()..color = const Color(0x665a4b48),
+          );
+        }
+      }
+    }
 
     _drawSpawnMarker(
       canvas,

@@ -21,6 +21,13 @@ void main() {
     expect(BattleControlRules.tacticalDurationSeconds, 4);
   });
 
+  test('gate damage stages expose stable visual thresholds', () {
+    expect(GateDefenseRules.damageStage(1200), ObjectiveDamageStage.secure);
+    expect(GateDefenseRules.damageStage(841), ObjectiveDamageStage.secure);
+    expect(GateDefenseRules.damageStage(840), ObjectiveDamageStage.damaged);
+    expect(GateDefenseRules.damageStage(420), ObjectiveDamageStage.critical);
+  });
+
   test(
     'dash grants a short response window and contact damage scales by rank',
     () {

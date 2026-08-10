@@ -430,7 +430,11 @@ class BattleHud extends StatelessWidget {
                         child: Text(
                           contract.battlefield == BattlefieldType.evacuation
                               ? '탈출 ${stats.escortEscaped} / ${stats.escortTotal}'
-                              : '북문  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
+                              : '북문 ${switch (GateDefenseRules.damageStage(stats.gateHp)) {
+                                  ObjectiveDamageStage.secure => '안정',
+                                  ObjectiveDamageStage.damaged => '파손',
+                                  ObjectiveDamageStage.critical => '붕괴 위험',
+                                }}  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
                           style: const TextStyle(fontSize: 10),
                         ),
                       ),

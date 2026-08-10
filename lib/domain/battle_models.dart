@@ -13,6 +13,8 @@ enum UnitRole { infantry, shield, archer, cavalry, mage, siege, commander }
 
 enum UnitStance { advance, support, retreat }
 
+enum ObjectiveDamageStage { secure, damaged, critical }
+
 class BattleControlState {
   const BattleControlState({
     required this.dashCooldown,
@@ -314,6 +316,13 @@ abstract final class EvacuationRules {
 
 abstract final class GateDefenseRules {
   static const double maxGateHp = 1200;
+
+  static ObjectiveDamageStage damageStage(double gateHp) {
+    final ratio = (gateHp / maxGateHp).clamp(0.0, 1.0);
+    if (ratio <= .35) return ObjectiveDamageStage.critical;
+    if (ratio <= .7) return ObjectiveDamageStage.damaged;
+    return ObjectiveDamageStage.secure;
+  }
 
   static BattleOutcome resolve({
     required double gateHp,
