@@ -791,14 +791,17 @@ void main() {
 
   test('every mercenary has one resolvable signature ultimate pairing', () {
     final ultimateNames = <String>{};
+    final ultimatePatterns = <UltimatePattern>{};
     for (final mercenary in content.mercenaries) {
       final signature = content.weaponById(mercenary.signatureWeaponId);
       expect(signature.ownerId, mercenary.id);
       expect(mercenary.ultimate, isNotEmpty);
       ultimateNames.add(mercenary.ultimate);
+      ultimatePatterns.add(mercenary.ultimatePattern);
     }
 
     expect(ultimateNames, hasLength(content.mercenaries.length));
+    expect(ultimatePatterns, hasLength(content.mercenaries.length));
   });
 
   test('gate defense outcome is resolved from time and gate durability', () {

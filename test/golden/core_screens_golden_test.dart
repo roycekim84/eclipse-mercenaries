@@ -39,12 +39,23 @@ void main() {
         ),
       ),
     );
-    await tester.runAsync(
-      () => precacheImage(
-        const AssetImage('assets/images/mercenary_camp.png'),
-        tester.element(find.byType(CampScreen)),
-      ),
-    );
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(CampScreen));
+      await Future.wait([
+        precacheImage(
+          const AssetImage('assets/images/mercenary_camp.png'),
+          context,
+        ),
+        precacheImage(
+          const AssetImage('assets/images/characters/luna_battle_sheet.png'),
+          context,
+        ),
+        precacheImage(
+          const AssetImage('assets/images/characters/kael_battle_sheet.png'),
+          context,
+        ),
+      ]);
+    });
     await _settleImages(tester);
     final titleParagraph = tester.renderObject<RenderParagraph>(
       find.text('월영 Lv.15'),

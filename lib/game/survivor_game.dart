@@ -224,6 +224,10 @@ class SurvivorGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
+    _reinforcementClock = config.balance.reinforcementInterval;
+    _nextEventAt = config.balance.firstEventAt;
+    _enemyDamageBonus = config.balance.enemyDamageBonus;
+    _enemySpeedMultiplier = config.balance.enemySpeedMultiplier;
     _player = config.battlefield == BattlefieldType.evacuation
         ? Vector2(size.x * .34, size.y / 2)
         : size / 2;

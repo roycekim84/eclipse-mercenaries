@@ -31,6 +31,47 @@ enum UnitStance { advance, support, retreat }
 
 enum ObjectiveDamageStage { secure, damaged, critical }
 
+class StageBalanceProfile {
+  const StageBalanceProfile({
+    required this.durationSeconds,
+    required this.unitCount,
+    required this.initialDeployment,
+    required this.activePopulationTarget,
+    required this.reinforcementInterval,
+    required this.enemyHpMultiplier,
+    required this.enemyDamageBonus,
+    required this.enemySpeedMultiplier,
+    required this.eliteStride,
+    required this.firstEventAt,
+    required this.eventInterval,
+  });
+
+  const StageBalanceProfile.baseline()
+    : durationSeconds = 45,
+      unitCount = 500,
+      initialDeployment = 100,
+      activePopulationTarget = 220,
+      reinforcementInterval = 4.2,
+      enemyHpMultiplier = 1,
+      enemyDamageBonus = 0,
+      enemySpeedMultiplier = 1,
+      eliteStride = 83,
+      firstEventAt = 10,
+      eventInterval = 14;
+
+  final int durationSeconds;
+  final int unitCount;
+  final int initialDeployment;
+  final int activePopulationTarget;
+  final double reinforcementInterval;
+  final double enemyHpMultiplier;
+  final int enemyDamageBonus;
+  final double enemySpeedMultiplier;
+  final int eliteStride;
+  final double firstEventAt;
+  final double eventInterval;
+}
+
 class BattleControlState {
   const BattleControlState({
     required this.dashCooldown,
@@ -141,9 +182,11 @@ class BattleConfig {
     this.battlefield = BattlefieldType.gateDefense,
     this.condition = BattlefieldCondition.moonlitNight,
     this.objective = ContractObjective.defense,
+    this.balance = const StageBalanceProfile.baseline(),
     this.durationSeconds = 45,
     this.seed = 19,
     this.unitCount = 500,
+    this.recommendedPower = 8000,
     this.contractId = 'gate_defense',
     this.contractName = '성문 방어전',
     this.contractGold = 3000,
@@ -159,9 +202,11 @@ class BattleConfig {
   final BattlefieldType battlefield;
   final BattlefieldCondition condition;
   final ContractObjective objective;
+  final StageBalanceProfile balance;
   final int durationSeconds;
   final int seed;
   final int unitCount;
+  final int recommendedPower;
   final String contractId;
   final String contractName;
   final int contractGold;

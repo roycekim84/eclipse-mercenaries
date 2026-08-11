@@ -1,5 +1,16 @@
 enum CombatStyle { blades, greatsword, magic }
 
+enum UltimatePattern {
+  lunarFlurry,
+  bloodMoonRampage,
+  foxfireIllusion,
+  meteorPursuit,
+  goldenSanctuary,
+  skyTactics,
+  earthPiercer,
+  twinMoonSigil,
+}
+
 enum WeaponPattern {
   twinSlash,
   bloodCleave,
@@ -37,6 +48,7 @@ class MercenarySpec {
     required this.style,
     required this.signatureWeaponId,
     required this.ultimate,
+    required this.ultimatePattern,
   });
 
   final String id;
@@ -55,6 +67,7 @@ class MercenarySpec {
   final CombatStyle style;
   final String signatureWeaponId;
   final String ultimate;
+  final UltimatePattern ultimatePattern;
 }
 
 class WeaponSpec {
@@ -99,6 +112,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.blades,
     signatureWeaponId: 'moon_blades',
     ultimate: '월식 · 백야난무',
+    ultimatePattern: UltimatePattern.lunarFlurry,
   ),
   MercenarySpec(
     id: 'kael',
@@ -117,6 +131,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.greatsword,
     signatureWeaponId: 'blood_fang',
     ultimate: '혈월 · 야수해방',
+    ultimatePattern: UltimatePattern.bloodMoonRampage,
   ),
   MercenarySpec(
     id: 'sera',
@@ -135,6 +150,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.magic,
     signatureWeaponId: 'glass_flame',
     ultimate: '천화 · 몽환구미진',
+    ultimatePattern: UltimatePattern.foxfireIllusion,
   ),
   MercenarySpec(
     id: 'nyra',
@@ -153,6 +169,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.blades,
     signatureWeaponId: 'gale_string',
     ultimate: '천궁 · 유성추적진',
+    ultimatePattern: UltimatePattern.meteorPursuit,
   ),
   MercenarySpec(
     id: 'aurel',
@@ -171,6 +188,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.greatsword,
     signatureWeaponId: 'sunwall_aegis',
     ultimate: '성역 · 황금녹각성',
+    ultimatePattern: UltimatePattern.goldenSanctuary,
   ),
   MercenarySpec(
     id: 'vesta',
@@ -189,6 +207,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.magic,
     signatureWeaponId: 'corvus_codex',
     ultimate: '전개 · 천공전술도',
+    ultimatePattern: UltimatePattern.skyTactics,
   ),
   MercenarySpec(
     id: 'rask',
@@ -207,6 +226,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.greatsword,
     signatureWeaponId: 'verdigris_halberd',
     ultimate: '역린 · 지맥관통창',
+    ultimatePattern: UltimatePattern.earthPiercer,
   ),
   MercenarySpec(
     id: 'iris',
@@ -225,6 +245,7 @@ const alphaMercenaries = <MercenarySpec>[
     style: CombatStyle.magic,
     signatureWeaponId: 'noctis_crescent',
     ultimate: '환성 · 쌍월성흔검',
+    ultimatePattern: UltimatePattern.twinMoonSigil,
   ),
 ];
 

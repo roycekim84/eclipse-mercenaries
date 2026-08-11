@@ -967,6 +967,7 @@ class BattlefieldContract {
     required this.xp,
     required this.color,
     required this.icon,
+    required this.balance,
   });
   final String id;
   final String factionId;
@@ -982,6 +983,7 @@ class BattlefieldContract {
   final int xp;
   final Color color;
   final IconData icon;
+  final StageBalanceProfile balance;
 }
 
 const contracts = [
@@ -1000,6 +1002,7 @@ const contracts = [
     xp: 1200,
     color: Color(0xff334d6f),
     icon: Icons.shield_outlined,
+    balance: StageBalanceProfile.baseline(),
   ),
   BattlefieldContract(
     id: 'ashwind_evacuation',
@@ -1016,6 +1019,19 @@ const contracts = [
     xp: 1450,
     color: Color(0xff8c6031),
     icon: Icons.directions_run,
+    balance: StageBalanceProfile(
+      durationSeconds: 55,
+      unitCount: 560,
+      initialDeployment: 106,
+      activePopulationTarget: 232,
+      reinforcementInterval: 4.0,
+      enemyHpMultiplier: 1.08,
+      enemyDamageBonus: 1,
+      enemySpeedMultiplier: 1.04,
+      eliteStride: 76,
+      firstEventAt: 11,
+      eventInterval: 14,
+    ),
   ),
   BattlefieldContract(
     id: 'commander_assassination',
@@ -1032,6 +1048,19 @@ const contracts = [
     xp: 1750,
     color: Color(0xff733b3e),
     icon: Icons.gps_fixed,
+    balance: StageBalanceProfile(
+      durationSeconds: 60,
+      unitCount: 620,
+      initialDeployment: 112,
+      activePopulationTarget: 245,
+      reinforcementInterval: 3.8,
+      enemyHpMultiplier: 1.14,
+      enemyDamageBonus: 1,
+      enemySpeedMultiplier: 1.06,
+      eliteStride: 68,
+      firstEventAt: 10,
+      eventInterval: 13,
+    ),
   ),
   BattlefieldContract(
     id: 'black_forest_supply',
@@ -1048,6 +1077,19 @@ const contracts = [
     xp: 1580,
     color: Color(0xff315844),
     icon: Icons.local_shipping_outlined,
+    balance: StageBalanceProfile(
+      durationSeconds: 65,
+      unitCount: 680,
+      initialDeployment: 118,
+      activePopulationTarget: 255,
+      reinforcementInterval: 3.7,
+      enemyHpMultiplier: 1.18,
+      enemyDamageBonus: 2,
+      enemySpeedMultiplier: 1.07,
+      eliteStride: 64,
+      firstEventAt: 10,
+      eventInterval: 12.5,
+    ),
   ),
   BattlefieldContract(
     id: 'black_forest_ambush',
@@ -1064,6 +1106,19 @@ const contracts = [
     xp: 1860,
     color: Color(0xff3f4d36),
     icon: Icons.visibility_off_outlined,
+    balance: StageBalanceProfile(
+      durationSeconds: 70,
+      unitCount: 760,
+      initialDeployment: 126,
+      activePopulationTarget: 270,
+      reinforcementInterval: 3.5,
+      enemyHpMultiplier: 1.25,
+      enemyDamageBonus: 2,
+      enemySpeedMultiplier: 1.10,
+      eliteStride: 58,
+      firstEventAt: 9,
+      eventInterval: 12,
+    ),
   ),
   BattlefieldContract(
     id: 'white_night_retake',
@@ -1080,5 +1135,18 @@ const contracts = [
     xp: 2150,
     color: Color(0xff547287),
     icon: Icons.castle_outlined,
+    balance: StageBalanceProfile(
+      durationSeconds: 75,
+      unitCount: 840,
+      initialDeployment: 136,
+      activePopulationTarget: 285,
+      reinforcementInterval: 3.3,
+      enemyHpMultiplier: 1.32,
+      enemyDamageBonus: 3,
+      enemySpeedMultiplier: 1.12,
+      eliteStride: 52,
+      firstEventAt: 9,
+      eventInterval: 11.5,
+    ),
   ),
 ];

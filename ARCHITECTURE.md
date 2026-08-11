@@ -143,9 +143,10 @@ M3.4에서는 `RewardBreakdown`, `LootDrop`, `BattleAward`를 `BattleReport`의 
 
 - Flame은 `BattleStats.ultimateCharge`와 `ultimateEnabled`를 HUD에 발행한다.
 - Flutter는 Ready 입력을 command로 전달하고 `UltimateSequence`를 받아 컷인을 표시한다.
-- 컷인 중 Flame 월드 `dt`만 8%로 감속하며 UI 애니메이션은 실제 시간으로 재생한다.
+- 컷인 중 Flame 엔진을 완전히 정지하고 UI 애니메이션만 실제 시간으로 재생한다.
 - 충격 시점의 피해·사망·경험치는 Flame이 처리하고 Flutter는 연출 상태만 소유한다.
 - 저사양 모드는 피해 대상 수를 바꾸지 않고 동시 Slash/VFX 인스턴스만 제한한다.
+- `MercenarySpec.ultimatePattern`은 8명 전용 대상 선정, 피해 횟수, 상태이상·회복·목표 보호와 Canvas VFX를 결정한다. 전투 스타일 3종은 일반 공격 렌더에만 사용한다.
 
 ## 7. Flame 시스템
 
@@ -173,6 +174,8 @@ M2.3 구현에서는 `domain/combat_rules.dart`의 `DamageResolver`가 방어, �
 M2.4 구현에서는 `RunGrowthRules`가 최대 레벨과 무기 슬롯을 먼저 검증한 뒤 가중치 비복원 추출로 중복 없는 3개 선택을 만든다. 선택 RNG는 `BattleConfig.seed ^ 0x5f3759df`로 생성해 전투 RNG 소비 순서가 레벨업 선택을 바꾸지 않게 한다. 런타임은 최대 4개 `RunWeaponState`에 독립 공격 타이머를 두고, `BattleStats.build`에는 UI가 안전하게 읽을 수 있는 ID·종류·레벨 스냅샷만 발행한다.
 
 M3.1 구현에서는 `BattlefieldType`과 `BattlefieldCondition`을 `BattleConfig`에 포함해 목표와 환경을 세션 시작 전에 고정한다. `EvacuationRules`는 Flame과 무관하게 8명 탈출 승패와 보너스를 판정한다. 호위 대상은 Component가 아닌 12개 경량 데이터 객체로 관리하며, 기존 적 AI의 목표 분기만 확장한다. 프레임 시간은 최근 512개 표본을 고정 배열에 기록하고 `BattleReport`에 최대 활성 유닛과 P95를 전달한다.
+
+계약의 `StageBalanceProfile`은 화면의 권장 전투력과 함께 `BattleConfig`에 복사된다. 전투 시간, 전체/초기/동시 활성 유닛 예산, 증원과 사건 간격, 적 HP·피해·속도 및 정예 밀도를 세션 시작 시 고정하므로 UI 난이도 표기와 Flame 런타임이 분리되지 않는다.
 
 M3.2 구현에서는 `EnemyArchetypeSpec`이 병과 위에 체력·공격·방어·속도 보정과 고유 능력을 합성한다. `BattleUnit`은 원형 참조와 능력 카운터만 추가로 보유하며 별도 Component를 생성하지 않는다. 일반 적은 기존 아틀라스와 세력 tint를 재사용하고 정예/보스만 스케일·링·Canvas 문양을 추가한다. 희귀 드롭 ID는 사망 경계에서 중복 없이 수집해 `BattleReport.rareDropIds`로만 Flutter 결과 화면에 전달한다.
 

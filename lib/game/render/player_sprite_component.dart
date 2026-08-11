@@ -7,6 +7,10 @@ enum PlayerAnimationState { idle, walk, attack, hit, dead }
 
 class PlayerSpriteComponent
     extends SpriteAnimationGroupComponent<PlayerAnimationState> {
+  static const attackFrameCount = 6;
+  static const attackStepTime = .05;
+  static const attackDuration = attackFrameCount * attackStepTime;
+
   PlayerSpriteComponent._({
     required super.animations,
     required super.size,
@@ -78,13 +82,13 @@ class PlayerSpriteComponent
         ),
         PlayerAnimationState.attack: animation(
           PlayerAnimationState.attack,
-          stepTime: .05,
+          stepTime: attackStepTime,
           loop: false,
           // Generated sheets reserve the final two cells for lingering debris
           // or extreme follow-through poses. Returning before those frames
           // prevents a living mercenary from reading as a fallen sprite.
           amount: math.min(
-            6,
+            attackFrameCount,
             frameIndices[PlayerAnimationState.attack.index].length,
           ),
         ),
@@ -114,7 +118,8 @@ class PlayerSpriteComponent
     }
   }
 
-  void playAttack() => _lock(PlayerAnimationState.attack, .30);
+  void playAttack() =>
+      _lock(PlayerAnimationState.attack, attackDuration, restart: true);
 
   void playHit() => _lock(PlayerAnimationState.hit, .52);
 
@@ -123,14 +128,26 @@ class PlayerSpriteComponent
     _setState(PlayerAnimationState.dead);
   }
 
-  void _lock(PlayerAnimationState state, double seconds) {
+  void _lock(
+    PlayerAnimationState state,
+    double seconds, {
+    bool restart = false,
+  }) {
     if (current == PlayerAnimationState.dead) return;
     _lockedFor = seconds;
-    _setState(state);
+    _setState(state, restart: restart);
   }
 
-  void _setState(PlayerAnimationState state) {
-    if (current != state) current = state;
+  void _setState(PlayerAnimationState state, {bool restart = false}) {
+    if (current != state) {
+      current = state;
+      return;
+    }
+    if (restart) {
+      // Non-looping attack animations otherwise remain on their final frame
+      // when another equipped weapon attacks before the action lock expires.
+      animationTickers?[state]?.reset();
+    }
   }
 
   @override
@@ -156,6 +173,7 @@ class PlayerSpriteComponent
     if (!_lockedFor.isFinite || _lockedFor <= 0) return;
     _lockedFor -= dt;
     if (_lockedFor <= 0) {
+      _lockedFor = 0;
       _setState(
         _moving ? PlayerAnimationState.walk : PlayerAnimationState.idle,
       );

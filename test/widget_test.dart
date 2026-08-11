@@ -20,6 +20,28 @@ void main() {
       contracts.map((contract) => contract.objective).toSet(),
       hasLength(ContractObjective.values.length),
     );
+    expect(
+      contracts.map((contract) => contract.balance.durationSeconds),
+      orderedEquals([45, 55, 60, 65, 70, 75]),
+    );
+    expect(
+      contracts.map((contract) => contract.balance.enemyHpMultiplier),
+      orderedEquals([1, 1.08, 1.14, 1.18, 1.25, 1.32]),
+    );
+    for (var index = 1; index < contracts.length; index++) {
+      final previous = contracts[index - 1].balance;
+      final current = contracts[index].balance;
+      expect(current.unitCount, greaterThan(previous.unitCount));
+      expect(
+        current.activePopulationTarget,
+        greaterThan(previous.activePopulationTarget),
+      );
+      expect(
+        current.reinforcementInterval,
+        lessThan(previous.reinforcementInterval),
+      );
+      expect(current.eliteStride, lessThan(previous.eliteStride));
+    }
   });
 
   testWidgets('portrait web shows a non-blocking landscape hint', (

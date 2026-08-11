@@ -15,7 +15,7 @@ extension BattlefieldEventSystem on SurvivorGame {
       progress: progress,
       random: _eventRandom,
     );
-    _nextEventAt += 14;
+    _nextEventAt += config.balance.eventInterval;
     if (selected == null) return;
     _triggeredEventIds.add(selected.id);
     _pausedForEvent = true;
@@ -212,7 +212,10 @@ extension BattlefieldEventSystem on SurvivorGame {
         }
       }
       final hpBonus = (archetype?.hpBonus ?? 0).clamp(-8, 80).toInt();
-      final maxHp = UnitRoleRules.maxHp(role) + hpBonus;
+      final rawMaxHp = UnitRoleRules.maxHp(role) + hpBonus;
+      final maxHp = ally
+          ? rawMaxHp
+          : math.max(1, (rawMaxHp * config.balance.enemyHpMultiplier).round());
       final unit = BattleUnit(
         position: Vector2(
           ally

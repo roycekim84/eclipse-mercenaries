@@ -6,7 +6,7 @@ extension GateDefenseSystem on SurvivorGame {
     // first frame. The remaining budget is introduced by staged reinforcements.
     final initialDeployment = math.min(
       config.unitCount,
-      math.max(72, config.unitCount ~/ 5),
+      config.balance.initialDeployment,
     );
     var allyIndex = 0;
     var enemyIndex = 0;
@@ -33,10 +33,13 @@ extension GateDefenseSystem on SurvivorGame {
                   (config.battlefield == BattlefieldType.evacuation
                       ? .28
                       : .4));
-      final maxHp =
+      final rawMaxHp =
           UnitRoleRules.maxHp(role) +
           (archetype?.hpBonus ?? 0) +
           (objectiveAggro ? 4 : 0);
+      final maxHp = ally
+          ? rawMaxHp
+          : math.max(1, (rawMaxHp * config.balance.enemyHpMultiplier).round());
       final lane = factionIndex % 5;
       final rank = (factionIndex ~/ 5) % 8;
       final usableHeight = _combatBottom - _combatTop;
@@ -94,7 +97,7 @@ extension GateDefenseSystem on SurvivorGame {
   void _maintainBattlePopulation(double dt) {
     _reinforcementClock -= dt;
     if (_reinforcementClock > 0 || _finished) return;
-    _reinforcementClock = 4.2;
+    _reinforcementClock = config.balance.reinforcementInterval;
     final secondsLeft = config.durationSeconds - _elapsed;
     if (secondsLeft <= 7) return;
     final livingEnemies = _units
@@ -104,9 +107,12 @@ extension GateDefenseSystem on SurvivorGame {
     final progress = (_elapsed / config.durationSeconds).clamp(0.0, 1.0);
     final initialDeployment = math.min(
       config.unitCount,
-      math.max(72, config.unitCount ~/ 5),
+      config.balance.initialDeployment,
     );
-    final activePopulationTarget = math.min(config.unitCount, 220);
+    final activePopulationTarget = math.min(
+      config.unitCount,
+      config.balance.activePopulationTarget,
+    );
     final stagedPopulation =
         initialDeployment +
         ((activePopulationTarget - initialDeployment) * progress).round();
@@ -138,8 +144,9 @@ extension GateDefenseSystem on SurvivorGame {
         BattlefieldCondition.moonlitNight => 'siege_marshal',
       });
     }
-    if (index % 83 == 0) {
-      return EnemyCatalog.elite[(index ~/ 83) % EnemyCatalog.elite.length];
+    if (index % config.balance.eliteStride == 0) {
+      return EnemyCatalog.elite[(index ~/ config.balance.eliteStride) %
+          EnemyCatalog.elite.length];
     }
     return EnemyCatalog.common[(index - 1) % EnemyCatalog.common.length];
   }
