@@ -163,13 +163,13 @@ extension UnitAiSystem on SurvivorGame {
       return;
     }
     if (commander != null && !commander.dead) {
-      final column = unit.squadId % 4;
-      final row = (unit.squadId ~/ 4) % 5;
+      final lane = unit.squadId % 11;
+      final rank = (unit.squadId ~/ 11) % 9;
       final target =
           commander.position +
           Vector2(
-            unit.ally ? 45 + column * 24 : -45 - column * 24,
-            (row - 2) * 38,
+            unit.ally ? 42 + rank * 18 : -42 - rank * 18,
+            (lane - 5) * 27 + (rank.isOdd ? 7 : -7),
           );
       unit.stance = unit.position.distanceTo(target) > 95
           ? UnitStance.support

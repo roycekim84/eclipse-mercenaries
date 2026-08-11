@@ -5,7 +5,7 @@ extension GateDefenseSystem on SurvivorGame {
     var allyIndex = 0;
     var enemyIndex = 0;
     for (var i = 0; i < config.unitCount; i++) {
-      final ally = i % 3 == 0;
+      final ally = i % 5 < 2;
       final factionIndex = ally ? allyIndex++ : enemyIndex++;
       final archetype = ally ? null : _enemyForIndex(factionIndex);
       final role = archetype?.role ?? _roleForFactionIndex(factionIndex);
@@ -23,26 +23,32 @@ extension GateDefenseSystem on SurvivorGame {
           UnitRoleRules.maxHp(role) +
           (archetype?.hpBonus ?? 0) +
           (objectiveAggro ? 4 : 0);
+      final lane = factionIndex % 11;
+      final rank = (factionIndex ~/ 11) % 9;
+      final laneY =
+          34 +
+          lane * math.max(24, (size.y - 68) / 10) +
+          (_random.nextDouble() - .5) * 10;
       final defaultPosition = config.battlefield == BattlefieldType.evacuation
           ? Vector2(
               ally
-                  ? size.x * .2 + _random.nextDouble() * size.x * .3
-                  : size.x * .48 + _random.nextDouble() * size.x * .55,
-              24 + _random.nextDouble() * math.max(80, size.y - 48),
+                  ? size.x * .18 + rank * 20 + _random.nextDouble() * 12
+                  : size.x * .62 + rank * 24 + _random.nextDouble() * 16,
+              laneY,
             )
           : !ally && role == UnitRole.siege
           ? Vector2(
-              size.x * .42 + _random.nextDouble() * size.x * .24,
-              40 + _random.nextDouble() * math.max(80, size.y - 80),
+              _defenseLineX + 190 + rank * 24 + _random.nextDouble() * 12,
+              laneY,
             )
           : ally
           ? Vector2(
-              _defenseLineX - 80 + _random.nextDouble() * 250,
-              30 + _random.nextDouble() * math.max(80, size.y - 60),
+              _defenseLineX - 105 + rank * 18 + _random.nextDouble() * 10,
+              laneY,
             )
           : Vector2(
-              size.x * .48 + _random.nextDouble() * size.x * .72,
-              20 + _random.nextDouble() * math.max(80, size.y - 40),
+              _defenseLineX + 155 + rank * 24 + _random.nextDouble() * 14,
+              laneY,
             );
       final unit = BattleUnit(
         position: role == UnitRole.commander
@@ -62,7 +68,7 @@ extension GateDefenseSystem on SurvivorGame {
         stance: role == UnitRole.commander
             ? UnitStance.support
             : UnitStance.advance,
-        squadId: factionIndex ~/ 8,
+        squadId: factionIndex,
         archetype: archetype,
       );
       _units.add(unit);
@@ -75,6 +81,34 @@ extension GateDefenseSystem on SurvivorGame {
       }
     }
     _peakActiveUnits = math.max(_peakActiveUnits, _units.length);
+  }
+
+  void _maintainBattlePopulation(double dt) {
+    _reinforcementClock -= dt;
+    if (_reinforcementClock > 0 || _finished) return;
+    _reinforcementClock = 5.5;
+    final secondsLeft = config.durationSeconds - _elapsed;
+    if (secondsLeft <= 7) return;
+    final livingEnemies = _units
+        .where((unit) => !unit.dead && !unit.ally)
+        .length;
+    final livingAllies = _units.where((unit) => !unit.dead && unit.ally).length;
+    final enemyFloor = math.max(36, config.unitCount ~/ 5);
+    final allyFloor = math.max(24, config.unitCount ~/ 9);
+    if (livingEnemies < enemyFloor) {
+      final archetype = EnemyCatalog
+          .common[(_elapsed ~/ 5).toInt() % EnemyCatalog.common.length];
+      _spawnEventWave(
+        count: math.min(28, enemyFloor - livingEnemies + 8),
+        archetypeId: archetype.id,
+      );
+    }
+    if (livingAllies < allyFloor) {
+      _spawnEventWave(
+        count: math.min(18, allyFloor - livingAllies + 5),
+        ally: true,
+      );
+    }
   }
 
   EnemyArchetypeSpec _enemyForIndex(int index) {
@@ -286,24 +320,7 @@ extension GateDefenseSystem on SurvivorGame {
       );
     }
 
-    final hpRatio = (_gateHp / GateDefenseRules.maxGateHp).clamp(0.0, 1.0);
     final damageStage = GateDefenseRules.damageStage(_gateHp);
-    canvas.drawRect(
-      Rect.fromLTWH(_gatePosition.x - 38, _gatePosition.y - 118, 96, 8),
-      Paint()..color = const Color(0xaa050608),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(
-        _gatePosition.x - 36,
-        _gatePosition.y - 116,
-        92 * hpRatio,
-        4,
-      ),
-      Paint()
-        ..color = hpRatio > .35
-            ? const Color(0xff60b875)
-            : const Color(0xffd2554e),
-    );
     canvas.drawCircle(
       Offset(_gatePosition.x + 3, _gatePosition.y - 136),
       13 + math.sin(_elapsed * 4) * 2,

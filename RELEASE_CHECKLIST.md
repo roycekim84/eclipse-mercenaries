@@ -2,7 +2,7 @@
 
 ## 자동 완료
 
-- [x] 버전 `0.9.0+9`, 표시명, Android/iOS 식별자 고정
+- [x] 버전 `0.9.2+11`, 표시명, Android/iOS 식별자 고정
 - [x] Android `sensorLandscape`, iOS/iPad 두 가로 방향 정적 검사
 - [x] SafeArea 및 1280×720·844×390·세로 Web 비차단 안내 회귀
 - [x] 앱 아이콘, Android adaptive icon, iOS AppIcon, 다크 스플래시 적용

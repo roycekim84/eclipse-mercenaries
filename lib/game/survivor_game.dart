@@ -135,6 +135,7 @@ class SurvivorGame extends FlameGame {
   late double _defenseLineX;
   double _elapsed = 0;
   double _eventClock = 0;
+  double _reinforcementClock = 5;
   double _nextEventAt = 10;
   double _eventRewardMultiplier = 1;
   double _enemySpeedMultiplier = 1;
@@ -209,6 +210,7 @@ class SurvivorGame extends FlameGame {
   BattleRenderPolicy get _renderPolicy =>
       performanceMode.value ? _performanceRenderPolicy : _standardRenderPolicy;
   bool get _reducedVisualLoad => reducedEffects.value || performanceMode.value;
+  Vector2 get _playerCombatOrigin => _player + _playerSprite.combatOrigin;
 
   @override
   Color backgroundColor() => const Color(0xff35362d);
@@ -231,8 +233,10 @@ class SurvivorGame extends FlameGame {
         'battlefield/twilight_siege_plain.png',
     });
     final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
-    _playerSprite = PlayerSpriteComponent.fromImage(playerImage)
-      ..position = _player.clone();
+    _playerSprite = PlayerSpriteComponent.fromImage(
+      playerImage,
+      displaySize: mercenary.visual.battleDisplaySize,
+    )..position = _player.clone();
     await add(_playerSprite);
     _speed =
         mercenary.speed *
@@ -473,6 +477,7 @@ class SurvivorGame extends FlameGame {
       return;
     }
     _updateBattlefieldEvents();
+    _maintainBattlePopulation(worldDt);
     _updateFrontPressure();
     _updateClock.stop();
     if (_elapsed >= 2) {
@@ -1002,7 +1007,8 @@ class SurvivorGame extends FlameGame {
         ..style = PaintingStyle.stroke
         ..strokeWidth = _playerInvulnerability > 0 ? 4 : 3,
     );
-    final pointerY = _player.y - 53 - math.sin(_elapsed * 5) * 3;
+    final pointerY =
+        _player.y - _playerSprite.markerTopOffset - math.sin(_elapsed * 5) * 3;
     final pointer = Path()
       ..moveTo(_player.x, pointerY + 10)
       ..lineTo(_player.x - 7, pointerY)

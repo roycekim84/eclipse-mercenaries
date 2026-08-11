@@ -11,6 +11,9 @@ class MercenaryVisual {
     required this.icon,
     required this.portraitAsset,
     required this.battleSpriteAsset,
+    required this.battleDisplaySize,
+    this.portraitAlignment = Alignment.center,
+    this.portraitScale = 1,
   });
 
   final Color color;
@@ -18,6 +21,9 @@ class MercenaryVisual {
   final IconData icon;
   final String portraitAsset;
   final String battleSpriteAsset;
+  final double battleDisplaySize;
+  final Alignment portraitAlignment;
+  final double portraitScale;
 }
 
 class WeaponVisual {
@@ -41,6 +47,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.pets,
     portraitAsset: 'assets/images/luna_belhardt.png',
     battleSpriteAsset: 'characters/luna_battle_sheet.png',
+    battleDisplaySize: 93,
   ),
   'kael': MercenaryVisual(
     color: Color(0xff49312f),
@@ -48,6 +55,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.change_history,
     portraitAsset: 'assets/images/kael_rozenfang.png',
     battleSpriteAsset: 'characters/kael_battle_sheet.png',
+    battleDisplaySize: 85,
   ),
   'sera': MercenaryVisual(
     color: Color(0xff273d50),
@@ -55,6 +63,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.auto_awesome,
     portraitAsset: 'assets/images/sera_inarion.png',
     battleSpriteAsset: 'characters/sera_battle_sheet.png',
+    battleDisplaySize: 89,
   ),
   'nyra': MercenaryVisual(
     color: Color(0xff183c43),
@@ -62,6 +71,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.cruelty_free,
     portraitAsset: 'assets/images/nyra_vale_fullbody.png',
     battleSpriteAsset: 'characters/nyra_battle_sheet.png',
+    battleDisplaySize: 87,
+    portraitScale: 1.04,
   ),
   'aurel': MercenaryVisual(
     color: Color(0xff454331),
@@ -69,6 +80,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.shield_outlined,
     portraitAsset: 'assets/images/aurel_hart_fullbody.png',
     battleSpriteAsset: 'characters/aurel_battle_sheet.png',
+    battleDisplaySize: 82,
+    portraitScale: 1.08,
   ),
   'vesta': MercenaryVisual(
     color: Color(0xff4a2631),
@@ -76,6 +89,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.menu_book_outlined,
     portraitAsset: 'assets/images/vesta_corven_fullbody.png',
     battleSpriteAsset: 'characters/vesta_battle_sheet.png',
+    battleDisplaySize: 98,
+    portraitScale: 1.06,
   ),
   'rask': MercenaryVisual(
     color: Color(0xff263b30),
@@ -83,6 +98,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.push_pin,
     portraitAsset: 'assets/images/rask_draven_fullbody.png',
     battleSpriteAsset: 'characters/rask_battle_sheet.png',
+    battleDisplaySize: 95,
+    portraitScale: 1.06,
   ),
   'iris': MercenaryVisual(
     color: Color(0xff302b52),
@@ -90,6 +107,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.diamond_outlined,
     portraitAsset: 'assets/images/iris_noctis_fullbody.png',
     battleSpriteAsset: 'characters/iris_battle_sheet.png',
+    battleDisplaySize: 97,
+    portraitScale: 1.06,
   ),
 };
 
@@ -169,12 +188,30 @@ extension EnemyVisualLookup on EnemyArchetypeSpec {
 String weaponArtAsset(String id) => 'assets/images/items/$id.png';
 
 String enemyArtAsset(EnemyArchetypeSpec enemy) {
-  if (enemy.rank == EnemyRank.boss) return 'assets/images/enemies/warlord.png';
+  if (enemy.rank == EnemyRank.boss) {
+    return switch (enemy.id) {
+      'hunt_captain' => 'assets/images/enemies/cavalry.png',
+      'forest_warlord' => 'assets/images/enemies/skirmisher.png',
+      'frost_castellan' => 'assets/images/enemies/frost_elite.png',
+      'dusk_general' => 'assets/images/enemies/warlord.png',
+      _ => 'assets/images/enemies/commander.png',
+    };
+  }
   if (enemy.role == UnitRole.commander) {
     return 'assets/images/enemies/commander.png';
   }
   if (enemy.rank == EnemyRank.elite) {
-    return 'assets/images/enemies/frost_elite.png';
+    return switch (enemy.role) {
+      UnitRole.archer => 'assets/images/enemies/archer.png',
+      UnitRole.cavalry => 'assets/images/enemies/cavalry.png',
+      UnitRole.mage =>
+        enemy.faction == EnemyFaction.cinderCoven
+            ? 'assets/images/enemies/mage.png'
+            : 'assets/images/enemies/frost_elite.png',
+      UnitRole.siege => 'assets/images/enemies/siege.png',
+      UnitRole.shield => 'assets/images/enemies/frost_elite.png',
+      _ => 'assets/images/enemies/skirmisher.png',
+    };
   }
   if (enemy.ability == EnemyAbility.flank ||
       enemy.ability == EnemyAbility.huntMark) {
@@ -185,6 +222,7 @@ String enemyArtAsset(EnemyArchetypeSpec enemy) {
     UnitRole.cavalry => 'assets/images/enemies/cavalry.png',
     UnitRole.mage => 'assets/images/enemies/mage.png',
     UnitRole.siege => 'assets/images/enemies/siege.png',
+    UnitRole.shield => 'assets/images/enemies/frost_elite.png',
     _ => 'assets/images/enemies/infantry.png',
   };
 }

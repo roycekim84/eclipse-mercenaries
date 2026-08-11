@@ -125,6 +125,8 @@ class _RecruitLobby extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).height < 500;
+    final guaranteeProgress =
+        recruitmentCount % RecruitmentRules.featuredGuarantee;
     return Align(
       alignment: Alignment.centerLeft,
       child: SizedBox(
@@ -188,7 +190,7 @@ class _RecruitLobby extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '달빛 계약 보증 · ${RecruitmentRules.guaranteeRemaining(recruitmentCount)}회 이내 루나 확정',
+                            '달빛 계약 보증 · 현재 $guaranteeProgress/${RecruitmentRules.featuredGuarantee} · ${RecruitmentRules.guaranteeRemaining(recruitmentCount)}회 이내 확정',
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -198,8 +200,7 @@ class _RecruitLobby extends StatelessWidget {
                           LinearProgressIndicator(
                             minHeight: 4,
                             value:
-                                (recruitmentCount %
-                                    RecruitmentRules.featuredGuarantee) /
+                                guaranteeProgress /
                                 RecruitmentRules.featuredGuarantee,
                             backgroundColor: Color(0xff14121a),
                             color: Color(0xffa878c3),
@@ -246,13 +247,22 @@ class _RecruitLobby extends StatelessWidget {
                 ],
               ),
               SizedBox(height: compact ? 3 : 9),
-              TextButton.icon(
-                onPressed: () => showDialog<void>(
-                  context: context,
-                  builder: (_) => const _ProbabilityDialog(),
-                ),
-                icon: const Icon(Icons.info_outline, size: 15),
-                label: const Text('계약 확률 및 중복 변환 안내'),
+              Row(
+                children: [
+                  const Text(
+                    '베타 계약 풀 8명 균등 · 중복 시 전용 증표 10개',
+                    style: TextStyle(fontSize: 9, color: Colors.white54),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => const _ProbabilityDialog(),
+                    ),
+                    icon: const Icon(Icons.info_outline, size: 15),
+                    label: const Text('확률 안내'),
+                  ),
+                ],
               ),
             ],
           ),

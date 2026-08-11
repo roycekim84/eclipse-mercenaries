@@ -1,5 +1,15 @@
 # 테스트
 
+## 전투 스프라이트 좌표·지면 앵커 회귀
+
+- 8명 시트는 `1792×1120 RGBA`, 8×5, 셀 `224×224` 계약을 만족해야 한다.
+- 각 프레임의 발 기준선은 셀 내부 y=208에 맞고 Idle 행의 몸통 중심 편차는 1px 이하여야 한다.
+- Attack 행은 무기 궤적의 크기와 무관하게 Idle/Walk 몸통 중심을 유지해야 한다.
+- 플레이어 위치는 발밑 지면 좌표이며 머리 표식, 투사체·참격 원점은 용병별 렌더 크기로 계산해야 한다.
+- `tool/align_battle_sheets.swift`를 다시 실행해 같은 입력에서 동일한 시트가 생성되는지 확인한다.
+- 1024×461 전투에서 8명 각각의 발이 선택 링에 닿고 이동·공격 전환 시 순간 이동하지 않는지 확인한다.
+- 2026-08-11 검증: `flutter analyze` 이슈 0건, 전체 91개 테스트와 Golden 3개, Pages base href Web release, Android debug APK 빌드 통과.
+
 ## 용병 전신 원화 회귀
 
 - 8명 원화가 모두 정확한 3:4 PNG이며 가로 1050px 이상의 해상도를 유지하는지 검사한다.
@@ -11,7 +21,7 @@
 ## 용병별 고유 전투 스프라이트 회귀
 
 - `repository_test.dart`가 8명 전원의 `battleSpriteAsset` 경로가 서로 다른지 검사한다.
-- `release_configuration_test.dart`가 8개 PNG의 파일 존재, 1584×990 크기와 RGBA 색상 형식을 헤더에서 검사한다.
+- `release_configuration_test.dart`가 8개 PNG의 파일 존재, 1792×1120 크기와 RGBA 색상 형식을 헤더에서 검사한다.
 - 생성 원본과 최종 시트를 직접 비교해 종족 특징·대표 의상·고유 무기가 5개 상태 행에서 유지되는지 확인한다.
 - 2026-08-10 검증: `flutter analyze` 이슈 0건, `flutter test` 90개 통과, Web release와 Android debug APK 빌드 성공.
 
@@ -67,7 +77,7 @@ macOS의 파일 동기화 경로에서 iOS framework에 Finder 확장 속성이 
 ## B3 용병·무기 콘텐츠 회귀
 
 - 통합 카탈로그에 용병 8명, 무기 16개와 중복 없는 ID·유효한 고유무기 소유자 참조가 존재하는지 확인한다.
-- 8명의 `battleSpriteAsset` 경로가 모두 다르고 각 파일이 PNG `1584×990 RGBA`, 8×5·셀 198×198 계약을 만족하는지 확인한다.
+- 8명의 `battleSpriteAsset` 경로가 모두 다르고 각 파일이 PNG `1792×1120 RGBA`, 8×5·셀 224×224 계약을 만족하는지 확인한다.
 - 니라 장궁, 아우렐 방패·검, 베스타 마도서, 라스크 장창, 아이리스 마검이 Idle/Walk/Attack/Hit/Dead 전 행에서 캐릭터 특징과 함께 유지되는지 확인한다.
 - 16개 `WeaponPattern`이 각각 한 무기에 배정되고 500유닛 전투에서 고정 projectile/effect pool을 넘지 않는지 확인한다.
 - 신규 5명의 명부·상세·출전·모집 초상이 동일한 에셋과 대표색을 사용하고 844×390에서 카드가 잘리지 않는지 확인한다.
@@ -94,7 +104,7 @@ macOS의 파일 동기화 경로에서 iOS framework에 Finder 확장 속성이 
 
 ## B6 출시 후보 자동 검증
 
-- `0.9.0+9`, `com.roycekim.eclipsemercenaries`, 양쪽 가로 방향, 딥링크와 표시명을 정적으로 확인한다.
+- `0.9.2+11`, `com.roycekim.eclipsemercenaries`, 양쪽 가로 방향, 딥링크와 표시명을 정적으로 확인한다.
 - 앱 아이콘 전 규격, Android adaptive icon, 다크 스플래시와 2208×1242 스크린샷 3종의 존재·크기를 확인한다.
 - `flutter build apk --release`와 `flutter build ios --release --no-codesign`으로 서명 경계 이전의 네이티브 컴파일을 확인한다.
 - `dart run tool/long_run_memory_benchmark.dart`와 고정 spatial-grid 테스트로 장시간 반복·고정 풀 예산을 확인한다.

@@ -1,6 +1,6 @@
 part of '../../app/game_app.dart';
 
-class RosterScreen extends StatelessWidget {
+class RosterScreen extends StatefulWidget {
   const RosterScreen({
     super.key,
     required this.onBack,
@@ -12,6 +12,22 @@ class RosterScreen extends StatelessWidget {
   final Map<String, MercenaryProgress> mercenaryProgress;
 
   @override
+  State<RosterScreen> createState() => _RosterScreenState();
+}
+
+class _RosterScreenState extends State<RosterScreen> {
+  String? raceFilter;
+  String? jobFilter;
+
+  List<MercenarySpec> get visible => gameContent.mercenaries
+      .where(
+        (mercenary) =>
+            (raceFilter == null || mercenary.race == raceFilter) &&
+            (jobFilter == null || mercenary.job == jobFilter),
+      )
+      .toList(growable: false);
+
+  @override
   Widget build(BuildContext context) => DarkBackdrop(
     child: SafeArea(
       child: Column(
@@ -19,26 +35,62 @@ class RosterScreen extends StatelessWidget {
           TitleBar(
             title: '용병 명부',
             subtitle:
-                '보유 용병  ${mercenaryProgress.length} / ${gameContent.mercenaries.length}',
-            onBack: onBack,
+                '보유 용병  ${widget.mercenaryProgress.length} / ${gameContent.mercenaries.length}',
+            onBack: widget.onBack,
           ),
-          const Padding(
-            padding: EdgeInsets.all(12),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
             child: Row(
               children: [
-                ChipLabel('전체'),
-                SizedBox(width: 6),
-                ChipLabel('종족'),
-                SizedBox(width: 6),
-                ChipLabel('직업'),
-                Spacer(),
-                Icon(Icons.tune, color: Color(0xffd8bd7b)),
+                _RosterFilterButton(
+                  label: '전체',
+                  selected: raceFilter == null && jobFilter == null,
+                  onTap: () => setState(() {
+                    raceFilter = null;
+                    jobFilter = null;
+                  }),
+                ),
+                const SizedBox(width: 6),
+                PopupMenuButton<String>(
+                  onSelected: (value) => setState(() => raceFilter = value),
+                  itemBuilder: (_) => gameContent.mercenaries
+                      .map((mercenary) => mercenary.race)
+                      .toSet()
+                      .map(
+                        (race) => PopupMenuItem(value: race, child: Text(race)),
+                      )
+                      .toList(),
+                  child: _RosterFilterButton(
+                    label: raceFilter ?? '종족',
+                    selected: raceFilter != null,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                PopupMenuButton<String>(
+                  onSelected: (value) => setState(() => jobFilter = value),
+                  itemBuilder: (_) => gameContent.mercenaries
+                      .map((mercenary) => mercenary.job)
+                      .toSet()
+                      .map((job) => PopupMenuItem(value: job, child: Text(job)))
+                      .toList(),
+                  child: _RosterFilterButton(
+                    label: jobFilter ?? '직업',
+                    selected: jobFilter != null,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${visible.length}명 표시',
+                  style: const TextStyle(fontSize: 9, color: Color(0xffd8bd7b)),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.tune, color: Color(0xffd8bd7b)),
               ],
             ),
           ),
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
               gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 210,
                 childAspectRatio: MediaQuery.sizeOf(context).height < 500
@@ -47,19 +99,46 @@ class RosterScreen extends StatelessWidget {
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),
-              itemCount: gameContent.mercenaries.length,
+              itemCount: visible.length,
               itemBuilder: (_, index) {
-                final mercenary = gameContent.mercenaries[index];
+                final mercenary = visible[index];
                 return _RosterCard(
                   mercenary: mercenary,
-                  progress: mercenaryProgress[mercenary.id]!,
-                  onTap: () => onSelect(mercenary),
+                  progress: widget.mercenaryProgress[mercenary.id]!,
+                  onTap: () => widget.onSelect(mercenary),
                 );
               },
             ),
           ),
         ],
       ),
+    ),
+  );
+}
+
+class _RosterFilterButton extends StatelessWidget {
+  const _RosterFilterButton({
+    required this.label,
+    required this.selected,
+    this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xff3d3020) : const Color(0xff171a20),
+        border: Border.all(
+          color: selected ? const Color(0xffd1ad64) : const Color(0xff57492f),
+        ),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 10)),
     ),
   );
 }
@@ -80,10 +159,14 @@ class _RosterCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            mercenary.visual.portraitAsset,
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
+          Transform.scale(
+            scale: mercenary.visual.portraitScale,
+            alignment: mercenary.visual.portraitAlignment,
+            child: Image.asset(
+              mercenary.visual.portraitAsset,
+              fit: BoxFit.contain,
+              alignment: mercenary.visual.portraitAlignment,
+            ),
           ),
           const DecoratedBox(
             decoration: BoxDecoration(
@@ -107,7 +190,9 @@ class _RosterCard extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'Lv.${progress.level} / ${progress.levelCap}  ·  ${mercenary.race}',
+                  'Lv.${progress.level} / ${progress.levelCap} · ${mercenary.race} · ${mercenary.job}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 10, color: Colors.white60),
                 ),
                 const Text(

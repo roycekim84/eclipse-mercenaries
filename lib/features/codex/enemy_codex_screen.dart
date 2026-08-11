@@ -208,7 +208,7 @@ class EnemyCodexCard extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 68,
+            width: 64,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -216,12 +216,12 @@ class EnemyCodexCard extends StatelessWidget {
                   asset: enemyArtAsset(enemy),
                   fallbackIcon: enemy.visual.icon,
                   fallbackColor: enemy.visual.color,
-                  size: 62,
+                  size: 58,
                 ),
                 if (enemy.rank != EnemyRank.common)
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -261,10 +261,11 @@ class EnemyCodexCard extends StatelessWidget {
                 children: [
                   Text(
                     enemy.name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
+                      height: 1.05,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -279,6 +280,26 @@ class EnemyCodexCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 8, color: Colors.white54),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        enemy.abilityIcon,
+                        size: 9,
+                        color: enemy.visual.color,
+                      ),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          unitRoleName(enemy.role),
+                          style: const TextStyle(
+                            fontSize: 7,
+                            color: Colors.white38,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

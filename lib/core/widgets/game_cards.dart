@@ -45,16 +45,16 @@ class ContractMarker extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: AnimatedScale(
-      scale: selected ? 1.08 : 1,
+      scale: selected ? 1.04 : 1,
       duration: const Duration(milliseconds: 180),
       child: SizedBox(
-        width: 152,
+        width: 136,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: contract.color,
                 shape: BoxShape.circle,
@@ -68,11 +68,11 @@ class ContractMarker extends StatelessWidget {
                   BoxShadow(color: Colors.black87, blurRadius: 12),
                 ],
               ),
-              child: Icon(contract.icon, color: Colors.white, size: 23),
+              child: Icon(contract.icon, color: Colors.white, size: 21),
             ),
             const SizedBox(height: 4),
             Container(
-              width: 148,
+              width: 132,
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
               color: const Color(0xdd0a0c11),
               child: Column(

@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.1+10'));
+    expect(pubspec, contains('version: 0.9.2+11'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));
@@ -103,10 +103,11 @@ void main() {
       expect(file.existsSync(), isTrue, reason: id);
       final bytes = file.readAsBytesSync();
       final header = ByteData.sublistView(bytes);
-      expect(header.getUint32(16), 1584, reason: '$id width');
-      expect(header.getUint32(20), 990, reason: '$id height');
+      expect(header.getUint32(16), 1792, reason: '$id width');
+      expect(header.getUint32(20), 1120, reason: '$id height');
       expect(bytes[25], 6, reason: '$id must be RGBA PNG');
     }
+    expect(File('tool/align_battle_sheets.swift').existsSync(), isTrue);
   });
 
   test('all mercenary portraits use a consistent full-body 3 by 4 canvas', () {

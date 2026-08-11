@@ -215,7 +215,7 @@ class _CampLifeLayerState extends State<_CampLifeLayer>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 900),
+    duration: const Duration(milliseconds: 1800),
   )..forward();
 
   @override
@@ -232,15 +232,17 @@ class _CampLifeLayerState extends State<_CampLifeLayer>
       return Stack(
         children: [
           _CampActor(
-            asset: 'assets/images/luna_belhardt.png',
+            asset: 'characters/luna_battle_sheet.png',
             label: '루나 · 야간 경계',
+            frame: (drift * 7.999).floor(),
             left: 12 + drift * 16,
             bottom: 4,
             height: widget.compact ? 82 : 116,
           ),
           _CampActor(
-            asset: 'assets/images/kael_rozenfang.png',
+            asset: 'characters/kael_battle_sheet.png',
             label: '카일 · 장비 점검',
+            frame: (drift * 7.999).floor(),
             right: 18 + (1 - drift) * 14,
             bottom: 0,
             height: widget.compact ? 84 : 120,
@@ -264,6 +266,7 @@ class _CampActor extends StatelessWidget {
   const _CampActor({
     required this.asset,
     required this.label,
+    required this.frame,
     required this.bottom,
     required this.height,
     this.left,
@@ -272,6 +275,7 @@ class _CampActor extends StatelessWidget {
 
   final String asset;
   final String label;
+  final int frame;
   final double bottom;
   final double height;
   final double? left;
@@ -295,21 +299,23 @@ class _CampActor extends StatelessWidget {
         ),
         SizedBox(
           height: height,
-          width: height * .66,
-          child: ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.white, Colors.white, Colors.transparent],
-              stops: [0, .72, 1],
-            ).createShader(bounds),
-            blendMode: BlendMode.dstIn,
-            child: Opacity(
-              opacity: .82,
-              child: Image.asset(
-                asset,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
+          width: height,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.topLeft,
+              maxWidth: height * 8,
+              maxHeight: height * 5,
+              child: Transform.translate(
+                offset: Offset(-frame * height, 0),
+                child: SizedBox(
+                  width: height * 8,
+                  height: height * 5,
+                  child: Image.asset(
+                    'assets/images/$asset',
+                    fit: BoxFit.fill,
+                    filterQuality: FilterQuality.none,
+                  ),
+                ),
               ),
             ),
           ),

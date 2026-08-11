@@ -33,6 +33,34 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   ShopCategory category = ShopCategory.general;
+  late DateTime _clock = DateTime.now();
+  Timer? _clockTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _clock = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
+
+  String get _rotationCountdown {
+    final nextBlockHour = ((_clock.hour ~/ 6) + 1) * 6;
+    final next = nextBlockHour >= 24
+        ? DateTime(_clock.year, _clock.month, _clock.day + 1)
+        : DateTime(_clock.year, _clock.month, _clock.day, nextBlockHour);
+    final remaining = next.difference(_clock);
+    final hours = remaining.inHours.toString().padLeft(2, '0');
+    final minutes = (remaining.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +77,7 @@ class _ShopScreenState extends State<ShopScreen> {
               onBack: widget.onBack,
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+              padding: const EdgeInsets.fromLTRB(14, 6, 14, 5),
               child: Row(
                 children: [
                   _ShopBalance(
@@ -91,10 +119,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       (value) => Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 7),
-                          child: FantasyButton(
+                          child: _ShopCategoryTab(
                             label: _categoryName(value),
                             icon: _categoryIcon(value),
-                            prominent: category == value,
+                            selected: category == value,
                             onTap: () => setState(() => category = value),
                           ),
                         ),
@@ -120,22 +148,26 @@ class _ShopScreenState extends State<ShopScreen> {
               ),
             Container(
               width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              margin: const EdgeInsets.fromLTRB(14, 5, 14, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0x66211910),
                 border: Border.all(color: const Color(0x996f5936)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.schedule, size: 14, color: Color(0xffd8bd7b)),
-                  SizedBox(width: 7),
-                  Text(
-                    '보급 교대까지 13:22:45',
-                    style: TextStyle(fontSize: 9, color: Colors.white60),
+                  const Icon(
+                    Icons.schedule,
+                    size: 13,
+                    color: Color(0xffd8bd7b),
                   ),
-                  Spacer(),
+                  const SizedBox(width: 7),
                   Text(
+                    '보급 교대까지 $_rotationCountdown',
+                    style: const TextStyle(fontSize: 9, color: Colors.white60),
+                  ),
+                  const Spacer(),
+                  const Text(
                     '오늘의 추천 · 계약/강화 재료 입고',
                     style: TextStyle(fontSize: 9, color: Color(0xffffd27c)),
                   ),
@@ -161,7 +193,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 360,
                         mainAxisExtent: MediaQuery.sizeOf(context).height < 500
-                            ? 154
+                            ? 140
                             : 190,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
@@ -261,7 +293,7 @@ class _ShopBalance extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(right: 7),
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
     decoration: BoxDecoration(
       color: const Color(0xcc11141a),
       border: Border.all(color: const Color(0xff584b35)),
@@ -272,6 +304,49 @@ class _ShopBalance extends StatelessWidget {
         const SizedBox(width: 5),
         Text('$label $value', style: const TextStyle(fontSize: 10)),
       ],
+    ),
+  );
+}
+
+class _ShopCategoryTab extends StatelessWidget {
+  const _ShopCategoryTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      height: 40,
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xff233f60) : const Color(0xff211a15),
+        border: Border.all(
+          color: selected ? const Color(0xff8bb0d2) : const Color(0xff725a35),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: const Color(0xffd8bd7b)),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -292,17 +367,15 @@ class _ShopProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GoldPanel(
     child: Padding(
-      padding: EdgeInsets.all(
-        MediaQuery.sizeOf(context).height < 500 ? 10 : 13,
-      ),
+      padding: EdgeInsets.all(MediaQuery.sizeOf(context).height < 500 ? 8 : 13),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
                   color: const Color(0xff24202a),
                   border: Border.all(color: const Color(0xff80634a)),

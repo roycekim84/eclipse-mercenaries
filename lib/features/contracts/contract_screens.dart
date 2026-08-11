@@ -1,5 +1,8 @@
 part of '../../app/game_app.dart';
 
+const _contractXFactors = [.12, .30, .48, .66, .84, .75];
+const _contractYFactors = [.18, .49, .16, .48, .18, .67];
+
 class ContractScreen extends StatelessWidget {
   const ContractScreen({
     super.key,
@@ -62,20 +65,28 @@ class ContractScreen extends StatelessWidget {
                         top: 10,
                         child: _WarMapLegend(),
                       ),
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _ContractRoutePainter(
+                              selectedIndex: contracts.indexOf(selected),
+                            ),
+                          ),
+                        ),
+                      ),
                       ...List.generate(contracts.length, (index) {
                         final item = contracts[index];
-                        const xFactors = [.12, .30, .48, .66, .84, .75];
-                        const yFactors = [.18, .49, .16, .48, .18, .67];
                         final nodeAreaHeight = (constraints.maxHeight - 112)
                             .clamp(180.0, constraints.maxHeight)
                             .toDouble();
-                        final x = constraints.maxWidth * xFactors[index];
-                        final y = nodeAreaHeight * yFactors[index];
+                        final x =
+                            constraints.maxWidth * _contractXFactors[index];
+                        final y = nodeAreaHeight * _contractYFactors[index];
                         final safeTop = (y - 48)
                             .clamp(18.0, nodeAreaHeight - 100)
                             .toDouble();
                         return Positioned(
-                          left: x - 76,
+                          left: x - 68,
                           top: safeTop,
                           child: ContractMarker(
                             contract: item,
@@ -130,6 +141,64 @@ class ContractScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ContractRoutePainter extends CustomPainter {
+  const _ContractRoutePainter({required this.selectedIndex});
+
+  final int selectedIndex;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final nodeAreaHeight = (size.height - 112).clamp(180.0, size.height);
+    final points = List.generate(_contractXFactors.length, (index) {
+      final y = nodeAreaHeight * _contractYFactors[index];
+      final safeTop = (y - 48).clamp(18.0, nodeAreaHeight - 100);
+      return Offset(size.width * _contractXFactors[index], safeTop + 22);
+    });
+    final route = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var index = 1; index < points.length; index++) {
+      final previous = points[index - 1];
+      final current = points[index];
+      final controlX = (previous.dx + current.dx) / 2;
+      route.cubicTo(
+        controlX,
+        previous.dy,
+        controlX,
+        current.dy,
+        current.dx,
+        current.dy,
+      );
+    }
+    canvas.drawPath(
+      route,
+      Paint()
+        ..color = const Color(0x885d5036)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5,
+    );
+    canvas.drawPath(
+      route,
+      Paint()
+        ..color = const Color(0xffb69a5c)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4,
+    );
+    for (var index = 0; index < points.length; index++) {
+      canvas.drawCircle(
+        points[index],
+        index == selectedIndex ? 8 : 5,
+        Paint()
+          ..color = index == selectedIndex
+              ? const Color(0xffffd36e)
+              : const Color(0xff6f603e),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ContractRoutePainter oldDelegate) =>
+      oldDelegate.selectedIndex != selectedIndex;
 }
 
 class _WarMapLegend extends StatelessWidget {

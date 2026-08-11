@@ -203,7 +203,7 @@ extension BattlefieldEventSystem on SurvivorGame {
         stance: role == UnitRole.commander
             ? UnitStance.support
             : UnitStance.advance,
-        squadId: 900 + _triggeredEventIds.length * 10 + i ~/ 8,
+        squadId: 900 + _triggeredEventIds.length * 40 + i,
         archetype: archetype,
       );
       _units.add(unit);

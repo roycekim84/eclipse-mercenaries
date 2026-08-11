@@ -77,7 +77,7 @@ extension WeaponSystem on SurvivorGame {
         }
       case WeaponPattern.chainFlame:
         _launchProjectile(
-          origin: _player,
+          origin: _playerCombatOrigin,
           target: target,
           pattern: activeWeapon.pattern,
           damage: baseDamage,
@@ -94,7 +94,7 @@ extension WeaponSystem on SurvivorGame {
         );
       case WeaponPattern.longBow:
         _launchProjectile(
-          origin: _player,
+          origin: _playerCombatOrigin,
           target: target,
           pattern: activeWeapon.pattern,
           damage: baseDamage + 1,
@@ -103,7 +103,7 @@ extension WeaponSystem on SurvivorGame {
         );
       case WeaponPattern.emberBurst:
         _launchProjectile(
-          origin: _player,
+          origin: _playerCombatOrigin,
           target: target,
           pattern: activeWeapon.pattern,
           damage: baseDamage,
@@ -132,7 +132,7 @@ extension WeaponSystem on SurvivorGame {
           statusChance: .28 + statusBonus,
         );
         _launchProjectile(
-          origin: _player,
+          origin: _playerCombatOrigin,
           target: target,
           pattern: activeWeapon.pattern,
           damage: 0,
@@ -143,7 +143,7 @@ extension WeaponSystem on SurvivorGame {
       case WeaponPattern.rapidVolley:
         for (var i = 0; i < 3; i++) {
           _launchProjectile(
-            origin: _player,
+            origin: _playerCombatOrigin,
             target: target,
             pattern: activeWeapon.pattern,
             damage: math.max(1, (baseDamage * .58).round()),
@@ -161,7 +161,7 @@ extension WeaponSystem on SurvivorGame {
             showFx: identical(unit, target),
           );
         }
-        _emitSlash(_player, .42, CombatStyle.greatsword);
+        _emitSlash(_playerCombatOrigin, .42, CombatStyle.greatsword);
       case WeaponPattern.runeMine:
         for (final unit in _enemiesNear(target.position, 92).take(10)) {
           _damageEnemy(
@@ -176,7 +176,7 @@ extension WeaponSystem on SurvivorGame {
         }
       case WeaponPattern.featherChain:
         _launchProjectile(
-          origin: _player,
+          origin: _playerCombatOrigin,
           target: target,
           pattern: activeWeapon.pattern,
           damage: baseDamage,
@@ -219,7 +219,7 @@ extension WeaponSystem on SurvivorGame {
         }
       case WeaponPattern.spiritFamiliar:
         _launchProjectile(
-          origin: _player,
+          origin: _playerCombatOrigin,
           target: target,
           pattern: activeWeapon.pattern,
           damage: baseDamage + 1,

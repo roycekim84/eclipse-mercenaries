@@ -9,7 +9,7 @@ class PlayerSpriteComponent
   PlayerSpriteComponent._({required super.animations, required super.size})
     : super(
         current: PlayerAnimationState.idle,
-        anchor: Anchor.center,
+        anchor: const Anchor(.5, 208 / 224),
         autoResize: false,
         priority: 20,
         paint: Paint()..filterQuality = FilterQuality.none,
@@ -17,12 +17,15 @@ class PlayerSpriteComponent
 
   static const columns = 8;
   static const rows = 5;
-  static final _displaySize = Vector2.all(86);
+  static const groundAnchorY = 208 / 224;
 
   double _lockedFor = 0;
   bool _moving = false;
 
-  static PlayerSpriteComponent fromImage(Image image) {
+  static PlayerSpriteComponent fromImage(
+    Image image, {
+    required double displaySize,
+  }) {
     final frameSize = Vector2(image.width / columns, image.height / rows);
     SpriteAnimation animation(
       PlayerAnimationState state, {
@@ -42,7 +45,7 @@ class PlayerSpriteComponent
     }
 
     return PlayerSpriteComponent._(
-      size: _displaySize,
+      size: Vector2.all(displaySize),
       animations: {
         PlayerAnimationState.idle: animation(
           PlayerAnimationState.idle,
@@ -70,6 +73,10 @@ class PlayerSpriteComponent
       },
     );
   }
+
+  double get markerTopOffset => size.y * groundAnchorY + 7;
+
+  Vector2 get combatOrigin => Vector2(0, -size.y * .38);
 
   void setMoving(bool moving) {
     _moving = moving;
