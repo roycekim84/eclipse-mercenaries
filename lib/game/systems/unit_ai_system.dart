@@ -34,7 +34,7 @@ extension UnitAiSystem on SurvivorGame {
     }
 
     final attackRange = UnitRoleRules.attackRange(unit.role);
-    final searchRange = math.max(150.0, attackRange + 55);
+    final searchRange = math.max(285.0, attackRange + 120);
     final opponent = _nearestOpponent(unit, searchRange);
     if (opponent == null) {
       if (!unit.ally && unit.playerAggro) {
@@ -156,8 +156,8 @@ extension UnitAiSystem on SurvivorGame {
       final anchor = Vector2(
         config.battlefield == BattlefieldType.evacuation
             ? (unit.ally ? size.x * .42 : size.x * .7)
-            : (unit.ally ? _defenseLineX - 34 : _defenseLineX + 158),
-        size.y / 2,
+            : (unit.ally ? size.x * .37 : size.x * .63),
+        _safeCombatY(size.y / 2),
       );
       _moveToward(unit, anchor, dt, stopDistance: 18);
       return;
@@ -165,11 +165,16 @@ extension UnitAiSystem on SurvivorGame {
     if (commander != null && !commander.dead) {
       final squad = unit.squadId % 5;
       final slot = (unit.squadId ~/ 5) % 7;
-      final laneOffset = (squad - 2) * 68 + (slot.isOdd ? 12 : -12);
-      final depth = (34 + slot * 17).toDouble();
-      final target =
-          commander.position +
-          Vector2(unit.ally ? depth : -depth, laneOffset.toDouble());
+      final laneY =
+          _combatTop +
+          (_combatBottom - _combatTop) * ((squad + 1) / 6) +
+          (slot.isOdd ? 10 : -10);
+      final frontX = size.x * .50;
+      final depth = (42 + (slot % 3) * 20).toDouble();
+      final target = Vector2(
+        frontX + (unit.ally ? -depth : depth),
+        _safeCombatY(laneY),
+      );
       unit.stance = unit.position.distanceTo(target) > 95
           ? UnitStance.support
           : UnitStance.advance;
@@ -179,8 +184,8 @@ extension UnitAiSystem on SurvivorGame {
     final fallback = Vector2(
       config.battlefield == BattlefieldType.evacuation
           ? (unit.ally ? size.x * .48 : size.x * .68)
-          : (unit.ally ? _defenseLineX - 10 : _defenseLineX + 90),
-      unit.position.y,
+          : (unit.ally ? size.x * .44 : size.x * .56),
+      _safeCombatY(unit.position.y),
     );
     _moveToward(unit, fallback, dt, stopDistance: 24);
   }

@@ -121,6 +121,7 @@ class SurvivorGame extends FlameGame {
   final _visibleUnitDetails = <bool>[];
   final _unitTransforms = <RSTransform>[];
   final _unitSources = <Rect>[];
+  final _unitColors = <Color>[];
   final _unitBatchPaint = Paint()..filterQuality = FilterQuality.none;
   final _unitShadowPaint = Paint()..color = const Color(0x66000000);
   Vector2? _moveTarget;
@@ -214,6 +215,9 @@ class SurvivorGame extends FlameGame {
       performanceMode.value ? _performanceRenderPolicy : _standardRenderPolicy;
   bool get _reducedVisualLoad => reducedEffects.value || performanceMode.value;
   Vector2 get _playerCombatOrigin => _player + _playerSprite.combatOrigin;
+  double get _combatTop => math.min(104, size.y * .23);
+  double get _combatBottom => math.max(_combatTop + 120, size.y - 84);
+  double _safeCombatY(double y) => y.clamp(_combatTop, _combatBottom);
 
   @override
   Color backgroundColor() => const Color(0xff35362d);
@@ -240,6 +244,13 @@ class SurvivorGame extends FlameGame {
     _playerSprite = PlayerSpriteComponent.fromImage(
       playerImage,
       displaySize: mercenary.visual.battleDisplaySize,
+      columns: mercenary.visual.battleColumns,
+      frameIndices: mercenary.visual.battleFrameIndices,
+      groundAnchorY: mercenary.visual.battleGroundAnchorY,
+      combatOriginFactor: Vector2(
+        mercenary.visual.battleCombatOrigin.dx,
+        mercenary.visual.battleCombatOrigin.dy,
+      ),
     )..position = _player.clone();
     await add(_playerSprite);
     _speed =
@@ -311,7 +322,7 @@ class SurvivorGame extends FlameGame {
     _player.add(direction * distance);
     _player
       ..x = _player.x.clamp(24, size.x - 24)
-      ..y = _player.y.clamp(24, size.y - 24);
+      ..y = _safeCombatY(_player.y);
     _playerSprite.position = _player;
     _emitSlash(_player, .32, mercenary.style);
     _dashCooldown =
@@ -455,7 +466,7 @@ class SurvivorGame extends FlameGame {
       _player += _moveDirection! * _speed * worldDt;
       _player
         ..x = _player.x.clamp(24, size.x - 24)
-        ..y = _player.y.clamp(24, size.y - 24);
+        ..y = _safeCombatY(_player.y);
       isMoving = true;
     } else if (_moveTarget != null) {
       final delta = _moveTarget! - _player;
@@ -612,7 +623,7 @@ class SurvivorGame extends FlameGame {
     unit.position.add(push.normalized() * 34 * dt);
     unit.position
       ..x = unit.position.x.clamp(12, size.x - 12)
-      ..y = unit.position.y.clamp(12, size.y - 12);
+      ..y = _safeCombatY(unit.position.y);
   }
 
   BattleUnit? _nearestOpponent(BattleUnit source, double range) {
@@ -620,8 +631,9 @@ class SurvivorGame extends FlameGame {
     var best = range;
     final cx = _spatialGrid.cellX(source.position.x);
     final cy = _spatialGrid.cellY(source.position.y);
-    for (var gx = cx - 2; gx <= cx + 2; gx++) {
-      for (var gy = cy - 2; gy <= cy + 2; gy++) {
+    final radius = math.max(1, (range / _spatialGrid.cellSize).ceil());
+    for (var gx = cx - radius; gx <= cx + radius; gx++) {
+      for (var gy = cy - radius; gy <= cy + radius; gy++) {
         for (final index in _spatialGrid.bucketAt(gx, gy)) {
           final candidate = _units[index];
           if (candidate.dead || candidate.ally == source.ally) continue;
@@ -786,6 +798,7 @@ class SurvivorGame extends FlameGame {
     _visibleUnitDetails.clear();
     _unitTransforms.clear();
     _unitSources.clear();
+    _unitColors.clear();
     var detailedEffects = 0;
     for (final unit in _units) {
       if (unit.dead) continue;
@@ -817,6 +830,12 @@ class SurvivorGame extends FlameGame {
         EnemyRank.boss => 1.34,
         _ => 1.0,
       };
+      final formationVariant = unit.squadId.abs() % 3;
+      final silhouetteScale = switch (formationVariant) {
+        0 => .48,
+        1 => .50,
+        _ => .52,
+      };
       if (policy.showsShadow(detailed: detailed, important: important)) {
         canvas.drawOval(
           Rect.fromCenter(
@@ -829,13 +848,22 @@ class SurvivorGame extends FlameGame {
       }
       final source = _unitBatchSource(unit);
       _unitSources.add(source);
+      _unitColors.add(switch (formationVariant) {
+        0 => const Color(0xffffffff),
+        1 => const Color(0xffeee7db),
+        _ => const Color(0xffdce8ef),
+      });
       _unitTransforms.add(
         RSTransform.fromComponents(
-          scale: .5 * rankScale,
+          scale: silhouetteScale * rankScale,
           anchorX: source.width / 2,
           anchorY: source.height / 2,
-          rotation: 0,
-          translateX: unit.position.x,
+          rotation: formationVariant == 0
+              ? -.012
+              : formationVariant == 2
+              ? .012
+              : 0,
+          translateX: unit.position.x + (formationVariant - 1) * 1.5,
           translateY: unit.position.y - 14 + bob,
         ),
       );
@@ -845,8 +873,8 @@ class SurvivorGame extends FlameGame {
         _unitAtlas,
         _unitTransforms,
         _unitSources,
-        null,
-        BlendMode.srcOver,
+        _unitColors,
+        BlendMode.modulate,
         null,
         _unitBatchPaint,
       );
@@ -854,7 +882,9 @@ class SurvivorGame extends FlameGame {
     for (var index = 0; index < _visibleUnits.length; index++) {
       final unit = _visibleUnits[index];
       if (!_visibleUnitDetails[index]) continue;
-      if (unit.status != StatusEffectType.none) {
+      final important = _isImportantRenderUnit(unit);
+      if (unit.status != StatusEffectType.none &&
+          (important || unit.squadId % 6 == 0)) {
         final statusColor = switch (unit.status) {
           StatusEffectType.bleed => const Color(0xffd94f58),
           StatusEffectType.burn => const Color(0xffff8a43),

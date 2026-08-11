@@ -7,17 +7,22 @@ enum PlayerAnimationState { idle, walk, attack, hit, dead }
 
 class PlayerSpriteComponent
     extends SpriteAnimationGroupComponent<PlayerAnimationState> {
-  PlayerSpriteComponent._({required super.animations, required super.size})
-    : super(
-        current: PlayerAnimationState.idle,
-        anchor: const Anchor(.5, 208 / 224),
-        autoResize: false,
-        priority: 20,
-        paint: Paint()..filterQuality = FilterQuality.none,
-      );
+  PlayerSpriteComponent._({
+    required super.animations,
+    required super.size,
+    required this.groundAnchorY,
+    required this.combatOriginFactor,
+  }) : super(
+         current: PlayerAnimationState.idle,
+         anchor: Anchor(.5, groundAnchorY),
+         autoResize: false,
+         priority: 20,
+         paint: Paint()..filterQuality = FilterQuality.none,
+       );
 
   static const rows = 5;
-  static const groundAnchorY = 208 / 224;
+  final double groundAnchorY;
+  final Vector2 combatOriginFactor;
 
   double _lockedFor = 0;
   bool _moving = false;
@@ -26,9 +31,11 @@ class PlayerSpriteComponent
   static PlayerSpriteComponent fromImage(
     Image image, {
     required double displaySize,
+    required int columns,
+    required List<List<int>> frameIndices,
+    required double groundAnchorY,
+    required Vector2 combatOriginFactor,
   }) {
-    final frameEdge = image.height / rows;
-    final columns = (image.width / frameEdge).round();
     final frameSize = Vector2(image.width / columns, image.height / rows);
     SpriteAnimation animation(
       PlayerAnimationState state, {
@@ -36,20 +43,30 @@ class PlayerSpriteComponent
       bool loop = true,
       int? amount,
     }) {
-      return SpriteAnimation.fromFrameData(
-        image,
-        SpriteAnimationData.sequenced(
-          amount: amount ?? columns,
-          stepTime: stepTime,
-          textureSize: frameSize,
-          texturePosition: Vector2(0, state.index * frameSize.y),
-          loop: loop,
-        ),
+      final indices = frameIndices[state.index];
+      final selected = amount == null ? indices : indices.take(amount).toList();
+      return SpriteAnimation.spriteList(
+        selected
+            .map(
+              (column) => Sprite(
+                image,
+                srcPosition: Vector2(
+                  column * frameSize.x,
+                  state.index * frameSize.y,
+                ),
+                srcSize: frameSize,
+              ),
+            )
+            .toList(growable: false),
+        stepTime: stepTime,
+        loop: loop,
       );
     }
 
     return PlayerSpriteComponent._(
-      size: Vector2.all(displaySize),
+      size: Vector2(displaySize * frameSize.x / frameSize.y, displaySize),
+      groundAnchorY: groundAnchorY,
+      combatOriginFactor: combatOriginFactor,
       animations: {
         PlayerAnimationState.idle: animation(
           PlayerAnimationState.idle,
@@ -66,7 +83,10 @@ class PlayerSpriteComponent
           // Generated sheets reserve the final two cells for lingering debris
           // or extreme follow-through poses. Returning before those frames
           // prevents a living mercenary from reading as a fallen sprite.
-          amount: 6,
+          amount: math.min(
+            6,
+            frameIndices[PlayerAnimationState.attack.index].length,
+          ),
         ),
         PlayerAnimationState.hit: animation(
           PlayerAnimationState.hit,
@@ -84,7 +104,8 @@ class PlayerSpriteComponent
 
   double get markerTopOffset => size.y * groundAnchorY + 7;
 
-  Vector2 get combatOrigin => Vector2(0, -size.y * .38);
+  Vector2 get combatOrigin =>
+      Vector2(size.x * combatOriginFactor.x, size.y * combatOriginFactor.y);
 
   void setMoving(bool moving) {
     _moving = moving;
@@ -122,7 +143,7 @@ class PlayerSpriteComponent
     if (current != PlayerAnimationState.dead) {
       final cadence = _moving ? 12.0 : 4.2;
       final pulse = math.sin(_visualClock * cadence);
-      final actionScale = current == PlayerAnimationState.attack ? 1.13 : 1.0;
+      final actionScale = current == PlayerAnimationState.attack ? 1.035 : 1.0;
       scale = Vector2(
         actionScale * (1 - pulse.abs() * (_moving ? .018 : .008)),
         actionScale * (1 + pulse * (_moving ? .032 : .014)),

@@ -352,13 +352,14 @@ class _FantasyCornerPainter extends CustomPainter {
 }
 
 class HudPanel extends StatelessWidget {
-  const HudPanel({super.key, required this.child});
+  const HudPanel({super.key, required this.child, this.backgroundColor});
   final Widget child;
+  final Color? backgroundColor;
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(9),
     decoration: BoxDecoration(
-      color: const Color(0xb8090b10),
+      color: backgroundColor ?? const Color(0xb8090b10),
       border: Border.all(color: const Color(0x9969583b)),
     ),
     child: child,

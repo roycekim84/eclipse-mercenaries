@@ -212,8 +212,11 @@ extension BattlefieldEventSystem on SurvivorGame {
       final maxHp = UnitRoleRules.maxHp(role) + hpBonus;
       final unit = BattleUnit(
         position: Vector2(
-          ally ? 90 + _random.nextDouble() * 120 : size.x - 45,
-          28 + _random.nextDouble() * math.max(80, size.y - 56),
+          ally
+              ? size.x * .16 + _random.nextDouble() * size.x * .12
+              : size.x * .72 + _random.nextDouble() * size.x * .12,
+          _combatTop +
+              _random.nextDouble() * math.max(80, _combatBottom - _combatTop),
         ),
         ally: ally,
         elite: archetype?.rank == EnemyRank.elite,

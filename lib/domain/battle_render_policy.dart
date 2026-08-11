@@ -19,8 +19,8 @@ class BattleRenderPolicy {
       !performanceMode || detailed || important;
 
   bool emitsSlash(int sequence) =>
-      performanceMode ? sequence % 8 == 0 : sequence % 4 == 0;
+      performanceMode ? sequence % 12 == 0 : sequence % 6 == 0;
 
   bool emitsDamageNumber({required int sequence, required bool critical}) =>
-      critical || (performanceMode ? sequence % 4 == 0 : sequence.isEven);
+      critical || (performanceMode ? sequence % 8 == 0 : sequence % 4 == 0);
 }

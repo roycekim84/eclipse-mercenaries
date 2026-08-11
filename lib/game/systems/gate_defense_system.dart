@@ -10,11 +10,19 @@ extension GateDefenseSystem on SurvivorGame {
     );
     var allyIndex = 0;
     var enemyIndex = 0;
+    var initialEnemySiege = 0;
     for (var i = 0; i < initialDeployment; i++) {
       final ally = i % 5 < 2;
       final factionIndex = ally ? allyIndex++ : enemyIndex++;
       final archetype = ally ? null : _enemyForIndex(factionIndex);
-      final role = archetype?.role ?? _roleForFactionIndex(factionIndex);
+      var role = archetype?.role ?? _roleForFactionIndex(factionIndex);
+      if (!ally && role == UnitRole.siege) {
+        if (initialEnemySiege >= 4) {
+          role = UnitRole.infantry;
+        } else {
+          initialEnemySiege++;
+        }
+      }
       final elite = archetype?.rank == EnemyRank.elite;
       final objectiveAggro =
           !ally &&
@@ -29,39 +37,30 @@ extension GateDefenseSystem on SurvivorGame {
           UnitRoleRules.maxHp(role) +
           (archetype?.hpBonus ?? 0) +
           (objectiveAggro ? 4 : 0);
-      final lane = factionIndex % 11;
-      final rank = (factionIndex ~/ 11) % 9;
-      final laneY =
-          34 +
-          lane * math.max(24, (size.y - 68) / 10) +
-          (_random.nextDouble() - .5) * 10;
+      final lane = factionIndex % 5;
+      final rank = (factionIndex ~/ 5) % 8;
+      final usableHeight = _combatBottom - _combatTop;
+      final laneY = _safeCombatY(
+        _combatTop +
+            usableHeight * ((lane + 1) / 6) +
+            (_random.nextDouble() - .5) * 18,
+      );
+      final frontX = size.x * .50;
       final defaultPosition = config.battlefield == BattlefieldType.evacuation
           ? Vector2(
               ally
-                  ? size.x * .18 + rank * 20 + _random.nextDouble() * 12
-                  : size.x * .62 + rank * 24 + _random.nextDouble() * 16,
+                  ? size.x * .24 + rank * 14 + _random.nextDouble() * 10
+                  : size.x * .68 + rank * 14 + _random.nextDouble() * 10,
               laneY,
             )
           : !ally && role == UnitRole.siege
-          ? Vector2(
-              _defenseLineX + 150 + rank * 16 + _random.nextDouble() * 10,
-              laneY,
-            )
+          ? Vector2(frontX + 112 + rank * 12 + _random.nextDouble() * 8, laneY)
           : ally
-          ? Vector2(
-              _defenseLineX - 72 + rank * 14 + _random.nextDouble() * 8,
-              laneY,
-            )
-          : Vector2(
-              _defenseLineX + 135 + rank * 16 + _random.nextDouble() * 10,
-              laneY,
-            );
+          ? Vector2(frontX - 78 - rank * 12 - _random.nextDouble() * 8, laneY)
+          : Vector2(frontX + 78 + rank * 12 + _random.nextDouble() * 8, laneY);
       final unit = BattleUnit(
         position: role == UnitRole.commander
-            ? Vector2(
-                ally ? _defenseLineX - 38 : _defenseLineX + 165,
-                size.y / 2,
-              )
+            ? Vector2(ally ? frontX - 128 : frontX + 128, size.y / 2)
             : defaultPosition,
         ally: ally,
         elite: elite,

@@ -80,7 +80,7 @@ void main() {
           (pattern) =>
               pattern.name.isNotEmpty &&
               pattern.warning.isNotEmpty &&
-              pattern.telegraphSeconds >= 1.2,
+              pattern.telegraphSeconds >= 1.8,
         ),
         isTrue,
         reason: boss.id,
@@ -270,6 +270,17 @@ void main() {
     for (final mercenary in content.mercenaries) {
       expect(mercenary.visual.portraitAsset, startsWith('assets/images/'));
       expect(mercenary.visual.battleSpriteAsset, endsWith('_battle_sheet.png'));
+      expect(mercenary.visual.battleFrameIndices, hasLength(5));
+      for (final stateFrames in mercenary.visual.battleFrameIndices) {
+        expect(stateFrames, isNotEmpty, reason: mercenary.id);
+        expect(
+          stateFrames.every(
+            (frame) => frame >= 0 && frame < mercenary.visual.battleColumns,
+          ),
+          isTrue,
+          reason: '${mercenary.id} frame metadata must stay inside the atlas',
+        );
+      }
     }
     for (final weapon in content.weapons) {
       expect(weapon.visual.icon.codePoint, isPositive);

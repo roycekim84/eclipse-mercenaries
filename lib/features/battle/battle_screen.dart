@@ -371,8 +371,9 @@ class BattleHud extends StatelessWidget {
           left: dense ? 8 : 12,
           top: dense ? 5 : 8,
           child: SizedBox(
-            width: dense ? 205 : 230,
+            width: dense ? 188 : 220,
             child: HudPanel(
+              backgroundColor: const Color(0xa8090b10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -778,10 +779,10 @@ class BattleMiniMap extends StatelessWidget {
       BattlefieldCondition.moonlitNight => '월광 야전 · 야행성',
     };
     return Container(
-      width: dense ? 110 : 140,
-      height: dense ? 64 : 80,
+      width: dense ? 100 : 132,
+      height: dense ? 58 : 76,
       decoration: BoxDecoration(
-        color: const Color(0xcc0b0e13),
+        color: const Color(0xb80b0e13),
         border: Border.all(color: const Color(0xff6b5b3d)),
         boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 8)],
       ),

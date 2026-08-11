@@ -11,7 +11,8 @@ void main() {
     expect(policy.emitsSlash(0), isTrue);
     expect(policy.emitsSlash(1), isFalse);
     expect(policy.emitsSlash(2), isFalse);
-    expect(policy.emitsSlash(4), isTrue);
+    expect(policy.emitsSlash(4), isFalse);
+    expect(policy.emitsSlash(6), isTrue);
     expect(policy.emitsDamageNumber(sequence: 0, critical: false), isTrue);
     expect(policy.emitsDamageNumber(sequence: 1, critical: false), isFalse);
     expect(policy.emitsDamageNumber(sequence: 1, critical: true), isTrue);
@@ -43,7 +44,8 @@ void main() {
     expect(policy.emitsSlash(1), isFalse);
     expect(policy.emitsSlash(2), isFalse);
     expect(policy.emitsSlash(4), isFalse);
-    expect(policy.emitsSlash(8), isTrue);
+    expect(policy.emitsSlash(8), isFalse);
+    expect(policy.emitsSlash(12), isTrue);
     expect(policy.emitsDamageNumber(sequence: 1, critical: false), isFalse);
     expect(policy.emitsDamageNumber(sequence: 1, critical: true), isTrue);
   });

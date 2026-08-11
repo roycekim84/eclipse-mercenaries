@@ -130,9 +130,22 @@ extension BossSystem on SurvivorGame {
         canvas.drawLine(
           Offset(boss.position.x, boss.position.y),
           Offset(target.x, target.y),
+          Paint()
+            ..color = const Color(0xffef493f).withValues(alpha: .16)
+            ..strokeWidth = 58
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.drawLine(
+          Offset(boss.position.x, boss.position.y),
+          Offset(target.x, target.y),
           paint,
         );
       case BossPatternType.bombardment:
+        canvas.drawCircle(
+          Offset(target.x, target.y),
+          70,
+          Paint()..color = const Color(0xffef493f).withValues(alpha: .14),
+        );
         canvas.drawCircle(Offset(target.x, target.y), 70, paint);
         canvas.drawCircle(
           Offset(target.x, target.y),
@@ -140,10 +153,32 @@ extension BossSystem on SurvivorGame {
           paint..strokeWidth = 2,
         );
       case BossPatternType.commandWave:
-        final edgeX = config.battlefield == BattlefieldType.evacuation
-            ? size.x - 42
-            : size.x * .72;
-        canvas.drawRect(Rect.fromLTWH(edgeX - 24, 12, 48, size.y - 24), paint);
+        final edgeX = size.x * .78;
+        final band = Rect.fromLTRB(
+          edgeX - 34,
+          _combatTop,
+          edgeX + 34,
+          _combatBottom,
+        );
+        canvas.drawRect(
+          band,
+          Paint()
+            ..shader = Gradient.linear(
+              band.centerLeft,
+              band.centerRight,
+              const [Color(0x00ef493f), Color(0x66ef493f)],
+            ),
+        );
+        canvas.drawLine(band.topLeft, band.bottomLeft, paint);
+        for (var i = 1; i <= 3; i++) {
+          final y = band.top + band.height * i / 4;
+          final arrow = Path()
+            ..moveTo(edgeX + 18, y - 10)
+            ..lineTo(edgeX - 5, y)
+            ..lineTo(edgeX + 18, y + 10)
+            ..close();
+          canvas.drawPath(arrow, Paint()..color = const Color(0xddef6a5f));
+        }
     }
   }
 }

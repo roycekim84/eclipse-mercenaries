@@ -55,19 +55,19 @@ abstract final class BossPatternCatalog {
       type: BossPatternType.chargeLine,
       name: '파성 돌진',
       warning: '붉은 진로를 벗어나십시오.',
-      telegraphSeconds: 1.45,
+      telegraphSeconds: 1.9,
     ),
     BossPatternSpec(
       type: BossPatternType.bombardment,
       name: '흑철 포격',
       warning: '표적 원에서 이탈하십시오.',
-      telegraphSeconds: 1.7,
+      telegraphSeconds: 2.0,
     ),
     BossPatternSpec(
       type: BossPatternType.commandWave,
       name: '공성 총동원',
       warning: '공성 증원대가 진입합니다.',
-      telegraphSeconds: 1.25,
+      telegraphSeconds: 1.8,
     ),
   ];
 
@@ -76,19 +76,19 @@ abstract final class BossPatternCatalog {
       type: BossPatternType.bombardment,
       name: '사냥 표식',
       warning: '표식이 고정되기 전에 이동하십시오.',
-      telegraphSeconds: 1.55,
+      telegraphSeconds: 1.9,
     ),
     BossPatternSpec(
       type: BossPatternType.chargeLine,
       name: '회색 섬광',
       warning: '돌진 궤도를 피하십시오.',
-      telegraphSeconds: 1.2,
+      telegraphSeconds: 1.8,
     ),
     BossPatternSpec(
       type: BossPatternType.commandWave,
       name: '추격대 호출',
       warning: '호위대 측면에 증원이 도착합니다.',
-      telegraphSeconds: 1.3,
+      telegraphSeconds: 1.8,
     ),
   ];
 
@@ -97,19 +97,19 @@ abstract final class BossPatternCatalog {
       type: BossPatternType.chargeLine,
       name: '수림 매복참',
       warning: '안개 속 돌진선을 벗어나십시오.',
-      telegraphSeconds: 1.3,
+      telegraphSeconds: 1.85,
     ),
     BossPatternSpec(
       type: BossPatternType.bombardment,
       name: '독안개 덫',
       warning: '초록 표식 지대를 피하십시오.',
-      telegraphSeconds: 1.6,
+      telegraphSeconds: 2.0,
     ),
     BossPatternSpec(
       type: BossPatternType.commandWave,
       name: '약탈대 호출',
       warning: '검은숲 측면 증원이 진입합니다.',
-      telegraphSeconds: 1.25,
+      telegraphSeconds: 1.8,
     ),
   ];
 
@@ -118,19 +118,19 @@ abstract final class BossPatternCatalog {
       type: BossPatternType.bombardment,
       name: '백야 빙창진',
       warning: '빙결 원에서 이탈하십시오.',
-      telegraphSeconds: 1.75,
+      telegraphSeconds: 2.0,
     ),
     BossPatternSpec(
       type: BossPatternType.chargeLine,
       name: '빙벽 돌파',
       warning: '푸른 돌진선을 피하십시오.',
-      telegraphSeconds: 1.45,
+      telegraphSeconds: 1.9,
     ),
     BossPatternSpec(
       type: BossPatternType.commandWave,
       name: '설원 수비령',
       warning: '빙벽 성기사단이 집결합니다.',
-      telegraphSeconds: 1.35,
+      telegraphSeconds: 1.85,
     ),
   ];
 
@@ -139,19 +139,19 @@ abstract final class BossPatternCatalog {
       type: BossPatternType.bombardment,
       name: '황혼 유성포',
       warning: '포격 표적에서 벗어나십시오.',
-      telegraphSeconds: 1.55,
+      telegraphSeconds: 1.95,
     ),
     BossPatternSpec(
       type: BossPatternType.chargeLine,
       name: '혈화 참진',
       warning: '붉은 참격로를 피하십시오.',
-      telegraphSeconds: 1.25,
+      telegraphSeconds: 1.85,
     ),
     BossPatternSpec(
       type: BossPatternType.commandWave,
       name: '잿불 총공세',
       warning: '교단 정예대가 진입합니다.',
-      telegraphSeconds: 1.3,
+      telegraphSeconds: 1.8,
     ),
   ];
 

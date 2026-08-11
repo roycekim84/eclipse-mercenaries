@@ -12,6 +12,10 @@ class MercenaryVisual {
     required this.portraitAsset,
     required this.battleSpriteAsset,
     required this.battleDisplaySize,
+    required this.battleColumns,
+    required this.battleFrameIndices,
+    this.battleGroundAnchorY = .93,
+    this.battleCombatOrigin = const Offset(.14, -.44),
     this.portraitAlignment = Alignment.center,
     this.portraitScale = 1,
   });
@@ -22,6 +26,10 @@ class MercenaryVisual {
   final String portraitAsset;
   final String battleSpriteAsset;
   final double battleDisplaySize;
+  final int battleColumns;
+  final List<List<int>> battleFrameIndices;
+  final double battleGroundAnchorY;
+  final Offset battleCombatOrigin;
   final Alignment portraitAlignment;
   final double portraitScale;
 }
@@ -47,7 +55,15 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.pets,
     portraitAsset: 'assets/images/luna_belhardt.png',
     battleSpriteAsset: 'characters/luna_battle_sheet.png',
-    battleDisplaySize: 93,
+    battleDisplaySize: 82,
+    battleColumns: 8,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 4, 5, 6, 7],
+    ],
   ),
   'kael': MercenaryVisual(
     color: Color(0xff49312f),
@@ -55,7 +71,16 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.change_history,
     portraitAsset: 'assets/images/kael_rozenfang.png',
     battleSpriteAsset: 'characters/kael_battle_sheet.png',
-    battleDisplaySize: 85,
+    battleDisplaySize: 76,
+    battleColumns: 8,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [0, 1, 5, 6, 7, 6],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6, 7],
+    ],
+    battleCombatOrigin: Offset(.22, -.42),
   ),
   'sera': MercenaryVisual(
     color: Color(0xff273d50),
@@ -63,7 +88,16 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.auto_awesome,
     portraitAsset: 'assets/images/sera_inarion.png',
     battleSpriteAsset: 'characters/sera_battle_sheet.png',
-    battleDisplaySize: 89,
+    battleDisplaySize: 80,
+    battleColumns: 8,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [0, 1, 2, 3, 4, 5, 6, 7],
+      [0, 1, 5, 6, 5, 1],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6],
+    ],
+    battleCombatOrigin: Offset(.2, -.58),
   ),
   'nyra': MercenaryVisual(
     color: Color(0xff183c43),
@@ -71,7 +105,15 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.cruelty_free,
     portraitAsset: 'assets/images/nyra_vale_profile_v2.png',
     battleSpriteAsset: 'characters/nyra_battle_sheet.png',
-    battleDisplaySize: 87,
+    battleDisplaySize: 78,
+    battleColumns: 7,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6],
+    ],
     portraitScale: 1.04,
   ),
   'aurel': MercenaryVisual(
@@ -80,7 +122,16 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.shield_outlined,
     portraitAsset: 'assets/images/aurel_hart_profile_v2.png',
     battleSpriteAsset: 'characters/aurel_battle_sheet.png',
-    battleDisplaySize: 82,
+    battleDisplaySize: 74,
+    battleColumns: 7,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6],
+    ],
+    battleGroundAnchorY: .94,
     portraitScale: 1.08,
   ),
   'vesta': MercenaryVisual(
@@ -89,7 +140,16 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.menu_book_outlined,
     portraitAsset: 'assets/images/vesta_corven_profile_v2.png',
     battleSpriteAsset: 'characters/vesta_battle_sheet.png',
-    battleDisplaySize: 98,
+    battleDisplaySize: 86,
+    battleColumns: 7,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6],
+    ],
+    battleCombatOrigin: Offset(.18, -.55),
     portraitScale: 1.06,
   ),
   'rask': MercenaryVisual(
@@ -98,7 +158,16 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.push_pin,
     portraitAsset: 'assets/images/rask_draven_profile_v2.png',
     battleSpriteAsset: 'characters/rask_battle_sheet.png',
-    battleDisplaySize: 95,
+    battleDisplaySize: 84,
+    battleColumns: 7,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6],
+    ],
+    battleCombatOrigin: Offset(.24, -.46),
     portraitScale: 1.06,
   ),
   'iris': MercenaryVisual(
@@ -107,7 +176,16 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     icon: Icons.diamond_outlined,
     portraitAsset: 'assets/images/iris_noctis_profile_v2.png',
     battleSpriteAsset: 'characters/iris_battle_sheet.png',
-    battleDisplaySize: 97,
+    battleDisplaySize: 86,
+    battleColumns: 7,
+    battleFrameIndices: [
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5, 6],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3, 4, 5, 6],
+    ],
+    battleCombatOrigin: Offset(.18, -.5),
     portraitScale: 1.06,
   ),
 };
