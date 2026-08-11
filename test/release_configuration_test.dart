@@ -108,4 +108,28 @@ void main() {
       expect(bytes[25], 6, reason: '$id must be RGBA PNG');
     }
   });
+
+  test('all mercenary portraits use a consistent full-body 3 by 4 canvas', () {
+    const portraitPaths = [
+      'assets/images/luna_belhardt.png',
+      'assets/images/kael_rozenfang.png',
+      'assets/images/sera_inarion.png',
+      'assets/images/nyra_vale_fullbody.png',
+      'assets/images/aurel_hart_fullbody.png',
+      'assets/images/vesta_corven_fullbody.png',
+      'assets/images/rask_draven_fullbody.png',
+      'assets/images/iris_noctis_fullbody.png',
+    ];
+    for (final path in portraitPaths) {
+      final file = File(path);
+      expect(file.existsSync(), isTrue, reason: path);
+      final bytes = file.readAsBytesSync();
+      final header = ByteData.sublistView(bytes);
+      final width = header.getUint32(16);
+      final height = header.getUint32(20);
+      expect(width * 4, height * 3, reason: '$path must be 3:4');
+      expect(width, greaterThanOrEqualTo(1050), reason: path);
+      expect(bytes[25], anyOf(2, 6), reason: '$path must be RGB/RGBA PNG');
+    }
+  });
 }

@@ -32,6 +32,7 @@
 - `assets/images/luna_belhardt.png`: 캐릭터 상세용 루나 전신 일러스트
 - `assets/images/kael_rozenfang.png`: 늑대족 검투사 카일 전신 일러스트
 - `assets/images/sera_inarion.png`: 여우족 환술사 세라 전신 일러스트
+- `assets/images/*_fullbody.png`: 니라·아우렐·베스타·라스크·아이리스 3:4 전신 일러스트
 - `assets/images/characters/luna_battle_sheet.png`: 루나 8×5 전투 애니메이션 시트
 - `assets/images/characters/kael_battle_sheet.png`: 카일 8×5 전투 애니메이션 시트
 - `assets/images/characters/sera_battle_sheet.png`: 세라 8×5 전투 애니메이션 시트
@@ -44,6 +45,8 @@
 - `assets/images/battlefield/unit_role_batch.png`: 원본 비율을 보존한 런타임 배칭 전용 아틀라스
 
 생성 이미지에 글자를 굽지 않고 Flutter 레이어에서 접근성과 현지화를 처리한다.
+
+용병 명부와 상세 화면용 원화는 모두 정확한 `3:4` 캔버스를 사용한다. 머리 장식·귀·뿔부터 양쪽 신발과 대표 무기까지 프레임 안에 포함하고 상하 최소 5% 안전 여백을 둔다. 명부 카드는 `BoxFit.contain`으로 전신을 우선 노출하며, 어두운 공통 배경을 사용해 좌우 여백이 생겨도 카드와 분리되어 보이지 않도록 한다. 상반신 중심 원본이나 가로폭이 지나치게 좁은 세로 스트립을 최종 원화로 사용하지 않는다.
 
 전투 시트 행 순서는 `Idle → Walk → Attack → Hit → Dead`, 각 행은 8프레임이다. 런타임은 nearest-neighbor 필터를 사용하며, 현재 방향은 첨부 레퍼런스의 전투 시점에 맞춘 down-right 3/4 방향이다.
 

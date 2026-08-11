@@ -82,8 +82,8 @@ class _RosterCard extends StatelessWidget {
         children: [
           Image.asset(
             mercenary.visual.portraitAsset,
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
           ),
           const DecoratedBox(
             decoration: BoxDecoration(

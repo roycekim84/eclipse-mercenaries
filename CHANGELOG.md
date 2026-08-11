@@ -1,5 +1,11 @@
 # 변경 기록
 
+## Consistent full-body mercenary portraits — 2026-08-11
+
+- 신규 용병 5명의 330×941 세로 스트립을 1086×1448 3:4 전신 원화로 교체
+- 명부 카드에서 전신을 보존하는 contain 렌더링 적용
+- 8명 전체 원화의 3:4 캔버스와 최소 해상도 회귀 검사 추가
+
 ## Unique battle sprites for all mercenaries — 2026-08-10
 
 - 니라·아우렐·베스타·라스크·아이리스의 고유 8×5 전투 애니메이션 시트 추가
