@@ -9,12 +9,18 @@ extension RunGrowthSystem on SurvivorGame {
 
   List<RunUpgradeDefinition> get _upgradeDefinitions => [
     for (final availableWeapon in alphaWeapons)
-      RunUpgradeDefinition(
-        id: availableWeapon.id,
-        kind: RunUpgradeKind.weapon,
-        maxLevel: _maxWeaponLevel,
-        baseWeight: availableWeapon.id == weapon.id ? 92 : 54,
-      ),
+      if (RunGrowthRules.canOfferWeapon(
+        ownerId: availableWeapon.ownerId,
+        mercenaryId: mercenary.id,
+        equippedWeaponId: weapon.id,
+        weaponId: availableWeapon.id,
+      ))
+        RunUpgradeDefinition(
+          id: availableWeapon.id,
+          kind: RunUpgradeKind.weapon,
+          maxLevel: _maxWeaponLevel,
+          baseWeight: availableWeapon.id == weapon.id ? 92 : 54,
+        ),
     ...alphaPassiveDefinitions,
     const RunUpgradeDefinition(
       id: 'mercenary_trait',
@@ -221,7 +227,10 @@ extension RunGrowthSystem on SurvivorGame {
     choice.value = null;
     _pausedForChoice = false;
     if (_xp >= _nextXp) _levelUpPending = true;
-    if (!_pausedByUser && !_pausedByLifecycle && !_pausedForEvent) {
+    if (!_pausedByUser &&
+        !_pausedByLifecycle &&
+        !_pausedForEvent &&
+        !_pausedForUltimate) {
       resumeEngine();
     }
     _publishStats();

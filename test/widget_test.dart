@@ -3,7 +3,9 @@ import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
 import 'package:eclipse_mercenaries/domain/game_settings.dart';
+import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
+import 'package:eclipse_mercenaries/domain/run_growth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -288,6 +290,10 @@ void main() {
   testWidgets('recruitment reveals a mercenary and persists duplicate tokens', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1024, 461);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final repository = InMemorySaveRepository();
     await tester.pumpWidget(
       EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
@@ -307,6 +313,86 @@ void main() {
     expect(restored.crystals, 2950);
     expect(restored.recruitmentCount, 1);
     expect(restored.inventory['sera_token'], 10);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('consecutive level-up choices replace resolved overlay state', (
+    tester,
+  ) async {
+    const first = BattleChoice([
+      UpgradeOption(
+        id: 'first',
+        kind: RunUpgradeKind.passive,
+        title: '첫 선택',
+        description: '첫 번째 강화',
+        iconId: 'swift_step',
+        currentLevel: 0,
+        maxLevel: 5,
+      ),
+    ]);
+    const second = BattleChoice([
+      UpgradeOption(
+        id: 'second',
+        kind: RunUpgradeKind.passive,
+        title: '두 번째 선택',
+        description: '연속 강화',
+        iconId: 'keen_eye',
+        currentLevel: 0,
+        maxLevel: 5,
+      ),
+    ]);
+    final picks = <int>[];
+
+    Widget overlay(BattleChoice choice) => MaterialApp(
+      home: Scaffold(
+        body: Stack(
+          children: [
+            LevelUpOverlay(
+              key: ObjectKey(choice),
+              choice: choice,
+              onPick: picks.add,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(overlay(first));
+    await tester.tap(find.text('첫 선택'));
+    await tester.pumpWidget(overlay(second));
+    await tester.tap(find.text('두 번째 선택'));
+
+    expect(picks, [0, 0]);
+    expect(find.textContaining('6초 후'), findsOneWidget);
+  });
+
+  testWidgets('ultimate cut-in completes before battle impact callback', (
+    tester,
+  ) async {
+    var completed = 0;
+    final mercenary = alphaMercenaries.first;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Stack(
+          children: [
+            UltimateCutIn(
+              sequence: UltimateSequence(
+                mercenaryId: mercenary.id,
+                title: mercenary.ultimate,
+                activation: 1,
+              ),
+              mercenary: mercenary,
+              onComplete: () => completed++,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(completed, 0);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(completed, 1);
   });
 
   testWidgets('general shop confirms purchase and persists inventory', (

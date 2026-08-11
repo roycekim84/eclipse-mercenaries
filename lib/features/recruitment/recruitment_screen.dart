@@ -382,196 +382,247 @@ class _RecruitReveal extends StatelessWidget {
       0,
       (sum, value) => sum + value,
     );
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xdd07080d),
-        image: DecorationImage(
-          image: AssetImage(featured.visual.portraitAsset),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          opacity: .13,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: 6,
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 3 / 4,
-                child: GoldPanel(
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        featured.visual.portraitAsset,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                      ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0xf0080a10)],
-                            stops: [.5, 1],
-                          ),
-                        ),
-                      ),
-                      Center(
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 1.6, end: .75),
-                          duration: const Duration(milliseconds: 900),
-                          curve: Curves.easeOutCubic,
-                          builder: (_, value, child) => Container(
-                            width: 180 * value,
-                            height: 180 * value,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(
-                                  0xffffd27c,
-                                ).withValues(alpha: .45),
-                                width: 2,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x998d59b2),
-                                  blurRadius: 45,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 14,
-                        bottom: 14,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 440;
+        final outerPadding = compact ? 8.0 : 14.0;
+        final panelHeight = constraints.maxHeight - outerPadding * 2;
+        final resultCardWidth = compact ? 56.0 : 68.0;
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xdd07080d),
+            image: DecorationImage(
+              image: AssetImage(featured.visual.portraitAsset),
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              opacity: .13,
+            ),
+          ),
+          padding: EdgeInsets.all(outerPadding),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 6,
+                child: Center(
+                  child: SizedBox(
+                    height: panelHeight,
+                    child: AspectRatio(
+                      aspectRatio: 3 / 4,
+                      child: GoldPanel(
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
-                            const Text(
-                              'CONTRACT COMPLETE',
-                              style: TextStyle(
-                                color: Color(0xffffd27c),
-                                letterSpacing: 2,
-                                fontSize: 9,
+                            Image.asset(
+                              featured.visual.portraitAsset,
+                              fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
+                            ),
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Color(0xf0080a10),
+                                  ],
+                                  stops: [.5, 1],
+                                ),
                               ),
                             ),
-                            Text(
-                              featured.name,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                            Center(
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 1.6, end: .75),
+                                duration: const Duration(milliseconds: 900),
+                                curve: Curves.easeOutCubic,
+                                builder: (_, value, child) => Container(
+                                  width: 180 * value,
+                                  height: 180 * value,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(
+                                        0xffffd27c,
+                                      ).withValues(alpha: .45),
+                                      width: 2,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x998d59b2),
+                                        blurRadius: 45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            Text(
-                              '★★★★★ · ${featured.race} / ${featured.job}',
-                              style: const TextStyle(
-                                color: Color(0xffffcf67),
-                                fontSize: 11,
+                            Positioned(
+                              left: 14,
+                              bottom: 14,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'CONTRACT COMPLETE',
+                                    style: TextStyle(
+                                      color: Color(0xffffd27c),
+                                      letterSpacing: 2,
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  Text(
+                                    featured.name,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '★★★★★ · ${featured.race} / ${featured.job}',
+                                    style: const TextStyle(
+                                      color: Color(0xffffcf67),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            flex: 5,
-            child: GoldPanel(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      '용병 계약 완료',
-                      style: TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${receipt.mercenaryIds.length}명의 계약 결과',
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                    const Divider(color: Color(0xff665536), height: 24),
-                    Wrap(
-                      spacing: 7,
-                      runSpacing: 7,
-                      children: receipt.mercenaryIds.map((id) {
-                        final mercenary = gameContent.mercenaryById(id);
-                        return Container(
-                          width: 68,
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xff141720),
-                            border: Border.all(color: mercenary.visual.accent),
+              SizedBox(width: compact ? 10 : 18),
+              Expanded(
+                flex: 5,
+                child: SizedBox(
+                  height: panelHeight,
+                  child: GoldPanel(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(compact ? 10 : 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '용병 계약 완료',
+                            style: TextStyle(
+                              fontSize: compact ? 19 : 23,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          child: Column(
-                            children: [
-                              CircleAvatar(
-                                backgroundImage: AssetImage(
-                                  mercenary.visual.portraitAsset,
+                          Text(
+                            '${receipt.mercenaryIds.length}명의 계약 결과',
+                            style: const TextStyle(color: Colors.white60),
+                          ),
+                          Divider(
+                            color: const Color(0xff665536),
+                            height: compact ? 14 : 24,
+                          ),
+                          Wrap(
+                            spacing: 7,
+                            runSpacing: 7,
+                            children: receipt.mercenaryIds.map((id) {
+                              final mercenary = gameContent.mercenaryById(id);
+                              return Container(
+                                width: resultCardWidth,
+                                padding: EdgeInsets.all(compact ? 3 : 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff141720),
+                                  border: Border.all(
+                                    color: mercenary.visual.accent,
+                                  ),
                                 ),
-                                radius: 22,
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                mercenary.name.split(' ').first,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 9),
-                              ),
-                            ],
+                                child: Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: Image.asset(
+                                        mercenary.visual.portraitAsset,
+                                        width: compact ? 36 : 44,
+                                        height: compact ? 36 : 44,
+                                        fit: BoxFit.cover,
+                                        alignment: const Alignment(0, -.68),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      mercenary.name.split(' ').first,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 9),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0x663c2850),
-                        border: Border.all(color: const Color(0xff8e67a5)),
+                          SizedBox(height: compact ? 7 : 14),
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(compact ? 7 : 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0x663c2850),
+                              border: Border.all(
+                                color: const Color(0xff8e67a5),
+                              ),
+                            ),
+                            child: Text(
+                              '중복 용병 변환 · 전용 증표 +$tokens',
+                              style: const TextStyle(
+                                color: Color(0xffd7b5eb),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: compact ? 8 : 12),
+                          if (compact)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FantasyButton(
+                                    label: '다시 모집',
+                                    icon: Icons.refresh,
+                                    onTap: onAgain,
+                                    prominent: true,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: FantasyButton(
+                                    label: '용병 명부',
+                                    icon: Icons.groups_2_outlined,
+                                    onTap: onRoster,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else ...[
+                            FantasyButton(
+                              label: '다시 모집',
+                              icon: Icons.refresh,
+                              onTap: onAgain,
+                              prominent: true,
+                            ),
+                            const SizedBox(height: 8),
+                            FantasyButton(
+                              label: '용병 명부',
+                              icon: Icons.groups_2_outlined,
+                              onTap: onRoster,
+                            ),
+                          ],
+                        ],
                       ),
-                      child: Text(
-                        '중복 용병 변환 · 전용 증표 +$tokens',
-                        style: const TextStyle(
-                          color: Color(0xffd7b5eb),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                     ),
-                    const SizedBox(height: 12),
-                    FantasyButton(
-                      label: '다시 모집',
-                      icon: Icons.refresh,
-                      onTap: onAgain,
-                      prominent: true,
-                    ),
-                    const SizedBox(height: 8),
-                    FantasyButton(
-                      label: '용병 명부',
-                      icon: Icons.groups_2_outlined,
-                      onTap: onRoster,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

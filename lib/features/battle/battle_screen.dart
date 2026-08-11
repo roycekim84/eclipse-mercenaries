@@ -172,6 +172,7 @@ class _BattleScreenState extends State<BattleScreen>
                 key: ValueKey(sequence.activation),
                 sequence: sequence,
                 mercenary: widget.mercenary,
+                onComplete: game.completeUltimateCutIn,
               );
             }
             final prompt = game.eventPrompt.value;
@@ -183,7 +184,11 @@ class _BattleScreenState extends State<BattleScreen>
             }
             final choice = game.choice.value;
             if (choice != null) {
-              return LevelUpOverlay(choice: choice, onPick: game.selectUpgrade);
+              return LevelUpOverlay(
+                key: ObjectKey(choice),
+                choice: choice,
+                onPick: game.selectUpgrade,
+              );
             }
             final warning = game.bossTelegraph.value;
             if (warning != null) return BossWarningBanner(warning: warning);
@@ -941,7 +946,19 @@ class _LevelUpOverlayState extends State<LevelUpOverlay> {
   @override
   void initState() {
     super.initState();
+    _startCountdown();
+  }
+
+  @override
+  void didUpdateWidget(covariant LevelUpOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.choice, widget.choice)) _startCountdown();
+  }
+
+  void _startCountdown() {
+    _timer?.cancel();
     _remaining = _limit;
+    _resolved = false;
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted || _resolved) return;
       if (_remaining <= 1) {

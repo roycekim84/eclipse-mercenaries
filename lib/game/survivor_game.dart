@@ -156,7 +156,7 @@ class SurvivorGame extends FlameGame {
   late double _playerHp;
   double _tacticalCooldown = 0;
   double _tacticalClock = 0;
-  bool _ultimateImpactApplied = false;
+  bool _pausedForUltimate = false;
   int _ultimateActivation = 0;
   double _gateHp = GateDefenseRules.maxGateHp;
   double _frontPressure = 0;
@@ -369,7 +369,8 @@ class SurvivorGame extends FlameGame {
     if (_finished ||
         _pausedForChoice ||
         _pausedForEvent ||
-        _pausedByLifecycle) {
+        _pausedByLifecycle ||
+        _pausedForUltimate) {
       return;
     }
     _pausedByUser = !_pausedByUser;
@@ -396,7 +397,11 @@ class SurvivorGame extends FlameGame {
     if (!_pausedByLifecycle) return;
     _pausedByLifecycle = false;
     combatPaused.value = _pausedByUser;
-    if (!_pausedByUser && !_pausedForChoice && !_pausedForEvent && !_finished) {
+    if (!_pausedByUser &&
+        !_pausedForChoice &&
+        !_pausedForEvent &&
+        !_pausedForUltimate &&
+        !_finished) {
       resumeEngine();
     }
   }
@@ -407,12 +412,15 @@ class SurvivorGame extends FlameGame {
         _ultimateClock > 0 ||
         _finished ||
         _pausedForChoice ||
-        _pausedForEvent) {
+        _pausedForEvent ||
+        _pausedByUser ||
+        _pausedByLifecycle ||
+        _pausedForUltimate) {
       return;
     }
     _ultimateCharge = 0;
-    _ultimateClock = 2.4;
-    _ultimateImpactApplied = false;
+    _ultimateClock = 1.2;
+    _pausedForUltimate = true;
     _ultimateActivation++;
     ultimate.value = UltimateSequence(
       mercenaryId: mercenary.id,
@@ -421,6 +429,22 @@ class SurvivorGame extends FlameGame {
     );
     clearMoveTarget();
     clearMoveDirection();
+    pauseEngine();
+    _publishStats();
+  }
+
+  void completeUltimateCutIn() {
+    if (!_pausedForUltimate || ultimate.value == null) return;
+    _pausedForUltimate = false;
+    ultimate.value = null;
+    _applyUltimateImpact();
+    if (!_pausedByUser &&
+        !_pausedByLifecycle &&
+        !_pausedForChoice &&
+        !_pausedForEvent &&
+        !_finished) {
+      resumeEngine();
+    }
     _publishStats();
   }
 
@@ -434,7 +458,7 @@ class SurvivorGame extends FlameGame {
     _hitStopClock = math.max(0, _hitStopClock - dt);
     _cameraImpulse = math.max(0, _cameraImpulse - dt * 18);
     final combatTimeScale = hitStopActive ? .08 : 1.0;
-    final worldDt = (_ultimateClock > 1.18 ? dt * .08 : dt) * combatTimeScale;
+    final worldDt = dt * combatTimeScale;
     super.update(worldDt);
     if (_finished || _pausedForChoice || _pausedForEvent) {
       _updateClock.stop();

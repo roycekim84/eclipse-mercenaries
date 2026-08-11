@@ -1054,6 +1054,35 @@ void main() {
     expect(choices, isEmpty);
   });
 
+  test('run growth only offers generic, equipped, or personal weapons', () {
+    final luna = content.mercenaryById('luna');
+    final kael = content.mercenaryById('kael');
+    final generic = content.weaponById('iron_sword');
+    final lunaSignature = content.weaponById(luna.signatureWeaponId);
+    final kaelSignature = content.weaponById(kael.signatureWeaponId);
+
+    bool allowed(WeaponSpec weapon) => RunGrowthRules.canOfferWeapon(
+      ownerId: weapon.ownerId,
+      mercenaryId: luna.id,
+      equippedWeaponId: generic.id,
+      weaponId: weapon.id,
+    );
+
+    expect(allowed(generic), isTrue);
+    expect(allowed(lunaSignature), isTrue);
+    expect(allowed(kaelSignature), isFalse);
+    expect(
+      RunGrowthRules.canOfferWeapon(
+        ownerId: kaelSignature.ownerId,
+        mercenaryId: luna.id,
+        equippedWeaponId: kaelSignature.id,
+        weaponId: kaelSignature.id,
+      ),
+      isTrue,
+      reason: '이미 장착한 무기는 소유자가 달라도 강화 경로가 유지되어야 한다.',
+    );
+  });
+
   test('owned weapons remain upgradeable when weapon slots are full', () {
     const definition = RunUpgradeDefinition(
       id: 'owned',

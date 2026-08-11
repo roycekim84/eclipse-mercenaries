@@ -219,15 +219,31 @@ class EnemyCodexCard extends StatelessWidget {
                   size: 58,
                 ),
                 if (enemy.rank != EnemyRank.common)
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: enemy.rank == EnemyRank.boss
-                            ? const Color(0xffffd16c)
-                            : const Color(0xffc895e3),
+                  Positioned(
+                    left: 2,
+                    top: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xe611141a),
+                        border: Border.all(
+                          color: enemy.rank == EnemyRank.boss
+                              ? const Color(0xffffd16c)
+                              : const Color(0xffc895e3),
+                        ),
+                      ),
+                      child: Text(
+                        enemy.rank == EnemyRank.boss ? '지휘관' : '정예',
+                        style: TextStyle(
+                          fontSize: 6,
+                          fontWeight: FontWeight.bold,
+                          color: enemy.rank == EnemyRank.boss
+                              ? const Color(0xffffd16c)
+                              : const Color(0xffd8afea),
+                        ),
                       ),
                     ),
                   ),
@@ -240,7 +256,7 @@ class EnemyCodexCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(0xee101319),
                       border: Border.all(color: enemy.visual.color),
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(3),
                     ),
                     child: Icon(
                       enemy.visual.icon,

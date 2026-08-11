@@ -48,6 +48,17 @@ class RunGrowthState {
 }
 
 abstract final class RunGrowthRules {
+  static bool canOfferWeapon({
+    required String? ownerId,
+    required String mercenaryId,
+    required String equippedWeaponId,
+    required String weaponId,
+  }) {
+    return ownerId == null ||
+        ownerId == mercenaryId ||
+        weaponId == equippedWeaponId;
+  }
+
   static List<RunUpgradeDefinition> generateChoices({
     required List<RunUpgradeDefinition> definitions,
     required RunGrowthState state,

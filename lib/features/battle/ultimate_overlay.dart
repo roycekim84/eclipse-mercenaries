@@ -97,18 +97,21 @@ class UltimateCutIn extends StatelessWidget {
     super.key,
     required this.sequence,
     required this.mercenary,
+    required this.onComplete,
   });
 
   final UltimateSequence sequence;
   final MercenarySpec mercenary;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) => Positioned.fill(
     child: IgnorePointer(
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 720),
+        duration: const Duration(milliseconds: 1050),
         curve: Curves.easeOutCubic,
+        onEnd: onComplete,
         builder: (context, value, _) => Stack(
           children: [
             ColoredBox(

@@ -65,7 +65,10 @@ extension BattlefieldEventSystem on SurvivorGame {
     if (_levelUpPending) {
       _requestLevelUp();
     }
-    if (!_pausedByUser && !_pausedByLifecycle && !_pausedForChoice) {
+    if (!_pausedByUser &&
+        !_pausedByLifecycle &&
+        !_pausedForChoice &&
+        !_pausedForUltimate) {
       resumeEngine();
     }
     _publishStats();

@@ -2,15 +2,10 @@ part of '../survivor_game.dart';
 
 extension UltimateSystem on SurvivorGame {
   void _advanceUltimate(double realDt) {
-    if (_ultimateClock <= 0) return;
+    if (_ultimateClock <= 0 || _pausedForUltimate) return;
     _ultimateClock -= realDt;
-    if (!_ultimateImpactApplied && _ultimateClock <= 1.18) {
-      _ultimateImpactApplied = true;
-      _applyUltimateImpact();
-    }
     if (_ultimateClock <= 0) {
       _ultimateClock = 0;
-      ultimate.value = null;
     }
   }
 
@@ -61,8 +56,8 @@ extension UltimateSystem on SurvivorGame {
   }
 
   void _drawUltimateEffect(Canvas canvas) {
-    if (_ultimateClock <= 0) return;
-    final progress = (1 - _ultimateClock / 2.4).clamp(0.0, 1.0);
+    if (_ultimateClock <= 0 || _pausedForUltimate) return;
+    final progress = (1 - _ultimateClock / 1.2).clamp(0.0, 1.0);
     final color = switch (mercenary.style) {
       CombatStyle.blades => const Color(0xffb58af0),
       CombatStyle.greatsword => const Color(0xffd64b45),
@@ -72,7 +67,6 @@ extension UltimateSystem on SurvivorGame {
       Offset.zero & Size(size.x, size.y),
       Paint()..color = color.withValues(alpha: progress < .5 ? .12 : .06),
     );
-    if (!_ultimateImpactApplied) return;
     final paint = Paint()
       ..color = color.withValues(alpha: .72)
       ..style = PaintingStyle.stroke
