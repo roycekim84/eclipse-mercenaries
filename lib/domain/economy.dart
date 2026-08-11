@@ -69,7 +69,7 @@ const alphaShopProducts = <ShopProductSpec>[
   ShopProductSpec(
     id: 'field_medicine',
     category: ShopCategory.general,
-    itemId: 'field_ration',
+    itemId: 'field_medicine',
     name: '응급 치료 키트',
     quantity: 2,
     price: 1200,
@@ -102,7 +102,7 @@ const alphaShopProducts = <ShopProductSpec>[
   ShopProductSpec(
     id: 'war_contract',
     category: ShopCategory.war,
-    itemId: 'contract_ticket',
+    itemId: 'war_hero_contract',
     name: '전쟁 영웅 계약서',
     quantity: 1,
     price: 50,
@@ -113,7 +113,7 @@ const alphaShopProducts = <ShopProductSpec>[
   ShopProductSpec(
     id: 'siege_core',
     category: ShopCategory.war,
-    itemId: 'tempered_iron',
+    itemId: 'siege_core',
     name: '공성 병기 핵',
     quantity: 1,
     price: 45,

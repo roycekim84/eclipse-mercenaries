@@ -39,8 +39,8 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   _SettingTile(
                     icon: Icons.volume_up_outlined,
-                    title: '효과음',
-                    description: '전투 타격음과 UI 효과음을 재생합니다.',
+                    title: '배경음 · 효과음',
+                    description: '캠프·전투 음악과 타격 및 UI 효과음을 재생합니다.',
                     value: settings.soundEnabled,
                     onChanged: (value) =>
                         onChanged(settings.copyWith(soundEnabled: value)),

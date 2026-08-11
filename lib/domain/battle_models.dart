@@ -6,7 +6,22 @@ import 'camp_meta.dart';
 
 enum BattleOutcome { victory, retreat, defeat }
 
-enum BattlefieldType { gateDefense, evacuation }
+enum BattlefieldType {
+  gateDefense,
+  evacuation,
+  supplyEscort,
+  assassination,
+  ambush,
+  fortressRetake,
+}
+
+extension BattlefieldTypeRules on BattlefieldType {
+  bool get usesGate => this == BattlefieldType.gateDefense;
+  bool get isConvoy =>
+      this == BattlefieldType.evacuation ||
+      this == BattlefieldType.supplyEscort;
+  bool get isOpenField => !usesGate && !isConvoy;
+}
 
 enum BattlefieldCondition {
   moonlitNight,
@@ -47,17 +62,17 @@ class StageBalanceProfile {
   });
 
   const StageBalanceProfile.baseline()
-    : durationSeconds = 45,
-      unitCount = 500,
-      initialDeployment = 100,
-      activePopulationTarget = 220,
-      reinforcementInterval = 4.2,
+    : durationSeconds = 60,
+      unitCount = 480,
+      initialDeployment = 92,
+      activePopulationTarget = 180,
+      reinforcementInterval = 5,
       enemyHpMultiplier = 1,
       enemyDamageBonus = 0,
       enemySpeedMultiplier = 1,
-      eliteStride = 83,
-      firstEventAt = 10,
-      eventInterval = 14;
+      eliteStride = 90,
+      firstEventAt = 14,
+      eventInterval = 18;
 
   final int durationSeconds;
   final int unitCount;

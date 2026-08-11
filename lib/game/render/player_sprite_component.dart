@@ -16,6 +16,8 @@ class PlayerSpriteComponent
     required super.size,
     required this.groundAnchorY,
     required this.combatOriginFactor,
+    required this.attackLockDuration,
+    required this.hitLockDuration,
   }) : super(
          current: PlayerAnimationState.idle,
          anchor: Anchor(.5, groundAnchorY),
@@ -27,6 +29,8 @@ class PlayerSpriteComponent
   static const rows = 5;
   final double groundAnchorY;
   final Vector2 combatOriginFactor;
+  final double attackLockDuration;
+  final double hitLockDuration;
 
   double _lockedFor = 0;
   bool _moving = false;
@@ -71,6 +75,14 @@ class PlayerSpriteComponent
       size: Vector2(displaySize * frameSize.x / frameSize.y, displaySize),
       groundAnchorY: groundAnchorY,
       combatOriginFactor: combatOriginFactor,
+      attackLockDuration:
+          math.min(
+            attackFrameCount,
+            frameIndices[PlayerAnimationState.attack.index].length,
+          ) *
+          attackStepTime,
+      hitLockDuration:
+          frameIndices[PlayerAnimationState.hit.index].length * .065,
       animations: {
         PlayerAnimationState.idle: animation(
           PlayerAnimationState.idle,
@@ -118,10 +130,14 @@ class PlayerSpriteComponent
     }
   }
 
-  void playAttack() =>
-      _lock(PlayerAnimationState.attack, attackDuration, restart: true);
+  void playAttack() => _lock(
+    PlayerAnimationState.attack,
+    attackLockDuration + .01,
+    restart: true,
+  );
 
-  void playHit() => _lock(PlayerAnimationState.hit, .52);
+  void playHit() =>
+      _lock(PlayerAnimationState.hit, hitLockDuration + .01, restart: true);
 
   void playDead() {
     _lockedFor = double.infinity;

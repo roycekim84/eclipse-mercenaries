@@ -98,7 +98,7 @@ class _CompactContractNode extends StatelessWidget {
         colorBlendMode: locked ? BlendMode.saturation : null,
       ),
       const ColoredBox(color: Color(0x66000000)),
-      Icon(
+      PremiumGameIcon(
         locked ? Icons.lock_outline : contract.icon,
         color: locked ? Colors.white38 : const Color(0xffffd77b),
         size: 25,
@@ -140,7 +140,7 @@ class _SelectedContractNode extends StatelessWidget {
       Positioned(
         left: 7,
         top: 7,
-        child: Icon(contract.icon, color: const Color(0xffffd77b), size: 20),
+        child: PremiumGameIcon(contract.icon, size: 22),
       ),
       Positioned(
         left: 34,
@@ -207,7 +207,7 @@ class ContractSummary extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
       child: Row(
         children: [
-          Icon(contract.icon, color: const Color(0xffd4b56f)),
+          PremiumGameIcon(contract.icon, size: 30),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -265,7 +265,7 @@ class SkillOrb extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: compact ? 14 : 20, color: Colors.white),
+          PremiumGameIcon(icon, size: compact ? 18 : 24),
           Text(label, style: TextStyle(fontSize: compact ? 6 : 8)),
         ],
       ),

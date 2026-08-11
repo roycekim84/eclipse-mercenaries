@@ -1,5 +1,134 @@
 part of '../../app/game_app.dart';
 
+/// Production UI glyphs. Gameplay-facing symbols are painted assets instead of
+/// platform Material icons so the same visual language is used on Web, Android
+/// and iOS. Navigation primitives deliberately keep their familiar geometry.
+String? _premiumGlyphAsset(IconData icon) {
+  if (icon == Icons.groups_2_outlined ||
+      icon == Icons.person_outline ||
+      icon == Icons.pets ||
+      icon == Icons.cruelty_free) {
+    return 'assets/images/ui/glyphs/roster.png';
+  }
+  if (icon == Icons.inventory_2_outlined ||
+      icon == Icons.shield_outlined ||
+      icon == Icons.shield ||
+      icon == Icons.architecture ||
+      icon == Icons.fitness_center) {
+    return 'assets/images/ui/glyphs/equipment.png';
+  }
+  if (icon == Icons.storefront_outlined ||
+      icon == Icons.shopping_cart_outlined ||
+      icon == Icons.restaurant) {
+    return 'assets/images/ui/glyphs/shop.png';
+  }
+  if (icon == Icons.menu_book_outlined ||
+      icon == Icons.description_outlined ||
+      icon == Icons.history_edu_outlined ||
+      icon == Icons.edit_document ||
+      icon == Icons.school_outlined) {
+    return 'assets/images/ui/glyphs/missions.png';
+  }
+  if (icon == Icons.map_outlined ||
+      icon == Icons.public ||
+      icon == Icons.explore_outlined) {
+    return 'assets/images/ui/glyphs/map.png';
+  }
+  if (icon == Icons.handyman ||
+      icon == Icons.handyman_outlined ||
+      icon == Icons.build_outlined) {
+    return 'assets/images/ui/glyphs/forge.png';
+  }
+  if (icon == Icons.workspace_premium ||
+      icon == Icons.workspace_premium_outlined ||
+      icon == Icons.military_tech_outlined ||
+      icon == Icons.approval_outlined) {
+    return 'assets/images/ui/glyphs/reputation.png';
+  }
+  if (icon == Icons.medical_services_outlined ||
+      icon == Icons.monitor_heart_outlined ||
+      icon == Icons.health_and_safety) {
+    return 'assets/images/ui/glyphs/infirmary.png';
+  }
+  if (icon == Icons.monetization_on || icon == Icons.monetization_on_outlined) {
+    return 'assets/images/ui/glyphs/gold.png';
+  }
+  if (icon == Icons.diamond || icon == Icons.diamond_outlined) {
+    return 'assets/images/ui/glyphs/crystal.png';
+  }
+  if (icon == Icons.gavel ||
+      icon == Icons.description_outlined ||
+      icon == Icons.card_giftcard) {
+    return 'assets/images/ui/glyphs/contract.png';
+  }
+  if (icon == Icons.directions_run ||
+      icon == Icons.double_arrow ||
+      icon == Icons.speed ||
+      icon == Icons.speed_outlined) {
+    return 'assets/images/ui/glyphs/dash.png';
+  }
+  if (icon == Icons.flag ||
+      icon == Icons.flag_outlined ||
+      icon == Icons.local_shipping_outlined) {
+    return 'assets/images/ui/glyphs/rally.png';
+  }
+  if (icon == Icons.auto_awesome ||
+      icon == Icons.auto_fix_high ||
+      icon == Icons.flare ||
+      icon == Icons.flare_outlined ||
+      icon == Icons.bolt) {
+    return 'assets/images/ui/glyphs/ultimate.png';
+  }
+  if (icon == Icons.warning_amber_rounded ||
+      icon == Icons.change_history ||
+      icon == Icons.local_fire_department ||
+      icon == Icons.local_fire_department_outlined ||
+      icon == Icons.visibility ||
+      icon == Icons.visibility_off_outlined) {
+    return 'assets/images/ui/glyphs/omen.png';
+  }
+  return null;
+}
+
+class PremiumGameIcon extends StatelessWidget {
+  const PremiumGameIcon(
+    this.icon, {
+    super.key,
+    this.size,
+    this.color,
+    this.semanticLabel,
+  });
+
+  final IconData icon;
+  final double? size;
+  final Color? color;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = _premiumGlyphAsset(icon);
+    if (asset == null) {
+      return Icon(icon, size: size, color: color, semanticLabel: semanticLabel);
+    }
+    final dimension = size ?? IconTheme.of(context).size ?? 24;
+    return Semantics(
+      label: semanticLabel,
+      image: semanticLabel != null,
+      excludeSemantics: semanticLabel == null,
+      child: SizedBox.square(
+        dimension: dimension,
+        child: Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.medium,
+          color: color,
+          colorBlendMode: color == null ? null : BlendMode.modulate,
+        ),
+      ),
+    );
+  }
+}
+
 class SceneFrame extends StatelessWidget {
   const SceneFrame({super.key, required this.background, required this.child});
   final String background;
@@ -406,7 +535,7 @@ class FantasyButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: const Color(0xffd8bd7b), size: 20),
+                PremiumGameIcon(icon, size: 22),
                 const SizedBox(width: 9),
                 Flexible(
                   child: Text(
@@ -463,7 +592,7 @@ class NavButton extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(icon, size: 18, color: const Color(0xffd0b375)),
+                      PremiumGameIcon(icon, size: 22),
                       Text(label, style: const TextStyle(fontSize: 10)),
                     ],
                   ),
@@ -523,7 +652,7 @@ class Currency extends StatelessWidget {
     ),
     child: Row(
       children: [
-        Icon(icon, size: 15, color: color),
+        PremiumGameIcon(icon, size: 17),
         const SizedBox(width: 4),
         Text(
           value,

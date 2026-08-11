@@ -14,6 +14,16 @@
 - 조명: 따뜻한 불빛과 차가운 달빛의 대비
 - 재질: 낡은 가죽, 흑철, 어두운 목재, 천막, 유황과 재
 
+## 출시 에셋 세트
+
+- 공통 UI: `assets/images/ui/fantasy_glyph_atlas.png`과 개별 16종 글리프
+- 전투 VFX: `assets/images/battlefield/final_vfx_atlas.png`의 4×4 픽셀 효과
+- 전장 사건: `assets/images/events/final_event_atlas.png`과 개별 8종 원화
+- 상점 상품: `assets/images/shop/final_shop_atlas.png`과 개별 12종 상품 이미지
+- 앱 내장 오디오: `assets/audio`의 캠프·전투 루프와 UI·타격·궁극기 WAV
+
+위 세트가 존재하는 영역에서 단색 원, 임시 색상 박스, 범용 Material 심볼로 되돌리지 않는다. 신규 에셋은 동일한 흑철·금박·보라/남색 강조와 투명 배경 규격을 유지한다.
+
 ## 타이포그래피
 
 - 한국어 본문/수치/UI: 프로젝트에 내장한 `NotoSansKR` Regular 400, Bold 700을 사용한다.

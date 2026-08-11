@@ -23,7 +23,37 @@ class ResultScreen extends StatelessWidget {
       BattleOutcome.retreat => 'RETREAT',
       BattleOutcome.defeat => 'DEFEAT',
     };
-    final evacuation = report.battlefield == BattlefieldType.evacuation;
+    final objectiveIcon = switch (report.battlefield) {
+      BattlefieldType.gateDefense => Icons.castle_outlined,
+      BattlefieldType.evacuation ||
+      BattlefieldType.supplyEscort => Icons.local_shipping_outlined,
+      BattlefieldType.assassination => Icons.gps_fixed,
+      BattlefieldType.ambush => Icons.visibility_off_outlined,
+      BattlefieldType.fortressRetake => Icons.flag_outlined,
+    };
+    final objectiveResult = switch (report.battlefield) {
+      BattlefieldType.gateDefense =>
+        '성문 내구도 ${(report.objectiveHpRatio * 100).round()}%',
+      BattlefieldType.evacuation || BattlefieldType.supplyEscort =>
+        '호위 탈출 ${report.escortEscaped} / ${report.escortTotal}',
+      BattlefieldType.assassination =>
+        report.enemyCommanderDefeated ? '적 지휘관 제거 완료' : '적 지휘관 이탈',
+      BattlefieldType.ambush => '기습 전과 ${report.kills}명',
+      BattlefieldType.fortressRetake =>
+        report.enemyCommanderDefeated ? '요새 지휘부 제압' : '수비대 전력 약화',
+    };
+    final battlefieldArt = switch (report.battlefield) {
+      BattlefieldType.gateDefense =>
+        'assets/images/battlefield/north_gate_battlefield.png',
+      BattlefieldType.evacuation =>
+        'assets/images/battlefield/ashwind_road_v2.png',
+      BattlefieldType.supplyEscort || BattlefieldType.ambush =>
+        'assets/images/battlefield/black_forest_route.png',
+      BattlefieldType.assassination =>
+        'assets/images/battlefield/twilight_siege_plain.png',
+      BattlefieldType.fortressRetake =>
+        'assets/images/battlefield/white_night_fortress.png',
+    };
     final subtitle = switch (report.outcome) {
       BattleOutcome.victory => '계약 완수 · ${report.contractName}',
       BattleOutcome.retreat => '전술적 철수 · 획득 보상의 50% 보존',
@@ -35,196 +65,210 @@ class ResultScreen extends StatelessWidget {
       BattleOutcome.defeat => const Color(0xffe37268),
     };
     return DarkBackdrop(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: GoldPanel(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: .82, end: 1),
-                      duration: const Duration(milliseconds: 720),
-                      curve: Curves.easeOutBack,
-                      builder: (_, value, child) =>
-                          Transform.scale(scale: value, child: child),
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontFamily: 'Cinzel',
-                          color: titleColor,
-                          fontSize: 42,
-                          letterSpacing: 7,
-                          shadows: [
-                            Shadow(
-                              color: titleColor.withValues(alpha: .5),
-                              blurRadius: 22,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Text(subtitle, style: TextStyle(color: Colors.white54)),
-                    const SizedBox(height: 22),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Opacity(
+              opacity: .16,
+              child: Image.asset(
+                battlefieldArt,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.medium,
+              ),
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: GoldPanel(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        ResultStat('전투 시간', report.time),
-                        ResultStat('처치 수', '${report.kills}'),
-                        ResultStat('획득 골드', '${report.gold}'),
-                        ResultStat('경험치', '${report.xp}'),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 16,
-                      runSpacing: 6,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              evacuation
-                                  ? Icons.local_shipping_outlined
-                                  : Icons.castle_outlined,
-                              size: 16,
-                              color: Color(0xffd6bd81),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: .82, end: 1),
+                          duration: const Duration(milliseconds: 720),
+                          curve: Curves.easeOutBack,
+                          builder: (_, value, child) =>
+                              Transform.scale(scale: value, child: child),
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontFamily: 'Cinzel',
+                              color: titleColor,
+                              fontSize: 42,
+                              letterSpacing: 7,
+                              shadows: [
+                                Shadow(
+                                  color: titleColor.withValues(alpha: .5),
+                                  blurRadius: 22,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 7),
-                            Text(
-                              evacuation
-                                  ? '호위 탈출 ${report.escortEscaped} / ${report.escortTotal}'
-                                  : '성문 내구도 ${(report.objectiveHpRatio * 100).round()}%',
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                        if (report.completedBonusIds.isNotEmpty)
-                          Text(
-                            '전술 보너스 ${report.completedBonusIds.length}개',
-                            style: const TextStyle(color: Color(0xffffd27c)),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 9),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        ResultTag(
-                          icon: Icons.shield_outlined,
-                          label: report.commanderSurvived
-                              ? '아군 지휘관 생존'
-                              : '아군 지휘관 전사',
-                          positive: report.commanderSurvived,
                         ),
-                        ResultTag(
-                          icon: Icons.flag_outlined,
-                          label: report.enemyCommanderDefeated
-                              ? '적 지휘관 격퇴'
-                              : '적 지휘관 이탈',
-                          positive: report.enemyCommanderDefeated,
+                        Text(subtitle, style: TextStyle(color: Colors.white54)),
+                        const SizedBox(height: 22),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ResultStat('전투 시간', report.time),
+                            ResultStat('처치 수', '${report.kills}'),
+                            ResultStat('획득 골드', '${report.gold}'),
+                            ResultStat('경험치', '${report.xp}'),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    _MvpPanel(award: report.award),
-                    const SizedBox(height: 18),
-                    const Divider(color: Color(0xff665536)),
-                    const SizedBox(height: 12),
-                    _RewardBreakdownPanel(breakdown: report.rewardBreakdown),
-                    const SizedBox(height: 10),
-                    _PermanentGrowthPanel(receipt: growthReceipt),
-                    if (saveNotice != null) ...[
-                      const SizedBox(height: 8),
-                      StatusBanner(
-                        message: saveNotice!,
-                        isError: true,
-                        actionLabel: onRetrySave == null ? null : '저장 재시도',
-                        onAction: onRetrySave,
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '획득 전리품',
-                        style: TextStyle(color: Color(0xffd6bd81)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    if (report.lootDrops.isEmpty)
-                      const GameStatePanel(
-                        icon: Icons.inventory_2_outlined,
-                        title: '회수한 전리품 없음',
-                        message:
-                            '계약 골드와 경험치는 정상 반영되었습니다.\n다음 전장에서는 정예와 사건 목표를 노려보세요.',
-                      )
-                    else
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (var i = 0; i < report.lootDrops.length; i++)
-                            _LootDropCard(
-                              drop: report.lootDrops[i],
-                              revealIndex: i,
+                        const SizedBox(height: 12),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 16,
+                          runSpacing: 6,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                PremiumGameIcon(
+                                  objectiveIcon,
+                                  size: 16,
+                                  color: Color(0xffd6bd81),
+                                ),
+                                const SizedBox(width: 7),
+                                Text(
+                                  objectiveResult,
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                            if (report.completedBonusIds.isNotEmpty)
+                              Text(
+                                '전술 보너스 ${report.completedBonusIds.length}개',
+                                style: const TextStyle(
+                                  color: Color(0xffffd27c),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 9),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            ResultTag(
+                              icon: Icons.shield_outlined,
+                              label: report.commanderSurvived
+                                  ? '아군 지휘관 생존'
+                                  : '아군 지휘관 전사',
+                              positive: report.commanderSurvived,
+                            ),
+                            ResultTag(
+                              icon: Icons.flag_outlined,
+                              label: report.enemyCommanderDefeated
+                                  ? '적 지휘관 격퇴'
+                                  : '적 지휘관 이탈',
+                              positive: report.enemyCommanderDefeated,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        _MvpPanel(award: report.award),
+                        const SizedBox(height: 18),
+                        const Divider(color: Color(0xff665536)),
+                        const SizedBox(height: 12),
+                        _RewardBreakdownPanel(
+                          breakdown: report.rewardBreakdown,
+                        ),
+                        const SizedBox(height: 10),
+                        _PermanentGrowthPanel(receipt: growthReceipt),
+                        if (saveNotice != null) ...[
+                          const SizedBox(height: 8),
+                          StatusBanner(
+                            message: saveNotice!,
+                            isError: true,
+                            actionLabel: onRetrySave == null ? null : '저장 재시도',
+                            onAction: onRetrySave,
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '획득 전리품',
+                            style: TextStyle(color: Color(0xffd6bd81)),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (report.lootDrops.isEmpty)
+                          const GameStatePanel(
+                            icon: Icons.inventory_2_outlined,
+                            title: '회수한 전리품 없음',
+                            message:
+                                '계약 골드와 경험치는 정상 반영되었습니다.\n다음 전장에서는 정예와 사건 목표를 노려보세요.',
+                          )
+                        else
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (var i = 0; i < report.lootDrops.length; i++)
+                                _LootDropCard(
+                                  drop: report.lootDrops[i],
+                                  revealIndex: i,
+                                ),
+                            ],
+                          ),
+                        if (report.eventRecords.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          const Divider(color: Color(0xff665536)),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '전장 사건 기록',
+                              style: TextStyle(color: Color(0xffd6bd81)),
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          for (final record in report.eventRecords)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 7),
+                              child: _EventRecordRow(record: record),
                             ),
                         ],
-                      ),
-                    if (report.eventRecords.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      const Divider(color: Color(0xff665536)),
-                      const SizedBox(height: 10),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '전장 사건 기록',
-                          style: TextStyle(color: Color(0xffd6bd81)),
-                        ),
-                      ),
-                      const SizedBox(height: 9),
-                      for (final record in report.eventRecords)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 7),
-                          child: _EventRecordRow(record: record),
-                        ),
-                    ],
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FantasyButton(
-                            label: '캠프로 귀환',
-                            icon: Icons.home_outlined,
-                            onTap: onCamp,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: FantasyButton(
-                            label: '다시 출전',
-                            icon: Icons.gavel,
-                            prominent: true,
-                            onTap: onReplay,
-                          ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FantasyButton(
+                                label: '캠프로 귀환',
+                                icon: Icons.home_outlined,
+                                onTap: onCamp,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FantasyButton(
+                                label: '다시 출전',
+                                icon: Icons.gavel,
+                                prominent: true,
+                                onTap: onReplay,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

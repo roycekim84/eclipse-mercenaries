@@ -257,7 +257,15 @@ abstract final class ContentCatalogValidator {
       );
     }
 
-    const inventoryOnlyIds = {'contract_ticket'};
+    const inventoryOnlyIds = {
+      'contract_ticket',
+      'field_medicine',
+      'officer_map',
+      'war_hero_contract',
+      'siege_core',
+      'contract_seal',
+      'royal_writ',
+    };
     for (final product in catalog.shopProducts) {
       if (!lootIds.contains(product.itemId) &&
           !inventoryOnlyIds.contains(product.itemId)) {

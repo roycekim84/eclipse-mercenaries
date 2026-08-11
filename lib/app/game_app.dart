@@ -120,6 +120,11 @@ class GameShellState extends State<GameShell> {
 
   void updateSettings(GameSettings settings) {
     _updateAccount(account.copyWith(settings: settings), '환경 설정을 저장했습니다.');
+    if (settings.soundEnabled) {
+      unawaited(GameAudioFeedback.campAmbience(settings));
+    } else {
+      unawaited(GameAudioFeedback.stop());
+    }
   }
 
   void completeTutorial() {
@@ -184,6 +189,7 @@ class GameShellState extends State<GameShell> {
     }
     if (!mounted) return;
     setState(() => _account = loaded);
+    unawaited(GameAudioFeedback.campAmbience(loaded.settings));
   }
 
   Future<void> _persistAccount() async {
@@ -215,6 +221,9 @@ class GameShellState extends State<GameShell> {
 
   void go(AppScene next) {
     unawaited(GameAudioFeedback.navigation(account.settings));
+    if (next != AppScene.battle) {
+      unawaited(GameAudioFeedback.campAmbience(account.settings));
+    }
     setState(() => scene = next);
   }
 
@@ -561,10 +570,29 @@ class GameShellState extends State<GameShell> {
     final factionId = selected.factionId;
     final operation = WarOperationRules.forFaction(factionId);
     final reputationGain = FactionRules.reputationGain(value.outcome.name);
+    final warSealGain = switch (value.outcome) {
+      BattleOutcome.victory => 12 + value.completedBonusIds.length * 2,
+      BattleOutcome.retreat => 5,
+      BattleOutcome.defeat => 2,
+    };
+    final honorGain = switch (value.outcome) {
+      BattleOutcome.victory =>
+        4 +
+            (value.enemyCommanderDefeated ? 4 : 0) +
+            (value.commanderSurvived ? 2 : 0),
+      BattleOutcome.retreat => value.commanderSurvived ? 2 : 0,
+      BattleOutcome.defeat => 0,
+    };
+    final patronGoldBonus =
+        factionId == 'aurum_league' && value.outcome == BattleOutcome.victory
+        ? 300
+        : 0;
     final nextAccount = account.copyWith(
       commanderLevel: commanderProgress.level,
       commanderXp: commanderProgress.xp,
-      gold: account.gold + value.gold,
+      gold: account.gold + value.gold + patronGoldBonus,
+      warSeals: account.warSeals + warSealGain,
+      honor: account.honor + honorGain,
       factionReputation: {
         ...account.factionReputation,
         factionId: (account.factionReputation[factionId] ?? 0) + reputationGain,
@@ -626,6 +654,7 @@ class GameShellState extends State<GameShell> {
   }
 
   void startBattle() {
+    unawaited(GameAudioFeedback.battleAmbience(account.settings));
     setState(() {
       _rewardApplied = false;
       report = null;
@@ -831,6 +860,7 @@ class GameShellState extends State<GameShell> {
                   reducedEffects: account.settings.reducedFlash,
                   performanceMode: account.settings.performanceMode,
                   screenShakeEnabled: account.settings.screenShakeEnabled,
+                  soundEnabled: account.settings.soundEnabled,
                   inputMode: account.settings.battleInputMode,
                   targetPriority: account.settings.autoTargetPriority,
                   gearBonus: GearRules.combatBonus(
@@ -1013,140 +1043,140 @@ const contracts = [
     battlefieldName: '잿바람 철수로',
     name: '철수전',
     subtitle: '부상병과 보급대를 호위하라',
-    power: 22000,
+    power: 10500,
     requiredCommanderLevel: 3,
-    reward: 4500,
+    reward: 3800,
     xp: 1450,
     color: Color(0xff8c6031),
     icon: Icons.directions_run,
     balance: StageBalanceProfile(
-      durationSeconds: 55,
-      unitCount: 560,
-      initialDeployment: 106,
-      activePopulationTarget: 232,
-      reinforcementInterval: 4.0,
-      enemyHpMultiplier: 1.08,
+      durationSeconds: 70,
+      unitCount: 580,
+      initialDeployment: 100,
+      activePopulationTarget: 200,
+      reinforcementInterval: 4.7,
+      enemyHpMultiplier: 1.06,
       enemyDamageBonus: 1,
       enemySpeedMultiplier: 1.04,
-      eliteStride: 76,
-      firstEventAt: 11,
-      eventInterval: 14,
+      eliteStride: 80,
+      firstEventAt: 15,
+      eventInterval: 17,
     ),
   ),
   BattlefieldContract(
     id: 'commander_assassination',
     factionId: 'grey_banner',
-    battlefield: BattlefieldType.gateDefense,
+    battlefield: BattlefieldType.assassination,
     condition: BattlefieldCondition.twilightSiege,
     objective: ContractObjective.assassination,
     battlefieldName: '황혼 공성 평원',
     name: '적 지휘관 암살',
     subtitle: '혼란 속에서 지휘관을 제거하라',
-    power: 25000,
+    power: 13500,
     requiredCommanderLevel: 5,
-    reward: 5000,
+    reward: 4700,
     xp: 1750,
     color: Color(0xff733b3e),
     icon: Icons.gps_fixed,
     balance: StageBalanceProfile(
-      durationSeconds: 60,
-      unitCount: 620,
-      initialDeployment: 112,
-      activePopulationTarget: 245,
-      reinforcementInterval: 3.8,
-      enemyHpMultiplier: 1.14,
+      durationSeconds: 75,
+      unitCount: 650,
+      initialDeployment: 108,
+      activePopulationTarget: 215,
+      reinforcementInterval: 4.4,
+      enemyHpMultiplier: 1.12,
       enemyDamageBonus: 1,
       enemySpeedMultiplier: 1.06,
-      eliteStride: 68,
-      firstEventAt: 10,
-      eventInterval: 13,
+      eliteStride: 72,
+      firstEventAt: 14,
+      eventInterval: 16,
     ),
   ),
   BattlefieldContract(
     id: 'black_forest_supply',
     factionId: 'aurum_league',
-    battlefield: BattlefieldType.evacuation,
+    battlefield: BattlefieldType.supplyEscort,
     condition: BattlefieldCondition.blackForest,
     objective: ContractObjective.supplyEscort,
     battlefieldName: '검은숲 보급로',
     name: '보급부대 호위',
     subtitle: '검은숲을 지나 전선에 군량을 전달하라',
-    power: 23800,
+    power: 17000,
     requiredCommanderLevel: 8,
-    reward: 4800,
-    xp: 1580,
+    reward: 5700,
+    xp: 1900,
     color: Color(0xff315844),
     icon: Icons.local_shipping_outlined,
     balance: StageBalanceProfile(
-      durationSeconds: 65,
-      unitCount: 680,
-      initialDeployment: 118,
-      activePopulationTarget: 255,
-      reinforcementInterval: 3.7,
+      durationSeconds: 80,
+      unitCount: 720,
+      initialDeployment: 116,
+      activePopulationTarget: 230,
+      reinforcementInterval: 4.1,
       enemyHpMultiplier: 1.18,
       enemyDamageBonus: 2,
       enemySpeedMultiplier: 1.07,
-      eliteStride: 64,
-      firstEventAt: 10,
-      eventInterval: 12.5,
+      eliteStride: 65,
+      firstEventAt: 14,
+      eventInterval: 15,
     ),
   ),
   BattlefieldContract(
     id: 'black_forest_ambush',
     factionId: 'grey_banner',
-    battlefield: BattlefieldType.gateDefense,
+    battlefield: BattlefieldType.ambush,
     condition: BattlefieldCondition.blackForest,
     objective: ContractObjective.ambush,
     battlefieldName: '검은숲 보급로',
     name: '적 진지 기습',
     subtitle: '안개 속에서 적 병력 120명을 격파하라',
-    power: 26400,
+    power: 21500,
     requiredCommanderLevel: 12,
-    reward: 5400,
-    xp: 1860,
+    reward: 6900,
+    xp: 2300,
     color: Color(0xff3f4d36),
     icon: Icons.visibility_off_outlined,
     balance: StageBalanceProfile(
-      durationSeconds: 70,
-      unitCount: 760,
-      initialDeployment: 126,
-      activePopulationTarget: 270,
-      reinforcementInterval: 3.5,
+      durationSeconds: 90,
+      unitCount: 820,
+      initialDeployment: 124,
+      activePopulationTarget: 250,
+      reinforcementInterval: 3.8,
       enemyHpMultiplier: 1.25,
       enemyDamageBonus: 2,
       enemySpeedMultiplier: 1.10,
       eliteStride: 58,
-      firstEventAt: 9,
-      eventInterval: 12,
+      firstEventAt: 13,
+      eventInterval: 14,
     ),
   ),
   BattlefieldContract(
     id: 'white_night_retake',
     factionId: 'ember_principality',
-    battlefield: BattlefieldType.gateDefense,
+    battlefield: BattlefieldType.fortressRetake,
     condition: BattlefieldCondition.whiteNight,
     objective: ContractObjective.fortressRetake,
     battlefieldName: '백야 설원 요새',
     name: '요새 탈환',
     subtitle: '빙결 요새의 지휘관과 수비대를 제거하라',
-    power: 29200,
+    power: 27000,
     requiredCommanderLevel: 16,
-    reward: 6200,
-    xp: 2150,
+    reward: 8400,
+    xp: 2900,
     color: Color(0xff547287),
     icon: Icons.castle_outlined,
     balance: StageBalanceProfile(
-      durationSeconds: 75,
-      unitCount: 840,
-      initialDeployment: 136,
-      activePopulationTarget: 285,
-      reinforcementInterval: 3.3,
-      enemyHpMultiplier: 1.32,
+      durationSeconds: 100,
+      unitCount: 940,
+      initialDeployment: 132,
+      activePopulationTarget: 270,
+      reinforcementInterval: 3.5,
+      enemyHpMultiplier: 1.33,
       enemyDamageBonus: 3,
       enemySpeedMultiplier: 1.12,
       eliteStride: 52,
-      firstEventAt: 9,
-      eventInterval: 11.5,
+      firstEventAt: 12,
+      eventInterval: 13,
     ),
   ),
 ];

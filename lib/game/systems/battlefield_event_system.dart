@@ -112,7 +112,7 @@ extension BattlefieldEventSystem on SurvivorGame {
         _eventGoldBonus += 700;
         _eventXpBonus += 240;
       case 'tighten_lines':
-        if (config.battlefield == BattlefieldType.gateDefense) {
+        if (config.battlefield.usesGate) {
           _gateHp = math.min(GateDefenseRules.maxGateHp, _gateHp + 110);
         } else {
           for (final escort in _escorts) {
@@ -150,7 +150,7 @@ extension BattlefieldEventSystem on SurvivorGame {
         if (commander != null && !commander.dead) {
           commander.hp = math.min(commander.maxHp, commander.hp + 8);
         }
-        if (config.battlefield == BattlefieldType.gateDefense) {
+        if (config.battlefield.usesGate) {
           _gateHp = math.min(GateDefenseRules.maxGateHp, _gateHp + 70);
         } else {
           for (final escort in _escorts) {

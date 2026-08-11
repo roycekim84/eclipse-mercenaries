@@ -196,34 +196,38 @@ extension PooledEffectsSystem on SurvivorGame {
       if (!fx.active) continue;
       final progress = 1 - fx.life / fx.maxLife;
       final alpha = (255 * (fx.life / fx.maxLife)).clamp(0, 255).toInt();
-      final fxColor = switch (fx.style) {
-        CombatStyle.blades => mercenary.visual.accent,
-        CombatStyle.greatsword => const Color(0xffd2675b),
-        CombatStyle.magic => const Color(0xff71d4e7),
+      final atlasIndex = switch (fx.style) {
+        CombatStyle.blades => 0,
+        CombatStyle.greatsword => 1,
+        CombatStyle.magic => 2,
       };
-      final paint = Paint()
-        ..color = fxColor.withAlpha(alpha)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = fx.style == CombatStyle.greatsword ? 7 : 4;
-      if (fx.style == CombatStyle.magic) {
-        canvas.drawCircle(
-          Offset(fx.position.x, fx.position.y),
-          18 + progress * 18,
-          paint,
-        );
-      } else {
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: Offset(fx.position.x, fx.position.y),
-            width: fx.style == CombatStyle.greatsword ? 72 : 50,
-            height: fx.style == CombatStyle.greatsword ? 48 : 32,
-          ),
-          -.8,
-          2.2,
-          false,
-          paint,
-        );
-      }
+      final cellWidth = _vfxAtlas.width / 4;
+      final cellHeight = _vfxAtlas.height / 4;
+      final source = Rect.fromLTWH(
+        (atlasIndex % 4) * cellWidth,
+        (atlasIndex ~/ 4) * cellHeight,
+        cellWidth,
+        cellHeight,
+      );
+      final baseExtent = switch (fx.style) {
+        CombatStyle.blades => 74.0,
+        CombatStyle.greatsword => 88.0,
+        CombatStyle.magic => 78.0,
+      };
+      final extent = baseExtent * (.84 + progress * .28);
+      canvas.drawImageRect(
+        _vfxAtlas,
+        source,
+        Rect.fromCenter(
+          center: Offset(fx.position.x, fx.position.y),
+          width: extent,
+          height: extent,
+        ),
+        Paint()
+          ..filterQuality = FilterQuality.none
+          ..color = Color.fromARGB(alpha, 255, 255, 255)
+          ..blendMode = BlendMode.screen,
+      );
     }
     for (final projectile in _projectiles) {
       if (!projectile.active) continue;

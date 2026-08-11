@@ -22,11 +22,19 @@ void main() {
     );
     expect(
       contracts.map((contract) => contract.balance.durationSeconds),
-      orderedEquals([45, 55, 60, 65, 70, 75]),
+      orderedEquals([60, 70, 75, 80, 90, 100]),
     );
     expect(
       contracts.map((contract) => contract.balance.enemyHpMultiplier),
-      orderedEquals([1, 1.08, 1.14, 1.18, 1.25, 1.32]),
+      orderedEquals([1, 1.06, 1.12, 1.18, 1.25, 1.33]),
+    );
+    expect(
+      contracts.map((contract) => contract.power),
+      orderedEquals([8000, 10500, 13500, 17000, 21500, 27000]),
+    );
+    expect(
+      contracts.map((contract) => contract.reward),
+      orderedEquals([3000, 3800, 4700, 5700, 6900, 8400]),
     );
     for (var index = 1; index < contracts.length; index++) {
       final previous = contracts[index - 1].balance;

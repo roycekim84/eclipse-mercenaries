@@ -26,13 +26,11 @@ extension GateDefenseSystem on SurvivorGame {
       final elite = archetype?.rank == EnemyRank.elite;
       final objectiveAggro =
           !ally &&
+          (config.battlefield.usesGate || config.battlefield.isConvoy) &&
           role != UnitRole.commander &&
           (archetype?.ability == EnemyAbility.breach ||
               archetype?.ability == EnemyAbility.blast ||
-              _random.nextDouble() <
-                  (config.battlefield == BattlefieldType.evacuation
-                      ? .28
-                      : .4));
+              _random.nextDouble() < (config.battlefield.isConvoy ? .28 : .4));
       final rawMaxHp =
           UnitRoleRules.maxHp(role) +
           (archetype?.hpBonus ?? 0) +
@@ -49,7 +47,7 @@ extension GateDefenseSystem on SurvivorGame {
             (_random.nextDouble() - .5) * 18,
       );
       final frontX = size.x * .50;
-      final defaultPosition = config.battlefield == BattlefieldType.evacuation
+      final defaultPosition = config.battlefield.isConvoy
           ? Vector2(
               ally
                   ? size.x * .24 + rank * 14 + _random.nextDouble() * 10
@@ -202,7 +200,7 @@ extension GateDefenseSystem on SurvivorGame {
   }
 
   void _updateFrontPressure() {
-    if (config.battlefield == BattlefieldType.evacuation) {
+    if (config.battlefield.isConvoy) {
       final livingEscorts = _escorts.where(
         (escort) => !escort.dead && !escort.escaped,
       );
@@ -237,10 +235,22 @@ extension GateDefenseSystem on SurvivorGame {
     final elapsedSeconds = _elapsed.floor().clamp(0, config.durationSeconds);
     final minutes = elapsedSeconds ~/ 60;
     final seconds = elapsedSeconds % 60;
-    final evacuation = config.battlefield == BattlefieldType.evacuation;
-    final objectiveRatio = evacuation
-        ? (_escortEscaped / math.max(1, _escorts.length)).clamp(0.0, 1.0)
-        : (_gateHp / GateDefenseRules.maxGateHp).clamp(0.0, 1.0);
+    final evacuation = config.battlefield.isConvoy;
+    final objectiveRatio = switch (config.objective) {
+      ContractObjective.evacuation || ContractObjective.supplyEscort =>
+        (_escortEscaped / math.max(1, _escorts.length)).clamp(0.0, 1.0),
+      ContractObjective.assassination =>
+        _enemyCommander?.dead == true ? 1.0 : 0.0,
+      ContractObjective.ambush => (_kills / 120).clamp(0.0, 1.0),
+      ContractObjective.fortressRetake =>
+        math
+            .min(_kills / 80, _enemyCommander?.dead == true ? 1.0 : .5)
+            .clamp(0.0, 1.0),
+      ContractObjective.defense => (_gateHp / GateDefenseRules.maxGateHp).clamp(
+        0.0,
+        1.0,
+      ),
+    };
     final bonuses = outcome != BattleOutcome.victory
         ? const <String>[]
         : evacuation
@@ -250,13 +260,20 @@ extension GateDefenseSystem on SurvivorGame {
             enemyCommanderDefeated: _enemyCommander?.dead == true,
             secondsLeft: (config.durationSeconds - _elapsed).ceil(),
           )
-        : GateDefenseRules.completedBonuses(
+        : config.battlefield.usesGate
+        ? GateDefenseRules.completedBonuses(
             gateHpRatio: objectiveRatio,
             frontPressure: _frontPressure,
             elitesCleared: !_units.any(
               (unit) => !unit.dead && !unit.ally && unit.elite,
             ),
-          );
+          )
+        : <String>[
+            if (_enemyCommander?.dead == true) 'commander_eliminated',
+            if (_kills >= 80) 'field_dominance',
+            if (!_units.any((unit) => !unit.dead && !unit.ally && unit.elite))
+              'elite_clear',
+          ];
     final rewardRate = BattleRewardRules.preservationRate(outcome.name);
     final reward = BattleRewardRules.calculate(
       contractGold: config.contractGold,
@@ -321,8 +338,41 @@ extension GateDefenseSystem on SurvivorGame {
   }
 
   void _drawBattlefieldObjective(Canvas canvas) {
-    if (config.battlefield == BattlefieldType.evacuation) {
+    if (config.battlefield.isConvoy) {
       _drawEvacuationObjective(canvas);
+      return;
+    }
+    if (config.battlefield.isOpenField) {
+      final target =
+          _enemyCommander?.position ?? Vector2(size.x * .74, size.y / 2);
+      final atlasCellWidth = _vfxAtlas.width / 4;
+      final atlasCellHeight = _vfxAtlas.height / 4;
+      final index = switch (config.objective) {
+        ContractObjective.assassination => 7,
+        ContractObjective.ambush => 14,
+        ContractObjective.fortressRetake => 15,
+        _ => 10,
+      };
+      canvas.drawImageRect(
+        _vfxAtlas,
+        Rect.fromLTWH(
+          (index % 4) * atlasCellWidth,
+          (index ~/ 4) * atlasCellHeight,
+          atlasCellWidth,
+          atlasCellHeight,
+        ),
+        Rect.fromCenter(
+          center: Offset(target.x, target.y + 18),
+          width: config.objective == ContractObjective.fortressRetake ? 96 : 68,
+          height: config.objective == ContractObjective.fortressRetake
+              ? 96
+              : 68,
+        ),
+        Paint()
+          ..filterQuality = FilterQuality.none
+          ..color = const Color(0x99ffffff)
+          ..blendMode = BlendMode.screen,
+      );
       return;
     }
     final defensePaint = Paint()..color = const Color(0x182a6a8d);

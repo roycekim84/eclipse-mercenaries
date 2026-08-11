@@ -102,7 +102,7 @@ extension UltimateSystem on SurvivorGame {
           kind: DamageKind.pure,
         );
         _playerHp = math.min(_playerMaxHp, _playerHp + _playerMaxHp * .28);
-        if (config.battlefield == BattlefieldType.gateDefense) {
+        if (config.battlefield.usesGate) {
           _gateHp = math.min(GateDefenseRules.maxGateHp, _gateHp + 180);
         }
       case UltimatePattern.skyTactics:

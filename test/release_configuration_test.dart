@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.9+18'));
+    expect(pubspec, contains('version: 0.10.0+19'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));
@@ -173,4 +173,87 @@ void main() {
       expect(bytes[25], anyOf(2, 6), reason: '$path must be RGB/RGBA PNG');
     }
   });
+
+  test('release UI, event, shop, battle VFX and audio sets are complete', () {
+    const glyphs = <String>[
+      'roster',
+      'equipment',
+      'shop',
+      'missions',
+      'map',
+      'forge',
+      'guild',
+      'infirmary',
+      'gold',
+      'crystal',
+      'contract',
+      'reputation',
+      'dash',
+      'rally',
+      'ultimate',
+      'omen',
+    ];
+    const events = <String>[
+      'reinforcements',
+      'supply_wagon',
+      'elite_knight',
+      'wounded_commander',
+      'mercenary_intervention',
+      'monster_incursion',
+      'red_moon',
+      'royal_presence',
+    ];
+    const shopItems = <String>[
+      'field_ration',
+      'war_scrap',
+      'contract_ticket',
+      'field_medicine',
+      'tempered_iron',
+      'officer_map',
+      'war_hero_contract',
+      'siege_core',
+      'veteran_badge',
+      'contract_seal',
+      'mooncloth',
+      'royal_writ',
+    ];
+    const audio = <String>[
+      'ui_click',
+      'confirm',
+      'battle_hit',
+      'ultimate',
+      'camp_loop',
+      'battle_loop',
+    ];
+
+    for (final id in glyphs) {
+      _expectProductionAsset('assets/images/ui/glyphs/$id.png', minBytes: 500);
+    }
+    for (final id in events) {
+      _expectProductionAsset('assets/images/events/$id.png', minBytes: 10000);
+    }
+    for (final id in shopItems) {
+      _expectProductionAsset(
+        'assets/images/shop/final/$id.png',
+        minBytes: 1000,
+      );
+    }
+    _expectProductionAsset(
+      'assets/images/battlefield/final_vfx_atlas.png',
+      minBytes: 10000,
+    );
+    for (final id in audio) {
+      final file = File('assets/audio/$id.wav');
+      expect(file.existsSync(), isTrue, reason: file.path);
+      expect(file.lengthSync(), greaterThan(4096), reason: file.path);
+      final header = file.readAsBytesSync().take(4).toList();
+      expect(header, <int>[82, 73, 70, 70], reason: '${file.path} RIFF');
+    }
+  });
+}
+
+void _expectProductionAsset(String path, {required int minBytes}) {
+  final file = File(path);
+  expect(file.existsSync(), isTrue, reason: path);
+  expect(file.lengthSync(), greaterThan(minBytes), reason: path);
 }

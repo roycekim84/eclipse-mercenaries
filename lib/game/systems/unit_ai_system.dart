@@ -16,7 +16,7 @@ extension UnitAiSystem on SurvivorGame {
       return;
     }
     if (!unit.ally && unit.objectiveAggro) {
-      if (config.battlefield == BattlefieldType.evacuation) {
+      if (config.battlefield.isConvoy) {
         _updatePursuer(unit, dt);
       } else {
         _updateSiegeUnit(unit, dt);
@@ -142,9 +142,11 @@ extension UnitAiSystem on SurvivorGame {
 
   void _moveRetreatingUnit(BattleUnit unit, double dt) {
     final destination = unit.ally
-        ? config.battlefield == BattlefieldType.evacuation
+        ? config.battlefield.isConvoy
               ? Vector2(size.x - 45, unit.position.y)
-              : Vector2(_gatePosition.x + 45, _gatePosition.y)
+              : config.battlefield.usesGate
+              ? Vector2(_gatePosition.x + 45, _gatePosition.y)
+              : Vector2(-45, unit.position.y)
         : Vector2(size.x + 55, unit.position.y);
     _moveToward(unit, destination, dt, speedMultiplier: 1.22);
   }
@@ -154,7 +156,7 @@ extension UnitAiSystem on SurvivorGame {
     if (unit.role == UnitRole.commander) {
       unit.stance = UnitStance.support;
       final anchor = Vector2(
-        config.battlefield == BattlefieldType.evacuation
+        config.battlefield.isConvoy
             ? (unit.ally ? size.x * .42 : size.x * .7)
             : (unit.ally ? size.x * .37 : size.x * .63),
         _safeCombatY(size.y / 2),
@@ -182,7 +184,7 @@ extension UnitAiSystem on SurvivorGame {
       return;
     }
     final fallback = Vector2(
-      config.battlefield == BattlefieldType.evacuation
+      config.battlefield.isConvoy
           ? (unit.ally ? size.x * .48 : size.x * .68)
           : (unit.ally ? size.x * .44 : size.x * .56),
       _safeCombatY(unit.position.y),

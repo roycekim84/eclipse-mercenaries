@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -17,6 +18,7 @@ import '../domain/progression.dart';
 import '../domain/run_growth.dart';
 import '../domain/reusable_spatial_grid.dart';
 import '../core/content/game_visuals.dart';
+import '../core/audio/game_audio_feedback.dart';
 import 'render/player_sprite_component.dart';
 
 part 'systems/ultimate_system.dart';
@@ -43,6 +45,7 @@ class SurvivorGame extends FlameGame {
     required this.onVictory,
     this.targetPriority = AutoTargetPriority.nearest,
     this.screenShakeEnabled = true,
+    this.soundEnabled = true,
   }) : _random = math.Random(config.seed),
        _upgradeRandom = math.Random(config.seed ^ 0x5f3759df),
        _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
@@ -76,6 +79,7 @@ class SurvivorGame extends FlameGame {
   final BattleConfig config;
   final AutoTargetPriority targetPriority;
   final bool screenShakeEnabled;
+  final bool soundEnabled;
   MercenarySpec get mercenary => config.mercenary;
   WeaponSpec get weapon => config.weapon;
   double get _permanentDamageMultiplier =>
@@ -130,6 +134,7 @@ class SurvivorGame extends FlameGame {
   late final PlayerSpriteComponent _playerSprite;
   late final Image _unitAtlas;
   late final Image _projectileAtlas;
+  late final Image _vfxAtlas;
   Image? _battlefieldBackground;
   BattleUnit? _allyCommander;
   BattleUnit? _enemyCommander;
@@ -228,13 +233,19 @@ class SurvivorGame extends FlameGame {
     _nextEventAt = config.balance.firstEventAt;
     _enemyDamageBonus = config.balance.enemyDamageBonus;
     _enemySpeedMultiplier = config.balance.enemySpeedMultiplier;
-    _player = config.battlefield == BattlefieldType.evacuation
-        ? Vector2(size.x * .34, size.y / 2)
-        : size / 2;
+    _player = switch (config.battlefield) {
+      BattlefieldType.evacuation ||
+      BattlefieldType.supplyEscort => Vector2(size.x * .34, size.y / 2),
+      BattlefieldType.assassination => Vector2(size.x * .28, size.y / 2),
+      BattlefieldType.ambush => Vector2(size.x * .46, size.y * .58),
+      BattlefieldType.fortressRetake => Vector2(size.x * .35, size.y / 2),
+      BattlefieldType.gateDefense => size / 2,
+    };
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
     _unitAtlas = await images.load('battlefield/unit_role_batch.png');
     _projectileAtlas = await images.load('battlefield/projectile_atlas.png');
+    _vfxAtlas = await images.load('battlefield/final_vfx_atlas.png');
     _battlefieldBackground = await images.load(switch (config.condition) {
       BattlefieldCondition.moonlitNight =>
         'battlefield/north_gate_battlefield.png',
@@ -283,15 +294,15 @@ class SurvivorGame extends FlameGame {
       allyCommanderAlive: true,
       enemyCommanderAlive: true,
       build: _currentBuildEntries,
-      escortTotal: config.battlefield == BattlefieldType.evacuation
+      escortTotal: config.battlefield.isConvoy
           ? EvacuationRules.totalEscorts
           : 0,
-      escortAlive: config.battlefield == BattlefieldType.evacuation
+      escortAlive: config.battlefield.isConvoy
           ? EvacuationRules.totalEscorts
           : 0,
     );
     _spawnBattleLines();
-    if (config.battlefield == BattlefieldType.evacuation) {
+    if (config.battlefield.isConvoy) {
       _spawnEvacuationConvoy();
     }
   }
@@ -352,8 +363,8 @@ class SurvivorGame extends FlameGame {
     _emitSlash(_player, .5, CombatStyle.magic);
     event.value = BattleEvent(
       '전술 명령',
-      config.battlefield == BattlefieldType.evacuation ? '강행군' : '전선 집결',
-      config.battlefield == BattlefieldType.evacuation
+      config.battlefield.isConvoy ? '강행군' : '전선 집결',
+      config.battlefield.isConvoy
           ? '호위대가 4초간 이동속도 35% 증가'
           : '아군이 4초간 공격·이동 주기 가속',
       id: 'tactical_action',
@@ -423,6 +434,7 @@ class SurvivorGame extends FlameGame {
       return;
     }
     _ultimateCharge = 0;
+    unawaited(GameAudioFeedback.ultimateEnabled(soundEnabled));
     _ultimateClock = 1.2;
     _pausedForUltimate = true;
     _ultimateActivation++;
@@ -507,7 +519,7 @@ class SurvivorGame extends FlameGame {
     _playerSprite
       ..position = Vector2(_player.x.roundToDouble(), _player.y.roundToDouble())
       ..setMoving(isMoving);
-    if (config.battlefield == BattlefieldType.evacuation) {
+    if (config.battlefield.isConvoy) {
       _updateEvacuation(worldDt);
     }
     final aiStartMicros = _updateClock.elapsedMicroseconds;
@@ -556,21 +568,15 @@ class SurvivorGame extends FlameGame {
       ContractObjective.assassination =>
         _enemyCommander?.dead == true
             ? BattleOutcome.victory
-            : (_gateHp <= 0 || secondsLeft <= 0
-                  ? BattleOutcome.defeat
-                  : BattleOutcome.retreat),
+            : (secondsLeft <= 0 ? BattleOutcome.defeat : BattleOutcome.retreat),
       ContractObjective.ambush =>
         _kills >= 120
             ? BattleOutcome.victory
-            : (_gateHp <= 0 || secondsLeft <= 0
-                  ? BattleOutcome.defeat
-                  : BattleOutcome.retreat),
+            : (secondsLeft <= 0 ? BattleOutcome.defeat : BattleOutcome.retreat),
       ContractObjective.fortressRetake =>
         _enemyCommander?.dead == true && _kills >= 80
             ? BattleOutcome.victory
-            : (_gateHp <= 0 || secondsLeft <= 0
-                  ? BattleOutcome.defeat
-                  : BattleOutcome.retreat),
+            : (secondsLeft <= 0 ? BattleOutcome.defeat : BattleOutcome.retreat),
       ContractObjective.defense => GateDefenseRules.resolve(
         gateHp: _gateHp,
         secondsLeft: secondsLeft,

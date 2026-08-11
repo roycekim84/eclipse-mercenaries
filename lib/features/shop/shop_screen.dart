@@ -476,10 +476,17 @@ IconData _itemIcon(String id) => switch (id) {
 };
 
 String _shopItemArt(String id) => switch (id) {
-  'field_ration' => 'assets/images/shop/field_ration.png',
-  'war_scrap' || 'tempered_iron' => 'assets/images/shop/war_scrap.png',
-  'contract_ticket' ||
-  'contract_seal' ||
-  'officer_map' => 'assets/images/shop/contract_ticket.png',
-  _ => 'assets/images/shop/war_scrap.png',
+  'field_ration' => 'assets/images/shop/final/field_ration.png',
+  'war_scrap' => 'assets/images/shop/final/war_scrap.png',
+  'contract_ticket' => 'assets/images/shop/final/contract_ticket.png',
+  'field_medicine' => 'assets/images/shop/final/field_medicine.png',
+  'tempered_iron' => 'assets/images/shop/final/tempered_iron.png',
+  'officer_map' => 'assets/images/shop/final/officer_map.png',
+  'war_hero_contract' => 'assets/images/shop/final/war_hero_contract.png',
+  'siege_core' => 'assets/images/shop/final/siege_core.png',
+  'veteran_badge' => 'assets/images/shop/final/veteran_badge.png',
+  'contract_seal' => 'assets/images/shop/final/contract_seal.png',
+  'mooncloth' => 'assets/images/shop/final/mooncloth.png',
+  'royal_writ' => 'assets/images/shop/final/royal_writ.png',
+  _ => 'assets/images/shop/final/war_scrap.png',
 };

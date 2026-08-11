@@ -11,6 +11,7 @@ class BattleScreen extends StatefulWidget {
     required this.reducedEffects,
     required this.performanceMode,
     required this.screenShakeEnabled,
+    this.soundEnabled = true,
     required this.inputMode,
     required this.targetPriority,
     required this.gearBonus,
@@ -25,6 +26,7 @@ class BattleScreen extends StatefulWidget {
   final bool reducedEffects;
   final bool performanceMode;
   final bool screenShakeEnabled;
+  final bool soundEnabled;
   final BattleInputMode inputMode;
   final AutoTargetPriority targetPriority;
   final GearCombatBonus gearBonus;
@@ -65,6 +67,7 @@ class _BattleScreenState extends State<BattleScreen>
       onVictory: widget.onVictory,
       targetPriority: widget.targetPriority,
       screenShakeEnabled: widget.screenShakeEnabled,
+      soundEnabled: widget.soundEnabled,
     );
     game.reducedEffects.value = widget.reducedEffects;
     game.performanceMode.value = widget.performanceMode;
@@ -374,6 +377,39 @@ class BattleHud extends StatelessWidget {
     final screenSize = MediaQuery.sizeOf(context);
     final dense = screenSize.height < 500;
     final compact = screenSize.width < 1100 || dense;
+    final objectiveIcon = switch (contract.objective) {
+      ContractObjective.evacuation ||
+      ContractObjective.supplyEscort => Icons.local_shipping_outlined,
+      ContractObjective.assassination => Icons.gps_fixed,
+      ContractObjective.ambush => Icons.visibility_off_outlined,
+      ContractObjective.fortressRetake => Icons.castle_outlined,
+      ContractObjective.defense => Icons.shield_outlined,
+    };
+    final objectiveStatus = switch (contract.objective) {
+      ContractObjective.evacuation || ContractObjective.supplyEscort =>
+        '목표 호위 ${stats.escortEscaped} / ${EvacuationRules.requiredEscaped}',
+      ContractObjective.assassination =>
+        stats.enemyCommanderAlive ? '지휘관 추적 중' : '지휘관 제거 완료',
+      ContractObjective.ambush => '격파 ${stats.kills} / 120',
+      ContractObjective.fortressRetake =>
+        '수비대 ${stats.kills} / 80 · 지휘관 ${stats.enemyCommanderAlive ? '생존' : '격파'}',
+      ContractObjective.defense =>
+        '북문 ${switch (GateDefenseRules.damageStage(stats.gateHp)) {
+          ObjectiveDamageStage.secure => '안정',
+          ObjectiveDamageStage.damaged => '파손',
+          ObjectiveDamageStage.critical => '붕괴 위험',
+        }}  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
+    };
+    final objectiveProgress = switch (contract.objective) {
+      ContractObjective.evacuation || ContractObjective.supplyEscort =>
+        stats.escortEscaped / EvacuationRules.requiredEscaped,
+      ContractObjective.assassination => stats.enemyCommanderAlive ? .35 : 1.0,
+      ContractObjective.ambush => stats.kills / 120,
+      ContractObjective.fortressRetake =>
+        (stats.kills / 80).clamp(0.0, 1.0) *
+            (stats.enemyCommanderAlive ? .65 : 1.0),
+      ContractObjective.defense => stats.gateHp / stats.gateMaxHp,
+    };
     return Stack(
       children: [
         Positioned(
@@ -443,30 +479,20 @@ class BattleHud extends StatelessWidget {
                   SizedBox(height: dense ? 2 : 5),
                   Row(
                     children: [
-                      Icon(
-                        contract.battlefield == BattlefieldType.evacuation
-                            ? Icons.local_shipping_outlined
-                            : Icons.castle_outlined,
-                        size: 13,
-                        color: const Color(0xffd7bd7c),
-                      ),
+                      PremiumGameIcon(objectiveIcon, size: 17),
                       const SizedBox(width: 5),
                       Expanded(
                         child: Text(
-                          contract.battlefield == BattlefieldType.evacuation
-                              ? '필수 탈출 ${stats.escortEscaped} / ${EvacuationRules.requiredEscaped}'
-                              : '북문 ${switch (GateDefenseRules.damageStage(stats.gateHp)) {
-                                  ObjectiveDamageStage.secure => '안정',
-                                  ObjectiveDamageStage.damaged => '파손',
-                                  ObjectiveDamageStage.critical => '붕괴 위험',
-                                }}  ${stats.gateHp.ceil()} / ${stats.gateMaxHp.ceil()}',
+                          objectiveStatus,
                           style: const TextStyle(fontSize: 10),
                         ),
                       ),
                       Text(
-                        contract.battlefield == BattlefieldType.evacuation
+                        contract.battlefield.isConvoy
                             ? '생존 ${stats.escortAlive}'
-                            : '전선 ${(stats.frontPressure * 100).round()}%',
+                            : contract.battlefield.usesGate
+                            ? '전선 ${(stats.frontPressure * 100).round()}%'
+                            : '${(objectiveProgress * 100).clamp(0, 100).round()}%',
                         style: TextStyle(
                           fontSize: 9,
                           color: stats.frontPressure > .6
@@ -477,14 +503,14 @@ class BattleHud extends StatelessWidget {
                     ],
                   ),
                   Meter(
-                    value: contract.battlefield == BattlefieldType.evacuation
-                        ? stats.escortEscaped / EvacuationRules.requiredEscaped
-                        : stats.gateHp / stats.gateMaxHp,
+                    value: objectiveProgress.clamp(0, 1),
                     color:
-                        (contract.battlefield == BattlefieldType.evacuation
+                        (contract.battlefield.isConvoy
                             ? stats.escortAlive + stats.escortEscaped >=
                                   EvacuationRules.requiredEscaped
-                            : stats.gateHp / stats.gateMaxHp > .35)
+                            : contract.battlefield.usesGate
+                            ? stats.gateHp / stats.gateMaxHp > .35
+                            : objectiveProgress >= .5)
                         ? const Color(0xff60b875)
                         : const Color(0xffd2554e),
                   ),
@@ -581,12 +607,10 @@ class BattleHud extends StatelessWidget {
                     onTap: onDash,
                   ),
                   BattleActionOrb(
-                    icon: contract.battlefield == BattlefieldType.evacuation
+                    icon: contract.battlefield.isConvoy
                         ? Icons.directions_run
                         : Icons.flag,
-                    label: contract.battlefield == BattlefieldType.evacuation
-                        ? '강행군'
-                        : '집결',
+                    label: contract.battlefield.isConvoy ? '강행군' : '집결',
                     cooldown: controls.tacticalCooldown,
                     maxCooldown: BattleControlRules.tacticalCooldownSeconds,
                     active: controls.tacticalActive,
@@ -842,8 +866,37 @@ class BattleMiniMapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final field = Rect.fromLTWH(6, 6, size.width - 12, size.height - 24);
-    canvas.drawRect(field, Paint()..color = const Color(0xff272922));
-    if (battlefield == BattlefieldType.gateDefense) {
+    canvas.drawRect(field, Paint()..color = const Color(0xff161b1d));
+    final contour = Paint()
+      ..color = const Color(0x334f645e)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (var index = 0; index < 4; index++) {
+      final inset = 4.0 + index * 5;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTRB(
+            field.left + inset,
+            field.top + inset * .35,
+            field.right - inset * .7,
+            field.bottom - inset * .35,
+          ),
+          Radius.elliptical(18 + index * 6, 8 + index * 3),
+        ),
+        contour,
+      );
+    }
+    void diamond(Offset center, Color color, double radius) {
+      final path = Path()
+        ..moveTo(center.dx, center.dy - radius)
+        ..lineTo(center.dx + radius, center.dy)
+        ..lineTo(center.dx, center.dy + radius)
+        ..lineTo(center.dx - radius, center.dy)
+        ..close();
+      canvas.drawPath(path, Paint()..color = color);
+    }
+
+    if (battlefield.usesGate) {
       final lineX = field.left + field.width * .28;
       canvas.drawRect(
         Rect.fromLTWH(field.left, field.top, field.width * .28, field.height),
@@ -856,34 +909,62 @@ class BattleMiniMapPainter extends CustomPainter {
           ..color = const Color(0xffd6b968)
           ..strokeWidth = 2,
       );
-      canvas.drawCircle(
+      diamond(
         Offset(field.left + 8, field.center.dy),
+        const Color(0xff68a9c8),
         5,
-        Paint()..color = const Color(0xff68a9c8),
       );
-      canvas.drawCircle(
-        Offset(field.right - field.width * pressure, field.center.dy),
-        4,
-        Paint()..color = const Color(0xffd15f57),
-      );
-    } else {
-      canvas.drawLine(
-        Offset(field.left + 7, field.center.dy),
-        Offset(field.right - 7, field.center.dy),
+      for (var index = 0; index < 4; index++) {
+        diamond(
+          Offset(
+            field.right - field.width * pressure - index * 5,
+            field.top + 8 + index * (field.height - 16) / 3,
+          ),
+          const Color(0xffd15f57),
+          2.5,
+        );
+      }
+    } else if (battlefield.isConvoy) {
+      final road = Path()
+        ..moveTo(field.left + 5, field.bottom - 7)
+        ..cubicTo(
+          field.left + field.width * .32,
+          field.top + 2,
+          field.left + field.width * .67,
+          field.bottom - 3,
+          field.right - 5,
+          field.top + 6,
+        );
+      canvas.drawPath(
+        road,
         Paint()
           ..color = const Color(0xff8d7650)
-          ..strokeWidth = 9,
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6,
       );
       final convoyX = field.left + 7 + (field.width - 14) * escortProgress;
-      canvas.drawCircle(
-        Offset(convoyX, field.center.dy),
-        5,
-        Paint()..color = const Color(0xff71adc8),
-      );
+      diamond(Offset(convoyX, field.center.dy), const Color(0xff71adc8), 5);
       canvas.drawRect(
         Rect.fromLTWH(field.right - 9, field.top, 9, field.height),
         Paint()..color = const Color(0x8866a7b8),
       );
+    } else {
+      final objective = Offset(field.right - 12, field.center.dy);
+      diamond(objective, const Color(0xffd25f59), 7);
+      for (var index = 0; index < 6; index++) {
+        final column = index % 3;
+        final row = index ~/ 3;
+        diamond(
+          Offset(field.left + 15 + column * 11, field.center.dy - 7 + row * 14),
+          const Color(0xff6aa9c6),
+          2.7,
+        );
+        diamond(
+          Offset(field.right - 38 - column * 9, field.center.dy - 7 + row * 14),
+          const Color(0xffc95b55),
+          2.7,
+        );
+      }
     }
   }
 
@@ -1307,15 +1388,22 @@ class _BattlefieldEventArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final quadrant = switch (effect) {
-      BattlefieldEventEffect.reinforcements ||
-      BattlefieldEventEffect.eliteKnight => const Alignment(-1, -1),
-      BattlefieldEventEffect.supplyWagon ||
-      BattlefieldEventEffect.woundedCommander => const Alignment(1, -1),
-      BattlefieldEventEffect.mercenaryIntervention ||
-      BattlefieldEventEffect.monsterIncursion => const Alignment(-1, 1),
-      BattlefieldEventEffect.redMoon ||
-      BattlefieldEventEffect.royalPresence => const Alignment(1, 1),
+    final asset = switch (effect) {
+      BattlefieldEventEffect.reinforcements =>
+        'assets/images/events/reinforcements.png',
+      BattlefieldEventEffect.eliteKnight =>
+        'assets/images/events/elite_knight.png',
+      BattlefieldEventEffect.supplyWagon =>
+        'assets/images/events/supply_wagon.png',
+      BattlefieldEventEffect.woundedCommander =>
+        'assets/images/events/wounded_commander.png',
+      BattlefieldEventEffect.mercenaryIntervention =>
+        'assets/images/events/mercenary_intervention.png',
+      BattlefieldEventEffect.monsterIncursion =>
+        'assets/images/events/monster_incursion.png',
+      BattlefieldEventEffect.redMoon => 'assets/images/events/red_moon.png',
+      BattlefieldEventEffect.royalPresence =>
+        'assets/images/events/royal_presence.png',
     };
     return SizedBox(
       height: MediaQuery.sizeOf(context).height < 500 ? 78 : 120,
@@ -1325,15 +1413,12 @@ class _BattlefieldEventArt extends StatelessWidget {
           border: Border.all(color: const Color(0xff80643c)),
         ),
         child: ClipRect(
-          child: Align(
-            alignment: quadrant,
-            widthFactor: .5,
-            heightFactor: .5,
-            child: Image.asset(
-              'assets/images/events/battlefield_event_atlas.jpg',
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
-            ),
+          child: Image.asset(
+            asset,
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.high,
           ),
         ),
       ),

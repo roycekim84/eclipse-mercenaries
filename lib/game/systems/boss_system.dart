@@ -56,7 +56,7 @@ extension BossSystem on SurvivorGame {
     _bossTelegraphClock = _activeBossPattern!.telegraphSeconds;
     _bossUiClock = 0;
     _bossPatternTarget = _activeBossPattern!.type == BossPatternType.commandWave
-        ? (config.battlefield == BattlefieldType.gateDefense
+        ? (config.battlefield.usesGate
               ? _gatePosition.clone()
               : _player.clone())
         : _player.clone();
@@ -94,7 +94,7 @@ extension BossSystem on SurvivorGame {
             _ => 'siege_ram',
           },
         );
-        if (config.battlefield == BattlefieldType.gateDefense) {
+        if (config.battlefield.usesGate) {
           _gateHp = math.max(0, _gateHp - 8 * _bossPhase);
         }
     }

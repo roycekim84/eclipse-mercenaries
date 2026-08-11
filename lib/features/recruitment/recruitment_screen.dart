@@ -431,34 +431,24 @@ class _RecruitReveal extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            Center(
-                              child: TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                duration: const Duration(milliseconds: 760),
-                                curve: Curves.easeOutQuart,
-                                builder: (_, value, child) => IgnorePointer(
-                                  child: Opacity(
-                                    opacity: (1 - value).clamp(0.0, 1.0),
-                                    child: Transform.scale(
-                                      scale: .5 + value * 1.35,
-                                      child: Container(
-                                        width: 150,
-                                        height: 150,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xffffd27c),
-                                            width: 2,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xff8d59b2)
-                                                  .withValues(
-                                                    alpha: .62 * (1 - value),
-                                                  ),
-                                              blurRadius: 18 + value * 34,
-                                              spreadRadius: value * 8,
-                                            ),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: -1.3, end: 1.7),
+                              duration: const Duration(milliseconds: 920),
+                              curve: Curves.easeInOutCubic,
+                              builder: (_, value, child) => IgnorePointer(
+                                child: FractionalTranslation(
+                                  translation: Offset(value, 0),
+                                  child: Transform.rotate(
+                                    angle: -.18,
+                                    child: Container(
+                                      width: 52,
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.transparent,
+                                            Color(0x99ffffff),
+                                            Color(0x88c89ee9),
+                                            Colors.transparent,
                                           ],
                                         ),
                                       ),
