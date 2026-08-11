@@ -44,21 +44,24 @@ extension GateDefenseSystem on SurvivorGame {
             )
           : !ally && role == UnitRole.siege
           ? Vector2(
-              _defenseLineX + 190 + rank * 24 + _random.nextDouble() * 12,
+              _defenseLineX + 150 + rank * 16 + _random.nextDouble() * 10,
               laneY,
             )
           : ally
           ? Vector2(
-              _defenseLineX - 105 + rank * 18 + _random.nextDouble() * 10,
+              _defenseLineX - 72 + rank * 14 + _random.nextDouble() * 8,
               laneY,
             )
           : Vector2(
-              _defenseLineX + 155 + rank * 24 + _random.nextDouble() * 14,
+              _defenseLineX + 135 + rank * 16 + _random.nextDouble() * 10,
               laneY,
             );
       final unit = BattleUnit(
         position: role == UnitRole.commander
-            ? Vector2(ally ? _defenseLineX - 55 : size.x - 125, size.y / 2)
+            ? Vector2(
+                ally ? _defenseLineX - 38 : _defenseLineX + 165,
+                size.y / 2,
+              )
             : defaultPosition,
         ally: ally,
         elite: elite,
@@ -104,9 +107,10 @@ extension GateDefenseSystem on SurvivorGame {
       config.unitCount,
       math.max(72, config.unitCount ~/ 5),
     );
+    final activePopulationTarget = math.min(config.unitCount, 220);
     final stagedPopulation =
         initialDeployment +
-        ((config.unitCount - initialDeployment) * progress).round();
+        ((activePopulationTarget - initialDeployment) * progress).round();
     final enemyFloor = math.max(34, (stagedPopulation * .60).round());
     final allyFloor = math.max(22, (stagedPopulation * .40).round());
     if (livingEnemies < enemyFloor) {

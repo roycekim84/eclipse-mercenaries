@@ -626,29 +626,94 @@ class _EquipmentTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final signature = weapon.ownerId == mercenary.id;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       children: [
-        Center(
-          child: Icon(weapon.visual.icon, size: 72, color: weapon.visual.color),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 126,
+              height: 126,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xff090b10),
+                border: Border.all(color: weapon.visual.color, width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: weapon.visual.color.withValues(alpha: .22),
+                    blurRadius: 18,
+                  ),
+                ],
+              ),
+              child: Image.asset(
+                weaponArtAsset(weapon.id),
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (_, _, _) => Icon(
+                  weapon.visual.icon,
+                  size: 58,
+                  color: weapon.visual.color,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    weapon.name,
+                    style: const TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${weapon.grade} · 영구 Lv.${progress.level} · 성장 ${progress.stage}단계',
+                    style: TextStyle(color: weapon.visual.color),
+                  ),
+                  const SizedBox(height: 8),
+                  _EquipmentStatLine('공격력', '${weapon.attack}'),
+                  _EquipmentStatLine('치명타', '${weapon.crit}%'),
+                  _EquipmentStatLine(
+                    '공격속도',
+                    weapon.speed >= 0
+                        ? '+${weapon.speed}%'
+                        : '${weapon.speed}%',
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+        const Divider(color: Color(0xff5e5038), height: 20),
         Text(
-          weapon.name,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          '무기 특성',
+          style: TextStyle(
+            color: weapon.visual.color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        Text(
-          '${weapon.grade} · 영구 Lv.${progress.level} · ${progress.stage}단계',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: weapon.visual.color),
-        ),
-        const Divider(color: Color(0xff5e5038), height: 25),
-        Text(
-          weapon.description,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
-        ),
-        const SizedBox(height: 12),
-        if (signature) ChipLabel('고유 장비 · 궁극기 활성화'),
-        const SizedBox(height: 14),
+        const SizedBox(height: 4),
+        Text(weapon.description, style: const TextStyle(color: Colors.white70)),
+        const SizedBox(height: 9),
+        if (signature)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0x663c2850),
+              border: Border.all(color: const Color(0xff8e67a5)),
+            ),
+            child: Text(
+              '고유 장비 공명 · 궁극기 「${mercenary.ultimate}」 활성화',
+              style: const TextStyle(
+                color: Color(0xffddb7f0),
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        const SizedBox(height: 10),
         FantasyButton(
           label: '장비 변경',
           icon: Icons.auto_awesome_mosaic_outlined,
@@ -657,6 +722,29 @@ class _EquipmentTab extends StatelessWidget {
       ],
     );
   }
+}
+
+class _EquipmentStatLine extends StatelessWidget {
+  const _EquipmentStatLine(this.label, this.value);
+  final String label;
+  final String value;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: Row(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 11),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+        ),
+      ],
+    ),
+  );
 }
 
 class _SkillTab extends StatelessWidget {

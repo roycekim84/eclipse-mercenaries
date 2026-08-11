@@ -126,7 +126,12 @@ extension DamageSystem on SurvivorGame {
     );
     target.hp -= result.amount;
     target.hitFlash = .09;
-    if (showFx) {
+    final renderArmyImpact =
+        showFx &&
+        (_battleUnitFxSequence++ % (_reducedVisualLoad ? 9 : 5) == 0 ||
+            attacker.role == UnitRole.commander ||
+            attacker.elite);
+    if (renderArmyImpact) {
       final style = switch (attacker.role) {
         UnitRole.mage => CombatStyle.magic,
         UnitRole.cavalry ||

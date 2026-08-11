@@ -128,6 +128,7 @@ class SurvivorGame extends FlameGame {
   late Vector2 _player;
   late final PlayerSpriteComponent _playerSprite;
   late final Image _unitAtlas;
+  late final Image _projectileAtlas;
   Image? _battlefieldBackground;
   BattleUnit? _allyCommander;
   BattleUnit? _enemyCommander;
@@ -174,6 +175,7 @@ class SurvivorGame extends FlameGame {
   bool _pausedByLifecycle = false;
   int _slashEmissionSequence = 0;
   int _damageNumberEmissionSequence = 0;
+  int _battleUnitFxSequence = 0;
   double _bossPatternClock = 4.5;
   double _bossTelegraphClock = 0;
   int _bossPatternIndex = 0;
@@ -224,6 +226,7 @@ class SurvivorGame extends FlameGame {
     _gatePosition = Vector2(78, size.y / 2);
     _defenseLineX = math.max(190, size.x * .28);
     _unitAtlas = await images.load('battlefield/unit_role_batch.png');
+    _projectileAtlas = await images.load('battlefield/projectile_atlas.png');
     _battlefieldBackground = await images.load(switch (config.condition) {
       BattlefieldCondition.moonlitNight =>
         'battlefield/north_gate_battlefield.png',

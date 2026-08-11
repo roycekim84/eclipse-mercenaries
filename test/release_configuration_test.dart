@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.4+13'));
+    expect(pubspec, contains('version: 0.9.5+14'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));
@@ -85,6 +85,29 @@ void main() {
       File('assets/source/generated/enemy_atlas_source.png').existsSync(),
       isTrue,
     );
+  });
+
+  test('battle projectile atlas and recruitment hall art are production-ready', () {
+    final projectile = File('assets/images/battlefield/projectile_atlas.png');
+    final recruitment = File(
+      'assets/images/recruitment/contract_hall_v2.png',
+    );
+    expect(projectile.existsSync(), isTrue);
+    expect(recruitment.existsSync(), isTrue);
+
+    final projectileHeader = ByteData.sublistView(
+      projectile.readAsBytesSync(),
+    );
+    expect(projectileHeader.getUint32(16), projectileHeader.getUint32(20));
+    expect(projectileHeader.getUint32(16), greaterThanOrEqualTo(1024));
+    expect(projectileHeader.getUint8(25), 6, reason: 'atlas must retain alpha');
+
+    final recruitmentHeader = ByteData.sublistView(
+      recruitment.readAsBytesSync(),
+    );
+    final width = recruitmentHeader.getUint32(16);
+    final height = recruitmentHeader.getUint32(20);
+    expect(width / height, closeTo(16 / 9, .02));
   });
 
   test('all mercenary battle sheets satisfy the Flame 8 by 5 contract', () {

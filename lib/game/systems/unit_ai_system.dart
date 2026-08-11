@@ -156,21 +156,20 @@ extension UnitAiSystem on SurvivorGame {
       final anchor = Vector2(
         config.battlefield == BattlefieldType.evacuation
             ? (unit.ally ? size.x * .42 : size.x * .7)
-            : (unit.ally ? _defenseLineX - 48 : _defenseLineX + 190),
+            : (unit.ally ? _defenseLineX - 34 : _defenseLineX + 158),
         size.y / 2,
       );
       _moveToward(unit, anchor, dt, stopDistance: 18);
       return;
     }
     if (commander != null && !commander.dead) {
-      final lane = unit.squadId % 11;
-      final rank = (unit.squadId ~/ 11) % 9;
+      final squad = unit.squadId % 5;
+      final slot = (unit.squadId ~/ 5) % 7;
+      final laneOffset = (squad - 2) * 68 + (slot.isOdd ? 12 : -12);
+      final depth = (34 + slot * 17).toDouble();
       final target =
           commander.position +
-          Vector2(
-            unit.ally ? 42 + rank * 18 : -42 - rank * 18,
-            (lane - 5) * 27 + (rank.isOdd ? 7 : -7),
-          );
+          Vector2(unit.ally ? depth : -depth, laneOffset.toDouble());
       unit.stance = unit.position.distanceTo(target) > 95
           ? UnitStance.support
           : UnitStance.advance;

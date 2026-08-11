@@ -33,11 +33,12 @@ class PlayerSpriteComponent
       PlayerAnimationState state, {
       required double stepTime,
       bool loop = true,
+      int amount = columns,
     }) {
       return SpriteAnimation.fromFrameData(
         image,
         SpriteAnimationData.sequenced(
-          amount: columns,
+          amount: amount,
           stepTime: stepTime,
           textureSize: frameSize,
           texturePosition: Vector2(0, state.index * frameSize.y),
@@ -59,8 +60,12 @@ class PlayerSpriteComponent
         ),
         PlayerAnimationState.attack: animation(
           PlayerAnimationState.attack,
-          stepTime: .055,
+          stepTime: .05,
           loop: false,
+          // Generated sheets reserve the final two cells for lingering debris
+          // or extreme follow-through poses. Returning before those frames
+          // prevents a living mercenary from reading as a fallen sprite.
+          amount: 6,
         ),
         PlayerAnimationState.hit: animation(
           PlayerAnimationState.hit,
@@ -87,7 +92,7 @@ class PlayerSpriteComponent
     }
   }
 
-  void playAttack() => _lock(PlayerAnimationState.attack, .44);
+  void playAttack() => _lock(PlayerAnimationState.attack, .30);
 
   void playHit() => _lock(PlayerAnimationState.hit, .52);
 
@@ -116,9 +121,10 @@ class PlayerSpriteComponent
     if (current != PlayerAnimationState.dead) {
       final cadence = _moving ? 12.0 : 4.2;
       final pulse = math.sin(_visualClock * cadence);
+      final actionScale = current == PlayerAnimationState.attack ? 1.13 : 1.0;
       scale = Vector2(
-        1 - pulse.abs() * (_moving ? .018 : .008),
-        1 + pulse * (_moving ? .032 : .014),
+        actionScale * (1 - pulse.abs() * (_moving ? .018 : .008)),
+        actionScale * (1 + pulse * (_moving ? .032 : .014)),
       );
       angle = _moving ? math.sin(_visualClock * 7.0) * .012 : 0;
     } else {

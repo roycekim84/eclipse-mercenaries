@@ -51,7 +51,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
 
   @override
   Widget build(BuildContext context) => SceneFrame(
-    background: 'assets/images/recruitment_luna_banner.png',
+    background: 'assets/images/recruitment/contract_hall_v2.png',
     child: SafeArea(
       child: Stack(
         children: [
@@ -73,7 +73,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
             children: [
               TitleBar(
                 title: '특별 용병 계약',
-                subtitle: '달빛의 그림자 · 루나 확률 균등 모집',
+                subtitle: '달빛의 그림자 · 루나 보증 계약',
                 onBack: widget.onBack,
               ),
               Expanded(
@@ -127,147 +127,180 @@ class _RecruitLobby extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).height < 500;
     final guaranteeProgress =
         recruitmentCount % RecruitmentRules.featuredGuarantee;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: SizedBox(
-        width: 470,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            compact ? 34 : 42,
-            compact ? 12 : 22,
-            18,
-            compact ? 12 : 30,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'SPECIAL CONTRACT',
-                style: TextStyle(
-                  color: Color(0xffb99ad3),
-                  letterSpacing: 4,
-                  fontSize: 11,
-                ),
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          right: 10,
+          bottom: 0,
+          width: MediaQuery.sizeOf(context).width * .53,
+          child: IgnorePointer(
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Colors.transparent, Colors.white, Colors.white],
+                stops: [0, .24, 1],
+              ).createShader(bounds),
+              child: Image.asset(
+                gameContent.mercenaryById('luna').visual.portraitAsset,
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomRight,
               ),
-              SizedBox(height: compact ? 4 : 8),
-              Text(
-                '달빛의 그림자\n루나',
-                style: TextStyle(
-                  fontSize: compact ? 30 : 37,
-                  height: 1.05,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: compact ? 5 : 9),
-              const Text(
-                '묘족 암살자 · 고유 특성 「야행성」\n고유무기 월광쌍검과 공명 시 궁극기 활성화',
-                style: TextStyle(
-                  color: Colors.white70,
-                  height: 1.5,
-                  fontSize: 12,
-                ),
-              ),
-              SizedBox(height: compact ? 6 : 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xbb17101f),
-                  border: Border.all(color: const Color(0xff8e67a5)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.workspace_premium_outlined,
-                      size: 17,
-                      color: Color(0xffffd27c),
-                    ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '달빛 계약 보증 · 현재 $guaranteeProgress/${RecruitmentRules.featuredGuarantee} · ${RecruitmentRules.guaranteeRemaining(recruitmentCount)}회 이내 확정',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          LinearProgressIndicator(
-                            minHeight: 4,
-                            value:
-                                guaranteeProgress /
-                                RecruitmentRules.featuredGuarantee,
-                            backgroundColor: Color(0xff14121a),
-                            color: Color(0xffa878c3),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: compact ? 10 : 22),
-              Row(
-                children: [
-                  _CurrencyPill(
-                    icon: Icons.description_outlined,
-                    label: '계약서 $tickets',
-                  ),
-                  const SizedBox(width: 8),
-                  _CurrencyPill(
-                    icon: Icons.diamond_outlined,
-                    label: '크리스탈 $crystals',
-                  ),
-                ],
-              ),
-              SizedBox(height: compact ? 7 : 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FantasyButton(
-                      label: '1회 계약  ${tickets > 0 ? '계약서 1' : '◆ 300'}',
-                      icon: Icons.edit_document,
-                      onTap: onSingle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FantasyButton(
-                      label: '10회 계약  ◆ 2,700',
-                      icon: Icons.auto_awesome,
-                      onTap: onTen,
-                      prominent: true,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: compact ? 3 : 9),
-              Row(
-                children: [
-                  const Text(
-                    '베타 계약 풀 8명 균등 · 중복 시 전용 증표 10개',
-                    style: TextStyle(fontSize: 9, color: Colors.white54),
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: () => showDialog<void>(
-                      context: context,
-                      builder: (_) => const _ProbabilityDialog(),
-                    ),
-                    icon: const Icon(Icons.info_outline, size: 15),
-                    label: const Text('확률 안내'),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 470,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                compact ? 34 : 42,
+                compact ? 12 : 22,
+                18,
+                compact ? 12 : 30,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'SPECIAL CONTRACT',
+                    style: TextStyle(
+                      color: Color(0xffb99ad3),
+                      letterSpacing: 4,
+                      fontSize: 11,
+                    ),
+                  ),
+                  SizedBox(height: compact ? 4 : 8),
+                  Text(
+                    '달빛의 그림자\n루나',
+                    style: TextStyle(
+                      fontSize: compact ? 30 : 37,
+                      height: 1.05,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: compact ? 5 : 9),
+                  const Text(
+                    '묘족 암살자 · 고유 특성 「야행성」\n고유무기 월광쌍검과 공명 시 궁극기 활성화',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      height: 1.5,
+                      fontSize: 12,
+                    ),
+                  ),
+                  SizedBox(height: compact ? 6 : 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xbb17101f),
+                      border: Border.all(color: const Color(0xff8e67a5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.workspace_premium_outlined,
+                          size: 17,
+                          color: Color(0xffffd27c),
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '달빛 계약 보증 · 현재 $guaranteeProgress/${RecruitmentRules.featuredGuarantee} · ${RecruitmentRules.guaranteeRemaining(recruitmentCount)}회 이내 확정',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              LinearProgressIndicator(
+                                minHeight: 4,
+                                value:
+                                    guaranteeProgress /
+                                    RecruitmentRules.featuredGuarantee,
+                                backgroundColor: Color(0xff14121a),
+                                color: Color(0xffa878c3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: compact ? 10 : 22),
+                  Row(
+                    children: [
+                      _CurrencyPill(
+                        icon: Icons.description_outlined,
+                        label: '계약서 $tickets',
+                      ),
+                      const SizedBox(width: 8),
+                      _CurrencyPill(
+                        icon: Icons.diamond_outlined,
+                        label: '크리스탈 $crystals',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: compact ? 7 : 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FantasyButton(
+                          label: '1회 계약  ${tickets > 0 ? '계약서 1' : '◆ 300'}',
+                          icon: Icons.edit_document,
+                          onTap: onSingle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FantasyButton(
+                          label: '10회 계약  ◆ 2,700',
+                          icon: Icons.auto_awesome,
+                          onTap: onTen,
+                          prominent: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: compact ? 3 : 9),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          '8명 균등 순환 · 40회째 루나 보증 · 중복 증표 10개',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 9, color: Colors.white54),
+                        ),
+                      ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                        ),
+                        onPressed: () => showDialog<void>(
+                          context: context,
+                          builder: (_) => const _ProbabilityDialog(),
+                        ),
+                        icon: const Icon(Icons.info_outline, size: 15),
+                        label: const Text('확률 안내'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -550,7 +583,7 @@ class _ProbabilityDialog extends StatelessWidget {
     backgroundColor: const Color(0xff15171d),
     title: const Text('계약 확률 안내'),
     content: const Text(
-      '일반 계약 풀 8명 균등 등장\n픽업 용병: 루나 벨하르트\n40회 이내 픽업 용병 확정\n\n보유 용병 중복 획득 시 해당 용병 전용 증표 10개로 변환됩니다.',
+      '계약 풀의 8명은 정해진 균등 순환으로 등장합니다.\n40번째 계약은 루나 벨하르트로 보증됩니다.\n\n보유 용병 중복 획득 시 해당 용병 전용 증표 10개로 변환됩니다.',
       style: TextStyle(height: 1.7),
     ),
     actions: [

@@ -244,64 +244,37 @@ extension PooledEffectsSystem on SurvivorGame {
       }
       final glow = Paint()
         ..color = color.withValues(alpha: .22)
-        ..strokeWidth = projectile.pattern == WeaponPattern.emberBurst ? 12 : 7
-        ..strokeCap = StrokeCap.round;
-      final core = Paint()
-        ..color = color
-        ..strokeWidth = projectile.pattern == WeaponPattern.longBow ? 2.2 : 4
+        ..strokeWidth = projectile.pattern == WeaponPattern.emberBurst ? 8 : 4
         ..strokeCap = StrokeCap.round;
       canvas.drawLine(trail, head, glow);
-      canvas.drawLine(trail, head, core);
-      switch (projectile.pattern) {
-        case WeaponPattern.emberBurst || WeaponPattern.chainFlame:
-          canvas.drawCircle(
-            head,
-            7,
-            Paint()..color = color.withValues(alpha: .25),
-          );
-          canvas.drawCircle(
-            head,
-            3.5,
-            Paint()..color = const Color(0xfffff0b0),
-          );
-        case WeaponPattern.shadowPierce:
-          final path = Path()
-            ..moveTo(head.dx, head.dy - 6)
-            ..lineTo(head.dx + 5, head.dy)
-            ..lineTo(head.dx, head.dy + 6)
-            ..lineTo(head.dx - 5, head.dy)
-            ..close();
-          canvas.drawPath(path, Paint()..color = color);
-        case WeaponPattern.featherChain:
-          canvas.drawOval(
-            Rect.fromCenter(center: head, width: 11, height: 5),
-            Paint()..color = color,
-          );
-        case WeaponPattern.spiritFamiliar:
-          canvas.drawCircle(
-            head,
-            8,
-            Paint()..color = color.withValues(alpha: .2),
-          );
-          canvas.drawCircle(head, 3, Paint()..color = const Color(0xffffffff));
-        default:
-          final direction = delta.distance > 0
-              ? delta / delta.distance
-              : const Offset(1, 0);
-          final normal = Offset(-direction.dy, direction.dx);
-          final arrow = Path()
-            ..moveTo(head.dx, head.dy)
-            ..lineTo(
-              head.dx - direction.dx * 10 + normal.dx * 3,
-              head.dy - direction.dy * 10 + normal.dy * 3,
-            )
-            ..lineTo(
-              head.dx - direction.dx * 10 - normal.dx * 3,
-              head.dy - direction.dy * 10 - normal.dy * 3,
-            )
-            ..close();
-          canvas.drawPath(arrow, Paint()..color = color);
-      }
+      final index = projectile.pattern.index;
+      final cellWidth = _projectileAtlas.width / 4;
+      final cellHeight = _projectileAtlas.height / 4;
+      final source = Rect.fromLTWH(
+        (index % 4) * cellWidth,
+        (index ~/ 4) * cellHeight,
+        cellWidth,
+        cellHeight,
+      );
+      final direction = delta.distance > 0
+          ? delta / delta.distance
+          : const Offset(1, 0);
+      final extent = switch (projectile.pattern) {
+        WeaponPattern.emberBurst || WeaponPattern.shieldOrbit => 34.0,
+        WeaponPattern.runeMine || WeaponPattern.frostTotem => 30.0,
+        _ => 27.0,
+      };
+      canvas
+        ..save()
+        ..translate(head.dx, head.dy)
+        ..rotate(math.atan2(direction.dy, direction.dx))
+        ..drawImageRect(
+          _projectileAtlas,
+          source,
+          Rect.fromCenter(center: Offset.zero, width: extent, height: extent),
+          Paint()..filterQuality = FilterQuality.none,
+        )
+        ..restore();
     }
     for (final number in _damageNumbers) {
       if (!number.active) continue;
