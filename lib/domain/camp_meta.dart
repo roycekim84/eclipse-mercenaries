@@ -328,12 +328,14 @@ abstract final class GearRules {
 class MissionSpec {
   const MissionSpec({
     required this.id,
+    required this.level,
     required this.title,
     required this.description,
     required this.rewardLabel,
   });
 
   final String id;
+  final int level;
   final String title;
   final String description;
   final String rewardLabel;
@@ -342,18 +344,21 @@ class MissionSpec {
 const alphaMissions = <MissionSpec>[
   MissionSpec(
     id: 'camp_arrival',
+    level: 1,
     title: '첫 보급품 확인',
     description: '용병단 캠프의 보급 담당관과 대화한다.',
     rewardLabel: '야전 식량 ×2 · 전장 고철 ×3',
   ),
   MissionSpec(
     id: 'field_scavenger',
+    level: 2,
     title: '전장의 몫',
     description: '전리품을 합계 3개 이상 확보한다.',
     rewardLabel: '1,200 골드',
   ),
   MissionSpec(
     id: 'tempered_edge',
+    level: 3,
     title: '단련된 칼날',
     description: '무기 하나를 영구 레벨 2 이상으로 강화한다.',
     rewardLabel: '피 묻은 계약 인장 ×2',
@@ -367,6 +372,12 @@ abstract final class CampMetaRules {
   static const forgeGoldCost = 700;
   static const forgeScrapCost = 2;
   static const forgeXp = 500;
+
+  static bool missionUnlocked(String id, Set<String> claimedMissionIds) {
+    final index = alphaMissions.indexWhere((mission) => mission.id == id);
+    return index <= 0 ||
+        claimedMissionIds.contains(alphaMissions[index - 1].id);
+  }
 
   static bool canTrain({
     required int gold,

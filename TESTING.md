@@ -1,5 +1,16 @@
 # 테스트
 
+## 신규 계정·온보딩 회귀
+
+- `AccountSave.initial()`은 단장 Lv.1, 루나 Lv.1 한 명, 월광쌍검·철검, 골드 5,000, 크리스탈 600, 계약서 1장으로 시작해야 한다.
+- `AccountSave.betaTest()`만 8명과 16무기를 보유하며 출시용 저장 생성에 사용하지 않는다.
+- 명부와 출전 선택은 `mercenaryProgress`에 존재하는 보유 용병만 표시한다.
+- 첫 신규 모집은 Lv.1 성장과 기본 철검·3슬롯 장비를 생성하고 중복 증표를 지급하지 않아야 한다.
+- 초심자 임무는 Lv.1→2→3 순서로만 열리고 계약은 단장 Lv.1/3/5/8/12/16에 열린다.
+- schema v11 이하 저장은 기존 보유 상태를 유지한 채 v12와 단장 Lv.15로 이관되어야 한다.
+- 1024×461 Web에서 명부 얼굴 카드, 신규 계정 캠프와 잠긴 계약 노드가 overflow 없이 표시되어야 한다.
+- 2026-08-11 검증: `flutter analyze` 이슈 0건, 전체 96개 테스트·Golden 3개·Pages base href Web release·Android debug APK 빌드 통과.
+
 ## 전투 스프라이트 좌표·지면 앵커 회귀
 
 - 8명 시트는 `1792×1120 RGBA`, 8×5, 셀 `224×224` 계약을 만족해야 한다.
@@ -104,7 +115,7 @@ macOS의 파일 동기화 경로에서 iOS framework에 Finder 확장 속성이 
 
 ## B6 출시 후보 자동 검증
 
-- `0.9.2+11`, `com.roycekim.eclipsemercenaries`, 양쪽 가로 방향, 딥링크와 표시명을 정적으로 확인한다.
+- `0.9.3+12`, `com.roycekim.eclipsemercenaries`, 양쪽 가로 방향, 딥링크와 표시명을 정적으로 확인한다.
 - 앱 아이콘 전 규격, Android adaptive icon, 다크 스플래시와 2208×1242 스크린샷 3종의 존재·크기를 확인한다.
 - `flutter build apk --release`와 `flutter build ios --release --no-codesign`으로 서명 경계 이전의 네이티브 컴파일을 확인한다.
 - `dart run tool/long_run_memory_benchmark.dart`와 고정 spatial-grid 테스트로 장시간 반복·고정 풀 예산을 확인한다.

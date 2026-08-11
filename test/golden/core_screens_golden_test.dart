@@ -18,6 +18,7 @@ void main() {
         child: CampScreen(
           gold: 45678,
           crystals: 3250,
+          commanderLevel: 15,
           lastReport: null,
           campaignCycle: 30,
           onDeploy: _noop,
@@ -59,6 +60,7 @@ void main() {
       _GoldenShell(
         child: ContractScreen(
           selected: contracts.first,
+          commanderLevel: 15,
           factionReputation: const {
             'aurum_league': 18,
             'ember_principality': 8,

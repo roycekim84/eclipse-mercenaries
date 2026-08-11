@@ -17,6 +17,13 @@ class MissionScreen extends StatelessWidget {
   final ValueChanged<MissionSpec> onClaim;
   final VoidCallback onBack;
 
+  int get currentMissionLevel => alphaMissions
+      .firstWhere(
+        (mission) => !claimedMissionIds.contains(mission.id),
+        orElse: () => alphaMissions.last,
+      )
+      .level;
+
   @override
   Widget build(BuildContext context) => DarkBackdrop(
     child: SafeArea(
@@ -24,7 +31,7 @@ class MissionScreen extends StatelessWidget {
         children: [
           TitleBar(
             title: '용병단 임무',
-            subtitle: '계약과 성장을 기록하는 전쟁 일지',
+            subtitle: '초심자 작전 Lv.$currentMissionLevel · 계약과 성장을 기록하는 전쟁 일지',
             onBack: onBack,
           ),
           if (notice != null)
@@ -45,6 +52,10 @@ class MissionScreen extends StatelessWidget {
               itemBuilder: (_, index) {
                 final mission = alphaMissions[index];
                 final claimed = claimedMissionIds.contains(mission.id);
+                final unlocked = CampMetaRules.missionUnlocked(
+                  mission.id,
+                  claimedMissionIds,
+                );
                 final complete = CampMetaRules.missionComplete(
                   mission.id,
                   inventory: inventory,
@@ -82,7 +93,7 @@ class MissionScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              mission.title,
+                              'Lv.${mission.level}  ${mission.title}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
@@ -111,6 +122,8 @@ class MissionScreen extends StatelessWidget {
                         width: 118,
                         child: claimed
                             ? const ChipLabel('수령 완료')
+                            : !unlocked
+                            ? const ChipLabel('이전 임무 필요')
                             : FantasyButton(
                                 label: complete ? '보상 수령' : '진행 중',
                                 icon: complete

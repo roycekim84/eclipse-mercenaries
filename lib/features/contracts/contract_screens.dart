@@ -7,6 +7,7 @@ class ContractScreen extends StatelessWidget {
   const ContractScreen({
     super.key,
     required this.selected,
+    required this.commanderLevel,
     required this.factionReputation,
     required this.operationProgress,
     required this.onSelect,
@@ -14,6 +15,7 @@ class ContractScreen extends StatelessWidget {
     required this.onDeploy,
   });
   final BattlefieldContract selected;
+  final int commanderLevel;
   final Map<String, int> factionReputation;
   final Map<String, int> operationProgress;
   final ValueChanged<BattlefieldContract> onSelect;
@@ -76,6 +78,8 @@ class ContractScreen extends StatelessWidget {
                       ),
                       ...List.generate(contracts.length, (index) {
                         final item = contracts[index];
+                        final locked =
+                            commanderLevel < item.requiredCommanderLevel;
                         final nodeAreaHeight = (constraints.maxHeight - 112)
                             .clamp(180.0, constraints.maxHeight)
                             .toDouble();
@@ -92,7 +96,8 @@ class ContractScreen extends StatelessWidget {
                             contract: item,
                             faction: FactionRules.byId(item.factionId),
                             selected: selected == item,
-                            onTap: () => onSelect(item),
+                            locked: locked,
+                            onTap: locked ? () {} : () => onSelect(item),
                           ),
                         );
                       }),
@@ -122,10 +127,18 @@ class ContractScreen extends StatelessWidget {
                             SizedBox(
                               width: 210,
                               child: FantasyButton(
-                                label: '계약 수락 · 출전',
+                                label:
+                                    commanderLevel <
+                                        selected.requiredCommanderLevel
+                                    ? '단장 Lv.${selected.requiredCommanderLevel} 필요'
+                                    : '계약 수락 · 출전',
                                 icon: Icons.gavel,
                                 prominent: true,
-                                onTap: onDeploy,
+                                onTap:
+                                    commanderLevel <
+                                        selected.requiredCommanderLevel
+                                    ? () {}
+                                    : onDeploy,
                               ),
                             ),
                           ],
@@ -257,6 +270,10 @@ class MercenarySelectScreen extends StatefulWidget {
 class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
   final ScrollController _controller = ScrollController();
 
+  List<MercenarySpec> get _ownedMercenaries => gameContent.mercenaries
+      .where((mercenary) => widget.mercenaryProgress.containsKey(mercenary.id))
+      .toList(growable: false);
+
   @override
   void initState() {
     super.initState();
@@ -273,7 +290,7 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
 
   void _revealSelection() {
     if (!_controller.hasClients) return;
-    final index = gameContent.mercenaries.indexWhere(
+    final index = _ownedMercenaries.indexWhere(
       (mercenary) => mercenary.id == widget.selected.id,
     );
     if (index < 0) return;
@@ -309,11 +326,11 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
                   controller: _controller,
                   scrollDirection: compact ? Axis.horizontal : Axis.vertical,
                   padding: const EdgeInsets.all(12),
-                  itemCount: gameContent.mercenaries.length,
+                  itemCount: _ownedMercenaries.length,
                   separatorBuilder: (_, _) =>
                       const SizedBox(width: 10, height: 10),
                   itemBuilder: (_, index) {
-                    final mercenary = gameContent.mercenaries[index];
+                    final mercenary = _ownedMercenaries[index];
                     return SizedBox(
                       width: compact ? 210 : double.infinity,
                       height: compact ? double.infinity : 128,
@@ -329,6 +346,7 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
                 final detail = DeploymentSummary(
                   mercenary: widget.selected,
                   weapon: widget.equippedWeapon,
+                  progress: widget.mercenaryProgress[widget.selected.id]!,
                   onEquipment: widget.onEquipment,
                   onDeploy: widget.onDeploy,
                 );
@@ -417,7 +435,7 @@ class DeploymentMercenaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '전투력 ${mercenary.power}',
+                      '전투력 ${ProgressionRules.displayPower(catalogPower: mercenary.power, catalogLevel: mercenary.level, permanentLevel: progress?.level ?? 1)}',
                       style: const TextStyle(
                         color: Color(0xffd7bd7d),
                         fontSize: 11,
@@ -446,11 +464,13 @@ class DeploymentSummary extends StatelessWidget {
     super.key,
     required this.mercenary,
     required this.weapon,
+    required this.progress,
     required this.onEquipment,
     required this.onDeploy,
   });
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
+  final MercenaryProgress progress;
   final VoidCallback onEquipment;
   final VoidCallback onDeploy;
 
@@ -513,7 +533,7 @@ class DeploymentSummary extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${mercenary.race} · ${mercenary.job}   전투력 ${mercenary.power}',
+                          '${mercenary.race} · ${mercenary.job}   전투력 ${ProgressionRules.displayPower(catalogPower: mercenary.power, catalogLevel: mercenary.level, permanentLevel: progress.level)}',
                           style: const TextStyle(
                             color: Colors.white60,
                             fontSize: 11,

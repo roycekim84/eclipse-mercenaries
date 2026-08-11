@@ -11,6 +11,8 @@ enum SaveLoadSource { primary, backup, initial }
 class AccountSave {
   const AccountSave({
     required this.schemaVersion,
+    required this.commanderLevel,
+    required this.commanderXp,
     required this.gold,
     required this.crystals,
     required this.selectedMercenaryId,
@@ -34,10 +36,51 @@ class AccountSave {
 
   factory AccountSave.initial() => const AccountSave(
     schemaVersion: currentSchemaVersion,
+    commanderLevel: 1,
+    commanderXp: 0,
+    gold: 5000,
+    crystals: 600,
+    selectedMercenaryId: 'luna',
+    equippedWeaponByMercenary: {'luna': 'moon_blades'},
+    equippedGearByMercenary: {
+      'luna:armor': 'moonweave_guard',
+      'luna:accessory': 'nightfang_charm',
+      'luna:tactical': 'moonstep_hook',
+    },
+    factionReputation: {
+      'aurum_league': 0,
+      'ember_principality': 0,
+      'grey_banner': 0,
+    },
+    operationProgress: {
+      'operation_northwall': 0,
+      'operation_ashroad': 0,
+      'operation_greyknife': 0,
+    },
+    mercenaryProgress: {
+      'luna': MercenaryProgress(level: 1, xp: 0, ascension: 0),
+    },
+    weaponProgress: {
+      'moon_blades': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1),
+    },
+    inventory: {'contract_ticket': 1},
+    claimedMissionIds: {},
+    warSeals: 0,
+    honor: 0,
+    recruitmentCount: 0,
+    mercenaryCopies: {'luna': 1},
+    shopPurchaseCounts: {},
+    shopRefreshCount: 0,
+    battleDiagnostics: [],
+    settings: GameSettings.defaults(),
+  );
+
+  factory AccountSave.betaTest() => AccountSave.initial().copyWith(
+    commanderLevel: 15,
     gold: 45678,
     crystals: 3250,
-    selectedMercenaryId: 'luna',
-    equippedWeaponByMercenary: {
+    equippedWeaponByMercenary: const {
       'luna': 'moon_blades',
       'kael': 'blood_fang',
       'sera': 'glass_flame',
@@ -47,7 +90,7 @@ class AccountSave {
       'rask': 'verdigris_halberd',
       'iris': 'noctis_crescent',
     },
-    equippedGearByMercenary: {
+    equippedGearByMercenary: const {
       'luna:armor': 'moonweave_guard',
       'luna:accessory': 'nightfang_charm',
       'luna:tactical': 'moonstep_hook',
@@ -73,17 +116,12 @@ class AccountSave {
       'iris:accessory': 'nightfang_charm',
       'iris:tactical': 'moonstep_hook',
     },
-    factionReputation: {
+    factionReputation: const {
       'aurum_league': 18,
       'ember_principality': 8,
       'grey_banner': 4,
     },
-    operationProgress: {
-      'operation_northwall': 0,
-      'operation_ashroad': 0,
-      'operation_greyknife': 0,
-    },
-    mercenaryProgress: {
+    mercenaryProgress: const {
       'luna': MercenaryProgress(level: 45, xp: 0, ascension: 0),
       'kael': MercenaryProgress(level: 42, xp: 0, ascension: 0),
       'sera': MercenaryProgress(level: 40, xp: 0, ascension: 0),
@@ -94,29 +132,30 @@ class AccountSave {
       'iris': MercenaryProgress(level: 44, xp: 0, ascension: 0),
     },
     weaponProgress: {
-      'moon_blades': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'blood_fang': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'glass_flame': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'war_bow': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'ember_orb': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'guard_spear': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'shadow_knife': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'gale_string': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'sunwall_aegis': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'corvus_codex': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'verdigris_halberd': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'noctis_crescent': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'frost_standard': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'spirit_lantern': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'storm_feathers': WeaponProgress(level: 1, xp: 0, stage: 1),
+      for (final id in const [
+        'moon_blades',
+        'blood_fang',
+        'glass_flame',
+        'iron_sword',
+        'war_bow',
+        'ember_orb',
+        'guard_spear',
+        'shadow_knife',
+        'gale_string',
+        'sunwall_aegis',
+        'corvus_codex',
+        'verdigris_halberd',
+        'noctis_crescent',
+        'frost_standard',
+        'spirit_lantern',
+        'storm_feathers',
+      ])
+        id: const WeaponProgress(level: 1, xp: 0, stage: 1),
     },
-    inventory: {},
-    claimedMissionIds: {},
+    inventory: const {},
     warSeals: 120,
     honor: 80,
-    recruitmentCount: 0,
-    mercenaryCopies: {
+    mercenaryCopies: const {
       'luna': 1,
       'kael': 1,
       'sera': 1,
@@ -126,15 +165,13 @@ class AccountSave {
       'rask': 1,
       'iris': 1,
     },
-    shopPurchaseCounts: {},
-    shopRefreshCount: 0,
-    battleDiagnostics: [],
-    settings: GameSettings.defaults(),
   );
 
-  static const currentSchemaVersion = 11;
+  static const currentSchemaVersion = 12;
 
   final int schemaVersion;
+  final int commanderLevel;
+  final int commanderXp;
   final int gold;
   final int crystals;
   final String selectedMercenaryId;
@@ -156,6 +193,8 @@ class AccountSave {
   final GameSettings settings;
 
   AccountSave copyWith({
+    int? commanderLevel,
+    int? commanderXp,
     int? gold,
     int? crystals,
     String? selectedMercenaryId,
@@ -177,6 +216,8 @@ class AccountSave {
     GameSettings? settings,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
+    commanderLevel: commanderLevel ?? this.commanderLevel,
+    commanderXp: commanderXp ?? this.commanderXp,
     gold: gold ?? this.gold,
     crystals: crystals ?? this.crystals,
     selectedMercenaryId: selectedMercenaryId ?? this.selectedMercenaryId,
@@ -202,6 +243,8 @@ class AccountSave {
 
   Map<String, Object> toJson() => {
     'schemaVersion': currentSchemaVersion,
+    'commanderLevel': commanderLevel,
+    'commanderXp': commanderXp,
     'gold': gold,
     'crystals': crystals,
     'selectedMercenaryId': selectedMercenaryId,
@@ -236,6 +279,11 @@ class AccountSave {
     final defaults = AccountSave.initial();
     return AccountSave(
       schemaVersion: currentSchemaVersion,
+      commanderLevel:
+          (migrated['commanderLevel'] as num?)?.toInt() ??
+          defaults.commanderLevel,
+      commanderXp:
+          (migrated['commanderXp'] as num?)?.toInt() ?? defaults.commanderXp,
       gold: (migrated['gold'] as num?)?.toInt() ?? defaults.gold,
       crystals: (migrated['crystals'] as num?)?.toInt() ?? defaults.crystals,
       selectedMercenaryId:
@@ -347,7 +395,7 @@ abstract final class SaveMigration {
     var current = Map<String, Object?>.from(raw);
     var version = (current['schemaVersion'] as num?)?.toInt() ?? 1;
     if (version < 2) {
-      final defaults = AccountSave.initial();
+      final defaults = AccountSave.betaTest();
       current = {
         ...current,
         'schemaVersion': 2,
@@ -372,7 +420,7 @@ abstract final class SaveMigration {
       version = 3;
     }
     if (version < 4) {
-      final defaults = AccountSave.initial();
+      final defaults = AccountSave.betaTest();
       current = {
         ...current,
         'schemaVersion': 4,
@@ -426,7 +474,7 @@ abstract final class SaveMigration {
         ...current,
         'schemaVersion': 8,
         'equippedGearByMercenary':
-            AccountSave.initial().equippedGearByMercenary,
+            AccountSave.betaTest().equippedGearByMercenary,
       };
       version = 8;
     }
@@ -434,7 +482,7 @@ abstract final class SaveMigration {
       current = {
         ...current,
         'schemaVersion': 9,
-        'factionReputation': AccountSave.initial().factionReputation,
+        'factionReputation': AccountSave.betaTest().factionReputation,
       };
       version = 9;
     }
@@ -442,7 +490,7 @@ abstract final class SaveMigration {
       current = {
         ...current,
         'schemaVersion': 10,
-        'operationProgress': AccountSave.initial().operationProgress,
+        'operationProgress': AccountSave.betaTest().operationProgress,
       };
       version = 10;
     }
@@ -453,6 +501,15 @@ abstract final class SaveMigration {
         'battleDiagnostics': <Object>[],
       };
       version = 11;
+    }
+    if (version < 12) {
+      current = {
+        ...current,
+        'schemaVersion': 12,
+        'commanderLevel': 15,
+        'commanderXp': 0,
+      };
+      version = 12;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');
@@ -575,11 +632,9 @@ class MemoryKeyValueStore implements KeyValueStore {
 class InMemorySaveRepository extends JsonSaveRepository {
   factory InMemorySaveRepository([AccountSave? initial]) {
     final store = MemoryKeyValueStore();
-    if (initial != null) {
-      store.values[JsonSaveRepository.primaryKey] = jsonEncode(
-        initial.toJson(),
-      );
-    }
+    store.values[JsonSaveRepository.primaryKey] = jsonEncode(
+      (initial ?? AccountSave.betaTest()).toJson(),
+    );
     return InMemorySaveRepository._(store);
   }
 

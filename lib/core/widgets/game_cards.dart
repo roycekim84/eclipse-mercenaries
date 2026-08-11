@@ -35,11 +35,13 @@ class ContractMarker extends StatelessWidget {
     required this.contract,
     required this.faction,
     required this.selected,
+    required this.locked,
     required this.onTap,
   });
   final BattlefieldContract contract;
   final FactionSpec faction;
   final bool selected;
+  final bool locked;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -68,7 +70,11 @@ class ContractMarker extends StatelessWidget {
                   BoxShadow(color: Colors.black87, blurRadius: 12),
                 ],
               ),
-              child: Icon(contract.icon, color: Colors.white, size: 21),
+              child: Icon(
+                locked ? Icons.lock_outline : contract.icon,
+                color: locked ? Colors.white38 : Colors.white,
+                size: 21,
+              ),
             ),
             const SizedBox(height: 4),
             Container(
@@ -99,7 +105,9 @@ class ContractMarker extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '권장 ${contract.power ~/ 1000}K · ${contract.reward} G',
+                    locked
+                        ? '단장 Lv.${contract.requiredCommanderLevel} 해금'
+                        : '권장 ${contract.power ~/ 1000}K · ${contract.reward} G',
                     style: const TextStyle(
                       color: Color(0xffd8bd7b),
                       fontSize: 7,

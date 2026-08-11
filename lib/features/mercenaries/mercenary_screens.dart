@@ -19,7 +19,11 @@ class _RosterScreenState extends State<RosterScreen> {
   String? raceFilter;
   String? jobFilter;
 
-  List<MercenarySpec> get visible => gameContent.mercenaries
+  List<MercenarySpec> get owned => gameContent.mercenaries
+      .where((mercenary) => widget.mercenaryProgress.containsKey(mercenary.id))
+      .toList(growable: false);
+
+  List<MercenarySpec> get visible => owned
       .where(
         (mercenary) =>
             (raceFilter == null || mercenary.race == raceFilter) &&
@@ -53,7 +57,7 @@ class _RosterScreenState extends State<RosterScreen> {
                 const SizedBox(width: 6),
                 PopupMenuButton<String>(
                   onSelected: (value) => setState(() => raceFilter = value),
-                  itemBuilder: (_) => gameContent.mercenaries
+                  itemBuilder: (_) => owned
                       .map((mercenary) => mercenary.race)
                       .toSet()
                       .map(
@@ -68,7 +72,7 @@ class _RosterScreenState extends State<RosterScreen> {
                 const SizedBox(width: 6),
                 PopupMenuButton<String>(
                   onSelected: (value) => setState(() => jobFilter = value),
-                  itemBuilder: (_) => gameContent.mercenaries
+                  itemBuilder: (_) => owned
                       .map((mercenary) => mercenary.job)
                       .toSet()
                       .map((job) => PopupMenuItem(value: job, child: Text(job)))
@@ -92,10 +96,10 @@ class _RosterScreenState extends State<RosterScreen> {
             child: GridView.builder(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
               gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 210,
+                maxCrossAxisExtent: 160,
                 childAspectRatio: MediaQuery.sizeOf(context).height < 500
-                    ? .9
-                    : .76,
+                    ? .82
+                    : .72,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),
@@ -159,13 +163,15 @@ class _RosterCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Transform.scale(
-            scale: mercenary.visual.portraitScale,
-            alignment: mercenary.visual.portraitAlignment,
-            child: Image.asset(
-              mercenary.visual.portraitAsset,
-              fit: BoxFit.contain,
-              alignment: mercenary.visual.portraitAlignment,
+          ClipRect(
+            child: Transform.scale(
+              scale: 1.9,
+              alignment: Alignment.topCenter,
+              child: Image.asset(
+                mercenary.visual.portraitAsset,
+                fit: BoxFit.cover,
+                alignment: const Alignment(0, -.78),
+              ),
             ),
           ),
           const DecoratedBox(
@@ -190,7 +196,7 @@ class _RosterCard extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'Lv.${progress.level} / ${progress.levelCap} · ${mercenary.race} · ${mercenary.job}',
+                  'Lv.${progress.level} · ${mercenary.race} · ${mercenary.job}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 10, color: Colors.white60),
@@ -447,8 +453,11 @@ class _InfoTab extends StatelessWidget {
   final MercenaryProgress progress;
   @override
   Widget build(BuildContext context) {
-    final bonusLevels = progress.level - mercenary.level;
-    final power = (mercenary.power * (1 + bonusLevels * .025)).round();
+    final power = ProgressionRules.displayPower(
+      catalogPower: mercenary.power,
+      catalogLevel: mercenary.level,
+      permanentLevel: progress.level,
+    );
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -474,7 +483,10 @@ class _InfoTab extends StatelessWidget {
             'HP',
             '${(mercenary.maxHp * ProgressionRules.mercenaryHpMultiplier(mercenary.level, progress.level)).round()}',
           ),
-          ('공격력', '${mercenary.baseDamage * 715 + bonusLevels * 54}'),
+          (
+            '공격력',
+            '${(mercenary.baseDamage * 715 * (.45 + .55 * progress.level / mercenary.level)).round()}',
+          ),
           ('방어력', '${920 + progress.level * 4}'),
           ('치명타', mercenary.style == CombatStyle.blades ? '32.5%' : '18.0%'),
           ('회피', mercenary.style == CombatStyle.blades ? '24.1%' : '12.0%'),

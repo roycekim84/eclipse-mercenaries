@@ -148,8 +148,11 @@ class GameShellState extends State<GameShell> {
       loaded = AccountSave.initial();
       saveNotice = '저장소를 불러오지 못해 안전한 기본 상태로 시작했습니다.';
     }
-    final mercenaryIds = gameContent.mercenaries
+    final catalogMercenaryIds = gameContent.mercenaries
         .map((mercenary) => mercenary.id)
+        .toSet();
+    final mercenaryIds = loaded.mercenaryProgress.keys
+        .where(catalogMercenaryIds.contains)
         .toSet();
     final mercenaryId = mercenaryIds.contains(loaded.selectedMercenaryId)
         ? loaded.selectedMercenaryId
@@ -157,9 +160,13 @@ class GameShellState extends State<GameShell> {
     selectedMercenary = gameContent.mercenaryById(mercenaryId);
     final weaponIds = gameContent.weapons.map((weapon) => weapon.id).toSet();
     final savedWeapon = loaded.equippedWeaponByMercenary[mercenaryId];
-    final weaponId = weaponIds.contains(savedWeapon)
+    final weaponId =
+        weaponIds.contains(savedWeapon) &&
+            loaded.weaponProgress.containsKey(savedWeapon)
         ? savedWeapon!
-        : selectedMercenary.signatureWeaponId;
+        : loaded.weaponProgress.containsKey(selectedMercenary.signatureWeaponId)
+        ? selectedMercenary.signatureWeaponId
+        : 'iron_sword';
     equippedWeapon = gameContent.weaponById(weaponId);
     if (mercenaryId != loaded.selectedMercenaryId || savedWeapon != weaponId) {
       loaded = loaded.copyWith(
@@ -351,6 +358,7 @@ class GameShellState extends State<GameShell> {
 
   void claimMission(MissionSpec mission) {
     if (account.claimedMissionIds.contains(mission.id) ||
+        !CampMetaRules.missionUnlocked(mission.id, account.claimedMissionIds) ||
         !CampMetaRules.missionComplete(
           mission.id,
           inventory: account.inventory,
@@ -399,6 +407,15 @@ class GameShellState extends State<GameShell> {
       count: count,
     );
     final copies = Map<String, int>.of(account.mercenaryCopies);
+    final mercenaryProgress = Map<String, MercenaryProgress>.of(
+      account.mercenaryProgress,
+    );
+    final equippedWeapons = Map<String, String>.of(
+      account.equippedWeaponByMercenary,
+    );
+    final equippedGear = Map<String, String>.of(
+      account.equippedGearByMercenary,
+    );
     final duplicateTokens = <String, int>{};
     final inventory = Map<String, int>.of(account.inventory);
     for (final id in results) {
@@ -410,6 +427,16 @@ class GameShellState extends State<GameShell> {
         final tokenId = '${id}_token';
         inventory[tokenId] =
             (inventory[tokenId] ?? 0) + RecruitmentRules.duplicateTokenReward;
+      } else {
+        mercenaryProgress[id] = const MercenaryProgress(
+          level: 1,
+          xp: 0,
+          ascension: 0,
+        );
+        equippedWeapons[id] = 'iron_sword';
+        equippedGear['$id:armor'] = 'moonweave_guard';
+        equippedGear['$id:accessory'] = 'nightfang_charm';
+        equippedGear['$id:tactical'] = 'moonstep_hook';
       }
     }
     if (ticketSpent > 0) inventory['contract_ticket'] = tickets - ticketSpent;
@@ -424,6 +451,9 @@ class GameShellState extends State<GameShell> {
         crystals: crystals - crystalSpent,
         recruitmentCount: account.recruitmentCount + count,
         mercenaryCopies: copies,
+        mercenaryProgress: mercenaryProgress,
+        equippedWeaponByMercenary: equippedWeapons,
+        equippedGearByMercenary: equippedGear,
         inventory: inventory,
       ),
       '$count명과 용병 계약을 체결했습니다.',
@@ -495,6 +525,10 @@ class GameShellState extends State<GameShell> {
       .where(
         (mission) =>
             !account.claimedMissionIds.contains(mission.id) &&
+            CampMetaRules.missionUnlocked(
+              mission.id,
+              account.claimedMissionIds,
+            ) &&
             CampMetaRules.missionComplete(
               mission.id,
               inventory: account.inventory,
@@ -519,10 +553,17 @@ class GameShellState extends State<GameShell> {
     final weaponXp = (value.xp / 2).round();
     final weaponAfter = ProgressionRules.addWeaponXp(weaponBefore, weaponXp);
     final inventoryAdded = ProgressionRules.lootQuantities(value.lootDrops);
+    final commanderProgress = ProgressionRules.addCommanderXp(
+      account.commanderLevel,
+      account.commanderXp,
+      (value.xp / 2).round(),
+    );
     final factionId = selected.factionId;
     final operation = WarOperationRules.forFaction(factionId);
     final reputationGain = FactionRules.reputationGain(value.outcome.name);
     final nextAccount = account.copyWith(
+      commanderLevel: commanderProgress.level,
+      commanderXp: commanderProgress.xp,
       gold: account.gold + value.gold,
       factionReputation: {
         ...account.factionReputation,
@@ -653,6 +694,7 @@ class GameShellState extends State<GameShell> {
                   key: const ValueKey('camp'),
                   gold: gold,
                   crystals: crystals,
+                  commanderLevel: account.commanderLevel,
                   lastReport: report,
                   campaignCycle:
                       account.recruitmentCount +
@@ -673,6 +715,7 @@ class GameShellState extends State<GameShell> {
                 AppScene.contracts => ContractScreen(
                   key: const ValueKey('contracts'),
                   selected: selected,
+                  commanderLevel: account.commanderLevel,
                   factionReputation: account.factionReputation,
                   operationProgress: account.operationProgress,
                   onSelect: (value) => setState(() => selected = value),
@@ -817,7 +860,12 @@ class GameShellState extends State<GameShell> {
                 ),
                 AppScene.forge => ForgeScreen(
                   key: const ValueKey('forge'),
-                  weapons: gameContent.weapons,
+                  weapons: gameContent.weapons
+                      .where(
+                        (weapon) =>
+                            account.weaponProgress.containsKey(weapon.id),
+                      )
+                      .toList(growable: false),
                   progress: account.weaponProgress,
                   inventory: account.inventory,
                   gold: gold,
@@ -914,6 +962,7 @@ class BattlefieldContract {
     required this.name,
     required this.subtitle,
     required this.power,
+    required this.requiredCommanderLevel,
     required this.reward,
     required this.xp,
     required this.color,
@@ -928,6 +977,7 @@ class BattlefieldContract {
   final String name;
   final String subtitle;
   final int power;
+  final int requiredCommanderLevel;
   final int reward;
   final int xp;
   final Color color;
@@ -944,7 +994,8 @@ const contracts = [
     battlefieldName: '북문 성벽',
     name: '성문 방어전',
     subtitle: '새벽까지 북문을 사수하라',
-    power: 18000,
+    power: 8000,
+    requiredCommanderLevel: 1,
     reward: 3000,
     xp: 1200,
     color: Color(0xff334d6f),
@@ -960,6 +1011,7 @@ const contracts = [
     name: '철수전',
     subtitle: '부상병과 보급대를 호위하라',
     power: 22000,
+    requiredCommanderLevel: 3,
     reward: 4500,
     xp: 1450,
     color: Color(0xff8c6031),
@@ -975,6 +1027,7 @@ const contracts = [
     name: '적 지휘관 암살',
     subtitle: '혼란 속에서 지휘관을 제거하라',
     power: 25000,
+    requiredCommanderLevel: 5,
     reward: 5000,
     xp: 1750,
     color: Color(0xff733b3e),
@@ -990,6 +1043,7 @@ const contracts = [
     name: '보급부대 호위',
     subtitle: '검은숲을 지나 전선에 군량을 전달하라',
     power: 23800,
+    requiredCommanderLevel: 8,
     reward: 4800,
     xp: 1580,
     color: Color(0xff315844),
@@ -1005,6 +1059,7 @@ const contracts = [
     name: '적 진지 기습',
     subtitle: '안개 속에서 적 병력 120명을 격파하라',
     power: 26400,
+    requiredCommanderLevel: 12,
     reward: 5400,
     xp: 1860,
     color: Color(0xff3f4d36),
@@ -1020,6 +1075,7 @@ const contracts = [
     name: '요새 탈환',
     subtitle: '빙결 요새의 지휘관과 수비대를 제거하라',
     power: 29200,
+    requiredCommanderLevel: 16,
     reward: 6200,
     xp: 2150,
     color: Color(0xff547287),

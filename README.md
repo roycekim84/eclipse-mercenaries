@@ -23,7 +23,7 @@ flutter run -d chrome
 
 첫 실행에서는 4단계 첫 계약 안내가 표시됩니다. 캠프 우상단 설정에서 큰 글자, 섬광 감소, 저사양 전투 모드, 효과음, 진동, 화면 흔들림과 튜토리얼 다시 보기를 변경할 수 있습니다.
 
-현재 플레이 루프는 `캠프 → 전쟁 계약 → Flame 전투 → 레벨업 → 전장 사건 선택 → 승리/후퇴/패배 → 보상 → 용병 훈련/무기 강화 → 모집/상점 → 다음 출전`입니다. 캠프에서는 3인 용병의 5개 상세 탭, 임무 보상, 대장간, 전리품 도감, 특별 용병 계약과 3종 상점을 확인할 수 있습니다.
+현재 플레이 루프는 `캠프 → 전쟁 계약 → Flame 전투 → 레벨업 → 전장 사건 선택 → 승리/후퇴/패배 → 보상 → 용병 훈련/무기 강화 → 모집/상점 → 다음 출전`입니다. 신규 계정은 루나 한 명으로 시작하며, 모집한 용병은 최대 8명의 명부와 5개 상세 탭에서 성장시킬 수 있습니다. 캠프에서는 임무 보상, 대장간, 전리품 도감, 특별 용병 계약과 3종 상점도 확인할 수 있습니다.
 
 ## 조작
 
@@ -38,6 +38,7 @@ flutter run -d chrome
 - 전체 문서 안내: [DOCS_INDEX.md](DOCS_INDEX.md)
 - 제품/게임 전체 기획: [PROJECT_PLAN.md](PROJECT_PLAN.md)
 - 게임 규칙과 알파 밸런스: [GAME_DESIGN.md](GAME_DESIGN.md)
+- 신규 플레이어 시작·초기 경제: [NEW_PLAYER_ONBOARDING.md](NEW_PLAYER_ONBOARDING.md)
 - 구현 작업 기획: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 - 기술 구조: [ARCHITECTURE.md](ARCHITECTURE.md)
 - 이미지 에셋 스타일: [ASSET_STYLE_GUIDE.md](ASSET_STYLE_GUIDE.md)

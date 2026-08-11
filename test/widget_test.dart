@@ -52,6 +52,40 @@ void main() {
     expect(find.text('대장간'), findsOneWidget);
   });
 
+  testWidgets('new commander starts with Luna and unlocks the first recruit', (
+    tester,
+  ) async {
+    final repository = InMemorySaveRepository(AccountSave.initial());
+    await tester.pumpWidget(
+      EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('월영 Lv.1'), findsOneWidget);
+    expect(find.text('5000'), findsOneWidget);
+    expect(find.text('600'), findsOneWidget);
+    await tester.tap(find.text('용병'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('보유 용병  1 / 8'), findsOneWidget);
+    expect(find.text('루나 벨하르트'), findsOneWidget);
+    expect(find.text('카일 로젠팽'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('용병 모집'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('1회 계약'));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+
+    final restored = await repository.load();
+    expect(restored.mercenaryProgress['sera']?.level, 1);
+    expect(restored.mercenaryCopies['sera'], 1);
+    expect(restored.inventory['contract_ticket'], 0);
+    expect(restored.crystals, 600);
+    expect(restored.inventory['sera_token'], isNull);
+  });
+
   testWidgets('first launch tutorial completes and persists', (tester) async {
     final repository = InMemorySaveRepository();
     await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));

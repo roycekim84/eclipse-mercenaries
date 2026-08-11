@@ -8,6 +8,7 @@
 |---|---|---|
 | `PROJECT_PLAN.md` | 제품 비전, 핵심 루프, 전체 시스템과 콘텐츠 범위 | 게임 방향이나 범위가 바뀔 때 |
 | `GAME_DESIGN.md` | 전투·성장·이벤트 규칙과 밸런스 초안 | 플레이 규칙이 바뀔 때 |
+| `NEW_PLAYER_ONBOARDING.md` | 신규 계정 시작값, 임무·계약 해금과 초기 경제 | 온보딩·초기 보상·해금 속도가 바뀔 때 |
 | `IMPLEMENTATION_PLAN.md` | 에픽별 구현 작업, 의존성, 완료 조건 | 개발 순서나 기술 범위가 바뀔 때 |
 | `ARCHITECTURE.md` | Flutter/Flame 경계, 시스템 구조, 성능 원칙 | 구조나 데이터 흐름이 바뀔 때 |
 | `ASSET_STYLE_GUIDE.md` | 캐릭터·픽셀·배경·아이콘·VFX 제작 규격 | 아트 파이프라인이나 스타일이 바뀔 때 |

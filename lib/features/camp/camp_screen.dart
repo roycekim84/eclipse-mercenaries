@@ -5,6 +5,7 @@ class CampScreen extends StatelessWidget {
     super.key,
     required this.gold,
     required this.crystals,
+    required this.commanderLevel,
     required this.lastReport,
     required this.campaignCycle,
     required this.onDeploy,
@@ -22,6 +23,7 @@ class CampScreen extends StatelessWidget {
   });
   final int gold;
   final int crystals;
+  final int commanderLevel;
   final BattleReport? lastReport;
   final int campaignCycle;
   final VoidCallback onDeploy;
@@ -50,7 +52,12 @@ class CampScreen extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            TopBar(gold: gold, crystals: crystals, onSettings: onSettings),
+            TopBar(
+              gold: gold,
+              crystals: crystals,
+              commanderLevel: commanderLevel,
+              onSettings: onSettings,
+            ),
             if (statusNotice != null)
               StatusBanner(
                 message: statusNotice!,

@@ -19,6 +19,10 @@ class EquipmentScreen extends StatelessWidget {
   final void Function(GearSlot slot, GearSpec gear) onEquipGear;
   final VoidCallback onBack;
 
+  List<WeaponSpec> get ownedWeapons => gameContent.weapons
+      .where((weapon) => weaponProgress.containsKey(weapon.id))
+      .toList(growable: false);
+
   @override
   Widget build(BuildContext context) => DarkBackdrop(
     child: SafeArea(
@@ -60,9 +64,9 @@ class EquipmentScreen extends StatelessWidget {
                                   crossAxisSpacing: 9,
                                   mainAxisSpacing: 9,
                                 ),
-                            itemCount: gameContent.weapons.length,
+                            itemCount: ownedWeapons.length,
                             itemBuilder: (_, index) {
-                              final weapon = gameContent.weapons[index];
+                              final weapon = ownedWeapons[index];
                               final active = weapon.id == equipped.id;
                               final progress = weaponProgress[weapon.id];
                               return WeaponGridCard(

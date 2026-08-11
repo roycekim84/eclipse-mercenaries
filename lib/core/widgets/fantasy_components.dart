@@ -43,10 +43,12 @@ class TopBar extends StatelessWidget {
     super.key,
     required this.gold,
     required this.crystals,
+    required this.commanderLevel,
     required this.onSettings,
   });
   final int gold;
   final int crystals;
+  final int commanderLevel;
   final VoidCallback onSettings;
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -68,17 +70,20 @@ class TopBar extends StatelessWidget {
             ),
             SizedBox(width: compact ? 5 : 9),
             if (!compact)
-              const Column(
+              Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '월영 Lv.15',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    '월영 Lv.$commanderLevel',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
-                    '단장 랭크 B',
-                    style: TextStyle(fontSize: 10, color: Colors.white54),
+                    '단장 랭크 ${ProgressionRules.commanderRank(commanderLevel)}',
+                    style: const TextStyle(fontSize: 10, color: Colors.white54),
                   ),
                 ],
               ),

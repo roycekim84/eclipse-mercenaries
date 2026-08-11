@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:eclipse_mercenaries/app/game_app.dart';
 import 'package:eclipse_mercenaries/core/content/game_content_repository.dart';
 import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/core/persistence/save_repository.dart';
@@ -283,6 +284,51 @@ void main() {
     expect(spriteAssets.toSet(), hasLength(content.mercenaries.length));
   });
 
+  test('new account starts with a focused onboarding economy', () {
+    final account = AccountSave.initial();
+
+    expect(account.commanderLevel, 1);
+    expect(account.commanderXp, 0);
+    expect(account.gold, 5000);
+    expect(account.crystals, 600);
+    expect(account.warSeals, 0);
+    expect(account.honor, 0);
+    expect(account.mercenaryProgress.keys, ['luna']);
+    expect(account.mercenaryProgress['luna']?.level, 1);
+    expect(
+      account.weaponProgress.keys,
+      containsAll(['moon_blades', 'iron_sword']),
+    );
+    expect(account.weaponProgress, hasLength(2));
+    expect(account.inventory['contract_ticket'], 1);
+    expect(AccountSave.betaTest().mercenaryProgress, hasLength(8));
+  });
+
+  test('contract tiers and commander progression pace early unlocks', () {
+    expect(contracts.map((contract) => contract.requiredCommanderLevel), [
+      1,
+      3,
+      5,
+      8,
+      12,
+      16,
+    ]);
+    final gained = ProgressionRules.addCommanderXp(1, 0, 1200);
+    expect(gained.level, 2);
+    expect(gained.xp, 200);
+    expect(ProgressionRules.commanderRank(1), 'E');
+    expect(ProgressionRules.commanderRank(15), 'C');
+  });
+
+  test('onboarding missions unlock in order', () {
+    expect(CampMetaRules.missionUnlocked('camp_arrival', const {}), isTrue);
+    expect(CampMetaRules.missionUnlocked('field_scavenger', const {}), isFalse);
+    expect(
+      CampMetaRules.missionUnlocked('field_scavenger', const {'camp_arrival'}),
+      isTrue,
+    );
+  });
+
   test('save repository preserves loadout and reward state', () async {
     final repository = InMemorySaveRepository();
     final initial = await repository.load();
@@ -319,7 +365,8 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 11);
+      expect(migrated.schemaVersion, 12);
+      expect(migrated.commanderLevel, 15);
       expect(migrated.battleDiagnostics, isEmpty);
       expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
       expect(migrated.gold, 12345);
@@ -353,6 +400,21 @@ void main() {
     expect(store.values[JsonSaveRepository.primaryKey], isNot('{broken json'));
   });
 
+  test('schema eleven beta ownership is preserved by onboarding migration', () {
+    final raw = AccountSave.betaTest().toJson()
+      ..['schemaVersion'] = 11
+      ..remove('commanderLevel')
+      ..remove('commanderXp');
+
+    final migrated = AccountSave.fromJson(raw);
+
+    expect(migrated.schemaVersion, 12);
+    expect(migrated.commanderLevel, 15);
+    expect(migrated.mercenaryProgress, hasLength(8));
+    expect(migrated.weaponProgress, hasLength(16));
+    expect(migrated.gold, 45678);
+  });
+
   test('version five settings migrate performance mode safely', () async {
     final settings =
         const GameSettings.defaults().copyWith(reducedFlash: true).toJson()
@@ -366,7 +428,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 11);
+    expect(migrated.schemaVersion, 12);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
