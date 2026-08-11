@@ -69,7 +69,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     color: Color(0xff183c43),
     accent: Color(0xff62d1c5),
     icon: Icons.cruelty_free,
-    portraitAsset: 'assets/images/nyra_vale_fullbody.png',
+    portraitAsset: 'assets/images/nyra_vale_profile_v2.png',
     battleSpriteAsset: 'characters/nyra_battle_sheet.png',
     battleDisplaySize: 87,
     portraitScale: 1.04,
@@ -78,7 +78,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     color: Color(0xff454331),
     accent: Color(0xffffd477),
     icon: Icons.shield_outlined,
-    portraitAsset: 'assets/images/aurel_hart_fullbody.png',
+    portraitAsset: 'assets/images/aurel_hart_profile_v2.png',
     battleSpriteAsset: 'characters/aurel_battle_sheet.png',
     battleDisplaySize: 82,
     portraitScale: 1.08,
@@ -87,7 +87,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     color: Color(0xff4a2631),
     accent: Color(0xffd99180),
     icon: Icons.menu_book_outlined,
-    portraitAsset: 'assets/images/vesta_corven_fullbody.png',
+    portraitAsset: 'assets/images/vesta_corven_profile_v2.png',
     battleSpriteAsset: 'characters/vesta_battle_sheet.png',
     battleDisplaySize: 98,
     portraitScale: 1.06,
@@ -96,7 +96,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     color: Color(0xff263b30),
     accent: Color(0xff8eb47a),
     icon: Icons.push_pin,
-    portraitAsset: 'assets/images/rask_draven_fullbody.png',
+    portraitAsset: 'assets/images/rask_draven_profile_v2.png',
     battleSpriteAsset: 'characters/rask_battle_sheet.png',
     battleDisplaySize: 95,
     portraitScale: 1.06,
@@ -105,7 +105,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     color: Color(0xff302b52),
     accent: Color(0xffa794ef),
     icon: Icons.diamond_outlined,
-    portraitAsset: 'assets/images/iris_noctis_fullbody.png',
+    portraitAsset: 'assets/images/iris_noctis_profile_v2.png',
     battleSpriteAsset: 'characters/iris_battle_sheet.png',
     battleDisplaySize: 97,
     portraitScale: 1.06,
@@ -186,6 +186,20 @@ extension EnemyVisualLookup on EnemyArchetypeSpec {
 }
 
 String weaponArtAsset(String id) => 'assets/images/items/$id.png';
+
+String battlefieldArtAsset(BattlefieldCondition condition) =>
+    switch (condition) {
+      BattlefieldCondition.moonlitNight =>
+        'assets/images/battlefield/north_gate_battlefield.png',
+      BattlefieldCondition.ashWind =>
+        'assets/images/battlefield/ashwind_road_v2.png',
+      BattlefieldCondition.blackForest =>
+        'assets/images/battlefield/black_forest_route.png',
+      BattlefieldCondition.whiteNight =>
+        'assets/images/battlefield/white_night_fortress.png',
+      BattlefieldCondition.twilightSiege =>
+        'assets/images/battlefield/twilight_siege_plain.png',
+    };
 
 String enemyArtAsset(EnemyArchetypeSpec enemy) {
   if (enemy.rank == EnemyRank.boss) {

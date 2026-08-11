@@ -169,6 +169,7 @@ class SurvivorGame extends FlameGame {
   bool _finished = false;
   bool _pausedForChoice = false;
   bool _pausedForEvent = false;
+  bool _levelUpPending = false;
   bool _pausedByUser = false;
   bool _pausedByLifecycle = false;
   int _slashEmissionSequence = 0;
@@ -391,7 +392,8 @@ class SurvivorGame extends FlameGame {
         _ultimateCharge < 1 ||
         _ultimateClock > 0 ||
         _finished ||
-        _pausedForChoice) {
+        _pausedForChoice ||
+        _pausedForEvent) {
       return;
     }
     _ultimateCharge = 0;
@@ -425,6 +427,13 @@ class SurvivorGame extends FlameGame {
       return;
     }
     _advanceUltimate(dt);
+    if (_ultimateClock <= 0 && _levelUpPending) {
+      _requestLevelUp();
+      if (_pausedForChoice) {
+        _updateClock.stop();
+        return;
+      }
+    }
     _dashCooldown = math.max(0, _dashCooldown - worldDt);
     _playerInvulnerability = math.max(0, _playerInvulnerability - worldDt);
     _playerHitFlash = math.max(0, _playerHitFlash - worldDt);
@@ -1078,6 +1087,7 @@ class SlashFx {
 class PooledProjectile {
   bool active = false;
   Vector2 position = Vector2.zero();
+  Vector2 previousPosition = Vector2.zero();
   BattleUnit? target;
   WeaponPattern pattern = WeaponPattern.longBow;
   int damage = 0;

@@ -90,7 +90,7 @@ class ContractScreen extends StatelessWidget {
                             .clamp(18.0, nodeAreaHeight - 100)
                             .toDouble();
                         return Positioned(
-                          left: x - 68,
+                          left: x - 77,
                           top: safeTop,
                           child: ContractMarker(
                             contract: item,

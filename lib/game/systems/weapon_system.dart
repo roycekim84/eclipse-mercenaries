@@ -227,7 +227,7 @@ extension WeaponSystem on SurvivorGame {
           criticalChance: criticalChance,
         );
     }
-    if (_xp >= _nextXp && !_pausedForChoice) _levelUp();
+    if (_xp >= _nextXp) _requestLevelUp();
   }
 
   void _strikeLine({

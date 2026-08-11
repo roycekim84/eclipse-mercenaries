@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math' as math;
 
 import 'package:flame/components.dart';
 
@@ -21,6 +22,7 @@ class PlayerSpriteComponent
 
   double _lockedFor = 0;
   bool _moving = false;
+  double _visualClock = 0;
 
   static PlayerSpriteComponent fromImage(
     Image image, {
@@ -107,6 +109,22 @@ class PlayerSpriteComponent
   @override
   void update(double dt) {
     super.update(dt);
+    _visualClock += dt;
+    // Some generated sheets have intentionally subtle idle frames. A small
+    // ground-anchored breathing motion guarantees that every mercenary reads
+    // as alive without changing the authored frame coordinates.
+    if (current != PlayerAnimationState.dead) {
+      final cadence = _moving ? 12.0 : 4.2;
+      final pulse = math.sin(_visualClock * cadence);
+      scale = Vector2(
+        1 - pulse.abs() * (_moving ? .018 : .008),
+        1 + pulse * (_moving ? .032 : .014),
+      );
+      angle = _moving ? math.sin(_visualClock * 7.0) * .012 : 0;
+    } else {
+      scale = Vector2.all(1);
+      angle = 0;
+    }
     if (!_lockedFor.isFinite || _lockedFor <= 0) return;
     _lockedFor -= dt;
     if (_lockedFor <= 0) {

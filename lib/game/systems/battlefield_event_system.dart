@@ -2,7 +2,12 @@ part of '../survivor_game.dart';
 
 extension BattlefieldEventSystem on SurvivorGame {
   void _updateBattlefieldEvents() {
-    if (_eventClock < _nextEventAt || eventPrompt.value != null) return;
+    if (_eventClock < _nextEventAt ||
+        eventPrompt.value != null ||
+        _pausedForChoice ||
+        _ultimateClock > 0) {
+      return;
+    }
     final progress = (_elapsed / config.durationSeconds).clamp(0.0, 1.0);
     final selected = BattlefieldEventRules.pickNext(
       definitions: alphaBattlefieldEvents,
@@ -57,7 +62,9 @@ extension BattlefieldEventSystem on SurvivorGame {
       _finishBattle(BattleOutcome.retreat);
       return;
     }
-    if (!_pausedByUser && !_pausedByLifecycle && !_pausedForChoice) {
+    if (_levelUpPending) {
+      _requestLevelUp();
+    } else if (!_pausedByUser && !_pausedByLifecycle && !_pausedForChoice) {
       resumeEngine();
     }
     _publishStats();

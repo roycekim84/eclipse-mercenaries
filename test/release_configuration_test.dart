@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.3+12'));
+    expect(pubspec, contains('version: 0.9.4+13'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));

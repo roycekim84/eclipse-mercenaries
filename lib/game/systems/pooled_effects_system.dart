@@ -70,6 +70,7 @@ extension PooledEffectsSystem on SurvivorGame {
     projectile
       ..active = true
       ..position.setFrom(origin)
+      ..previousPosition.setFrom(origin)
       ..target = target
       ..pattern = pattern
       ..damage = damage
@@ -107,6 +108,7 @@ extension PooledEffectsSystem on SurvivorGame {
       }
       final delta = target.position - projectile.position;
       final travel = projectile.speed * dt;
+      projectile.previousPosition.setFrom(projectile.position);
       if (delta.length <= travel + 10) {
         projectile.position.setFrom(target.position);
         projectile.active = false;
@@ -186,7 +188,7 @@ extension PooledEffectsSystem on SurvivorGame {
           statusChance: .18,
         );
     }
-    if (_xp >= _nextXp && !_pausedForChoice) _levelUp();
+    if (_xp >= _nextXp) _requestLevelUp();
   }
 
   void _drawCombatPools(Canvas canvas) {
@@ -231,11 +233,75 @@ extension PooledEffectsSystem on SurvivorGame {
         WeaponPattern.shadowPierce => const Color(0xffa782e8),
         _ => const Color(0xffe6c57a),
       };
-      canvas.drawCircle(
-        Offset(projectile.position.x, projectile.position.y),
-        projectile.pattern == WeaponPattern.emberBurst ? 8 : 4,
-        Paint()..color = color,
+      final head = Offset(projectile.position.x, projectile.position.y);
+      var trail = Offset(
+        projectile.previousPosition.x,
+        projectile.previousPosition.y,
       );
+      final delta = head - trail;
+      if (delta.distance < 12 && delta.distance > 0) {
+        trail = head - delta / delta.distance * 20;
+      }
+      final glow = Paint()
+        ..color = color.withValues(alpha: .22)
+        ..strokeWidth = projectile.pattern == WeaponPattern.emberBurst ? 12 : 7
+        ..strokeCap = StrokeCap.round;
+      final core = Paint()
+        ..color = color
+        ..strokeWidth = projectile.pattern == WeaponPattern.longBow ? 2.2 : 4
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(trail, head, glow);
+      canvas.drawLine(trail, head, core);
+      switch (projectile.pattern) {
+        case WeaponPattern.emberBurst || WeaponPattern.chainFlame:
+          canvas.drawCircle(
+            head,
+            7,
+            Paint()..color = color.withValues(alpha: .25),
+          );
+          canvas.drawCircle(
+            head,
+            3.5,
+            Paint()..color = const Color(0xfffff0b0),
+          );
+        case WeaponPattern.shadowPierce:
+          final path = Path()
+            ..moveTo(head.dx, head.dy - 6)
+            ..lineTo(head.dx + 5, head.dy)
+            ..lineTo(head.dx, head.dy + 6)
+            ..lineTo(head.dx - 5, head.dy)
+            ..close();
+          canvas.drawPath(path, Paint()..color = color);
+        case WeaponPattern.featherChain:
+          canvas.drawOval(
+            Rect.fromCenter(center: head, width: 11, height: 5),
+            Paint()..color = color,
+          );
+        case WeaponPattern.spiritFamiliar:
+          canvas.drawCircle(
+            head,
+            8,
+            Paint()..color = color.withValues(alpha: .2),
+          );
+          canvas.drawCircle(head, 3, Paint()..color = const Color(0xffffffff));
+        default:
+          final direction = delta.distance > 0
+              ? delta / delta.distance
+              : const Offset(1, 0);
+          final normal = Offset(-direction.dy, direction.dx);
+          final arrow = Path()
+            ..moveTo(head.dx, head.dy)
+            ..lineTo(
+              head.dx - direction.dx * 10 + normal.dx * 3,
+              head.dy - direction.dy * 10 + normal.dy * 3,
+            )
+            ..lineTo(
+              head.dx - direction.dx * 10 - normal.dx * 3,
+              head.dy - direction.dy * 10 - normal.dy * 3,
+            )
+            ..close();
+          canvas.drawPath(arrow, Paint()..color = color);
+      }
     }
     for (final number in _damageNumbers) {
       if (!number.active) continue;

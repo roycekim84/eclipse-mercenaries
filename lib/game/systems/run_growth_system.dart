@@ -94,6 +94,16 @@ extension RunGrowthSystem on SurvivorGame {
     }
   }
 
+  void _requestLevelUp() {
+    if (_xp < _nextXp || _pausedForChoice) return;
+    if (_pausedForEvent || eventPrompt.value != null || _ultimateClock > 0) {
+      _levelUpPending = true;
+      return;
+    }
+    _levelUpPending = false;
+    _levelUp();
+  }
+
   void _levelUp() {
     _xp -= _nextXp;
     _nextXp = (_nextXp * 1.32).roundToDouble();
@@ -206,6 +216,7 @@ extension RunGrowthSystem on SurvivorGame {
     }
     choice.value = null;
     _pausedForChoice = false;
+    if (_xp >= _nextXp) _levelUpPending = true;
     if (!_pausedByUser && !_pausedByLifecycle && !_pausedForEvent) {
       resumeEngine();
     }

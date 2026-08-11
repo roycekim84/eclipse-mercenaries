@@ -923,10 +923,47 @@ class CommanderStatus extends StatelessWidget {
   }
 }
 
-class LevelUpOverlay extends StatelessWidget {
+class LevelUpOverlay extends StatefulWidget {
   const LevelUpOverlay({super.key, required this.choice, required this.onPick});
   final BattleChoice choice;
   final ValueChanged<int> onPick;
+
+  @override
+  State<LevelUpOverlay> createState() => _LevelUpOverlayState();
+}
+
+class _LevelUpOverlayState extends State<LevelUpOverlay> {
+  static const _limit = 6;
+  late int _remaining;
+  Timer? _timer;
+  bool _resolved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _remaining = _limit;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || _resolved) return;
+      if (_remaining <= 1) {
+        _resolve(0);
+      } else {
+        setState(() => _remaining--);
+      }
+    });
+  }
+
+  void _resolve(int index) {
+    if (_resolved) return;
+    _resolved = true;
+    _timer?.cancel();
+    widget.onPick(index);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -948,19 +985,19 @@ class LevelUpOverlay extends StatelessWidget {
                     letterSpacing: 4,
                   ),
                 ),
-                const Text(
-                  '전장의 흐름을 바꿀 힘을 선택하십시오',
-                  style: TextStyle(color: Colors.white60),
+                Text(
+                  '전장의 흐름을 바꿀 힘을 선택하십시오 · $_remaining초 후 추천 선택',
+                  style: const TextStyle(color: Colors.white60),
                 ),
                 const SizedBox(height: 18),
                 Row(
-                  children: List.generate(choice.options.length, (i) {
-                    final option = choice.options[i];
+                  children: List.generate(widget.choice.options.length, (i) {
+                    final option = widget.choice.options[i];
                     return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(6),
                         child: InkWell(
-                          onTap: () => onPick(i),
+                          onTap: () => _resolve(i),
                           child: GoldPanel(
                             child: SizedBox(
                               height: 150,
@@ -1035,7 +1072,7 @@ class LevelUpOverlay extends StatelessWidget {
   }
 }
 
-class BattlefieldEventChoiceOverlay extends StatelessWidget {
+class BattlefieldEventChoiceOverlay extends StatefulWidget {
   const BattlefieldEventChoiceOverlay({
     super.key,
     required this.event,
@@ -1046,7 +1083,47 @@ class BattlefieldEventChoiceOverlay extends StatelessWidget {
   final ValueChanged<int> onPick;
 
   @override
+  State<BattlefieldEventChoiceOverlay> createState() =>
+      _BattlefieldEventChoiceOverlayState();
+}
+
+class _BattlefieldEventChoiceOverlayState
+    extends State<BattlefieldEventChoiceOverlay> {
+  static const _limit = 7;
+  late int _remaining;
+  Timer? _timer;
+  bool _resolved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _remaining = _limit;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || _resolved) return;
+      if (_remaining <= 1) {
+        _resolve(-1);
+      } else {
+        setState(() => _remaining--);
+      }
+    });
+  }
+
+  void _resolve(int index) {
+    if (_resolved) return;
+    _resolved = true;
+    _timer?.cancel();
+    widget.onPick(index);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final event = widget.event;
     final rarityColor = switch (event.rarity) {
       BattlefieldEventRarity.common => const Color(0xffaab4bf),
       BattlefieldEventRarity.special => const Color(0xff66b9da),
@@ -1100,6 +1177,14 @@ class BattlefieldEventChoiceOverlay extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '$_remaining초 후 계약 목표를 유지하고 자동 진행',
+                      style: const TextStyle(
+                        color: Color(0xffd8bd7b),
+                        fontSize: 9,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1127,7 +1212,7 @@ class BattlefieldEventChoiceOverlay extends StatelessWidget {
                                   horizontal: 6,
                                 ),
                                 child: InkWell(
-                                  onTap: () => onPick(synthetic ? -1 : index),
+                                  onTap: () => _resolve(synthetic ? -1 : index),
                                   child: Container(
                                     height: 118,
                                     padding: const EdgeInsets.all(14),

@@ -49,68 +49,103 @@ class ContractMarker extends StatelessWidget {
     child: AnimatedScale(
       scale: selected ? 1.04 : 1,
       duration: const Duration(milliseconds: 180),
-      child: SizedBox(
-        width: 136,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      child: Container(
+        width: 154,
+        height: 82,
+        decoration: BoxDecoration(
+          color: const Color(0xee0a0c11),
+          border: Border.all(
+            color: selected ? const Color(0xffffd36e) : const Color(0xff806b43),
+            width: selected ? 2.4 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: selected ? const Color(0x885d431d) : Colors.black87,
+              blurRadius: selected ? 16 : 9,
+            ),
+          ],
+        ),
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Container(
-              width: 44,
-              height: 44,
+            Image.asset(
+              battlefieldArtAsset(contract.condition),
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+            ),
+            const DecoratedBox(
               decoration: BoxDecoration(
-                color: contract.color,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected
-                      ? const Color(0xffffd36e)
-                      : const Color(0xff8d7952),
-                  width: selected ? 3 : 1,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x22000000), Color(0xf2080a0e)],
                 ),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black87, blurRadius: 12),
-                ],
-              ),
-              child: Icon(
-                locked ? Icons.lock_outline : contract.icon,
-                color: locked ? Colors.white38 : Colors.white,
-                size: 21,
               ),
             ),
-            const SizedBox(height: 4),
-            Container(
-              width: 132,
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              color: const Color(0xdd0a0c11),
-              child: Column(
+            Positioned(
+              left: 7,
+              top: 7,
+              child: Container(
+                width: 27,
+                height: 27,
+                decoration: BoxDecoration(
+                  color: contract.color.withValues(alpha: .9),
+                  border: Border.all(color: const Color(0xffe0c47d)),
+                ),
+                child: Icon(
+                  locked ? Icons.lock_outline : contract.icon,
+                  size: 15,
+                  color: locked ? Colors.white38 : Colors.white,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 41,
+              right: 6,
+              top: 7,
+              child: Text(
+                contract.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 41,
+              right: 6,
+              top: 24,
+              child: Text(
+                '${faction.name} · ${contract.battlefieldName}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: contract.color, fontSize: 7.5),
+              ),
+            ),
+            Positioned(
+              left: 7,
+              right: 7,
+              bottom: 6,
+              child: Row(
                 children: [
-                  Text(
-                    contract.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 9,
+                  Expanded(
+                    child: Text(
+                      locked
+                          ? 'Lv.${contract.requiredCommanderLevel} 해금'
+                          : '권장 ${contract.power ~/ 1000}K',
+                      style: const TextStyle(
+                        color: Color(0xffd8bd7b),
+                        fontSize: 7.5,
+                      ),
                     ),
                   ),
                   Text(
-                    contract.battlefieldName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: contract.color.withValues(alpha: .9),
-                      fontSize: 8,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    locked
-                        ? '단장 Lv.${contract.requiredCommanderLevel} 해금'
-                        : '권장 ${contract.power ~/ 1000}K · ${contract.reward} G',
+                    locked ? 'LOCKED' : '${contract.reward} G',
                     style: const TextStyle(
-                      color: Color(0xffd8bd7b),
-                      fontSize: 7,
+                      color: Colors.white70,
+                      fontSize: 7.5,
                     ),
                   ),
                 ],

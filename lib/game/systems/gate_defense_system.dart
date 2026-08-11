@@ -2,9 +2,15 @@ part of '../survivor_game.dart';
 
 extension GateDefenseSystem on SurvivorGame {
   void _spawnBattleLines() {
+    // A battle should form a front, not dump the full simulation budget on the
+    // first frame. The remaining budget is introduced by staged reinforcements.
+    final initialDeployment = math.min(
+      config.unitCount,
+      math.max(72, config.unitCount ~/ 5),
+    );
     var allyIndex = 0;
     var enemyIndex = 0;
-    for (var i = 0; i < config.unitCount; i++) {
+    for (var i = 0; i < initialDeployment; i++) {
       final ally = i % 5 < 2;
       final factionIndex = ally ? allyIndex++ : enemyIndex++;
       final archetype = ally ? null : _enemyForIndex(factionIndex);
@@ -86,26 +92,34 @@ extension GateDefenseSystem on SurvivorGame {
   void _maintainBattlePopulation(double dt) {
     _reinforcementClock -= dt;
     if (_reinforcementClock > 0 || _finished) return;
-    _reinforcementClock = 5.5;
+    _reinforcementClock = 4.2;
     final secondsLeft = config.durationSeconds - _elapsed;
     if (secondsLeft <= 7) return;
     final livingEnemies = _units
         .where((unit) => !unit.dead && !unit.ally)
         .length;
     final livingAllies = _units.where((unit) => !unit.dead && unit.ally).length;
-    final enemyFloor = math.max(36, config.unitCount ~/ 5);
-    final allyFloor = math.max(24, config.unitCount ~/ 9);
+    final progress = (_elapsed / config.durationSeconds).clamp(0.0, 1.0);
+    final initialDeployment = math.min(
+      config.unitCount,
+      math.max(72, config.unitCount ~/ 5),
+    );
+    final stagedPopulation =
+        initialDeployment +
+        ((config.unitCount - initialDeployment) * progress).round();
+    final enemyFloor = math.max(34, (stagedPopulation * .60).round());
+    final allyFloor = math.max(22, (stagedPopulation * .40).round());
     if (livingEnemies < enemyFloor) {
       final archetype = EnemyCatalog
           .common[(_elapsed ~/ 5).toInt() % EnemyCatalog.common.length];
       _spawnEventWave(
-        count: math.min(28, enemyFloor - livingEnemies + 8),
+        count: math.min(24, enemyFloor - livingEnemies + 5),
         archetypeId: archetype.id,
       );
     }
     if (livingAllies < allyFloor) {
       _spawnEventWave(
-        count: math.min(18, allyFloor - livingAllies + 5),
+        count: math.min(14, allyFloor - livingAllies + 3),
         ally: true,
       );
     }

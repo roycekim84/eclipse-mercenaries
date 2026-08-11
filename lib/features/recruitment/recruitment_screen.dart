@@ -350,72 +350,109 @@ class _RecruitReveal extends StatelessWidget {
       (sum, value) => sum + value,
     );
     return Container(
-      color: const Color(0xaa07080d),
-      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xdd07080d),
+        image: DecorationImage(
+          image: AssetImage(featured.visual.portraitAsset),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          opacity: .13,
+        ),
+      ),
+      padding: const EdgeInsets.all(14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Flexible(
-            child: AspectRatio(
-              aspectRatio: 3 / 4,
-              child: GoldPanel(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(
-                      featured.visual.portraitAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                    ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Color(0xf0080a10)],
-                          stops: [.5, 1],
+          Expanded(
+            flex: 6,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 3 / 4,
+                child: GoldPanel(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        featured.visual.portraitAsset,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                      ),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, Color(0xf0080a10)],
+                            stops: [.5, 1],
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      left: 14,
-                      bottom: 14,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'CONTRACT COMPLETE',
-                            style: TextStyle(
-                              color: Color(0xffffd27c),
-                              letterSpacing: 2,
-                              fontSize: 9,
+                      Center(
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 1.6, end: .75),
+                          duration: const Duration(milliseconds: 900),
+                          curve: Curves.easeOutCubic,
+                          builder: (_, value, child) => Container(
+                            width: 180 * value,
+                            height: 180 * value,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(
+                                  0xffffd27c,
+                                ).withValues(alpha: .45),
+                                width: 2,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x998d59b2),
+                                  blurRadius: 45,
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            featured.name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '★★★★★ · ${featured.race} / ${featured.job}',
-                            style: const TextStyle(
-                              color: Color(0xffffcf67),
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        left: 14,
+                        bottom: 14,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'CONTRACT COMPLETE',
+                              style: TextStyle(
+                                color: Color(0xffffd27c),
+                                letterSpacing: 2,
+                                fontSize: 9,
+                              ),
+                            ),
+                            Text(
+                              featured.name,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '★★★★★ · ${featured.race} / ${featured.job}',
+                              style: const TextStyle(
+                                color: Color(0xffffcf67),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 18),
-          SizedBox(
-            width: 410,
+          Expanded(
+            flex: 5,
             child: GoldPanel(
               child: Padding(
                 padding: const EdgeInsets.all(18),
