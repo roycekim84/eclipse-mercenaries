@@ -1,7 +1,9 @@
 part of '../../app/game_app.dart';
 
-const _contractXFactors = [.12, .30, .48, .66, .84, .75];
-const _contractYFactors = [.18, .49, .16, .48, .18, .67];
+// The first contract sits below the legend and the final branch is pushed
+// outward so an expanded selection card never covers a neighbouring node.
+const _contractXFactors = [.12, .30, .48, .66, .84, .88];
+const _contractYFactors = [.34, .53, .20, .51, .20, .72];
 
 class ContractScreen extends StatelessWidget {
   const ContractScreen({

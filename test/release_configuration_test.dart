@@ -76,7 +76,7 @@ void main() {
     ).listSync().whereType<File>().where((file) => file.path.endsWith('.png'));
 
     expect(itemTiles, hasLength(16));
-    expect(enemyTiles, hasLength(9));
+    expect(enemyTiles, hasLength(18));
     expect(
       File('assets/source/generated/weapon_atlas_source.png').existsSync(),
       isTrue,
@@ -85,52 +85,68 @@ void main() {
       File('assets/source/generated/enemy_atlas_source.png').existsSync(),
       isTrue,
     );
+    expect(
+      File('assets/source/generated/enemy_codex_variants.png').existsSync(),
+      isTrue,
+    );
   });
 
-  test('battle projectile atlas and recruitment hall art are production-ready', () {
-    final projectile = File('assets/images/battlefield/projectile_atlas.png');
-    final recruitment = File(
-      'assets/images/recruitment/contract_hall_v2.png',
-    );
-    expect(projectile.existsSync(), isTrue);
-    expect(recruitment.existsSync(), isTrue);
+  test(
+    'battle projectile atlas and recruitment hall art are production-ready',
+    () {
+      final projectile = File('assets/images/battlefield/projectile_atlas.png');
+      final recruitment = File(
+        'assets/images/recruitment/contract_hall_v2.png',
+      );
+      expect(projectile.existsSync(), isTrue);
+      expect(recruitment.existsSync(), isTrue);
 
-    final projectileHeader = ByteData.sublistView(
-      projectile.readAsBytesSync(),
-    );
-    expect(projectileHeader.getUint32(16), projectileHeader.getUint32(20));
-    expect(projectileHeader.getUint32(16), greaterThanOrEqualTo(1024));
-    expect(projectileHeader.getUint8(25), 6, reason: 'atlas must retain alpha');
+      final projectileHeader = ByteData.sublistView(
+        projectile.readAsBytesSync(),
+      );
+      expect(projectileHeader.getUint32(16), projectileHeader.getUint32(20));
+      expect(projectileHeader.getUint32(16), greaterThanOrEqualTo(1024));
+      expect(
+        projectileHeader.getUint8(25),
+        6,
+        reason: 'atlas must retain alpha',
+      );
 
-    final recruitmentHeader = ByteData.sublistView(
-      recruitment.readAsBytesSync(),
-    );
-    final width = recruitmentHeader.getUint32(16);
-    final height = recruitmentHeader.getUint32(20);
-    expect(width / height, closeTo(16 / 9, .02));
-  });
+      final recruitmentHeader = ByteData.sublistView(
+        recruitment.readAsBytesSync(),
+      );
+      final width = recruitmentHeader.getUint32(16);
+      final height = recruitmentHeader.getUint32(20);
+      expect(width / height, closeTo(16 / 9, .02));
+    },
+  );
 
-  test('all mercenary battle sheets satisfy the Flame 8 by 5 contract', () {
-    const mercenaryIds = [
-      'luna',
-      'kael',
-      'sera',
-      'nyra',
-      'aurel',
-      'vesta',
-      'rask',
-      'iris',
-    ];
-    for (final id in mercenaryIds) {
+  test('all mercenary battle sheets satisfy a square-frame contract', () {
+    const mercenaryColumns = <String, int>{
+      'luna': 8,
+      'kael': 8,
+      'sera': 8,
+      'nyra': 7,
+      'aurel': 7,
+      'vesta': 7,
+      'rask': 7,
+      'iris': 7,
+    };
+    for (final entry in mercenaryColumns.entries) {
+      final id = entry.key;
       final file = File('assets/images/characters/${id}_battle_sheet.png');
       expect(file.existsSync(), isTrue, reason: id);
       final bytes = file.readAsBytesSync();
       final header = ByteData.sublistView(bytes);
-      expect(header.getUint32(16), 1792, reason: '$id width');
+      expect(header.getUint32(16), 224 * entry.value, reason: '$id width');
       expect(header.getUint32(20), 1120, reason: '$id height');
       expect(bytes[25], 6, reason: '$id must be RGBA PNG');
     }
     expect(File('tool/align_battle_sheets.swift').existsSync(), isTrue);
+    expect(
+      File('tool/prepare_generated_battle_sheet.swift').existsSync(),
+      isTrue,
+    );
   });
 
   test('all mercenary portraits use a consistent full-body 3 by 4 canvas', () {

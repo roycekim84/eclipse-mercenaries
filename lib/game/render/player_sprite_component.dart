@@ -16,7 +16,6 @@ class PlayerSpriteComponent
         paint: Paint()..filterQuality = FilterQuality.none,
       );
 
-  static const columns = 8;
   static const rows = 5;
   static const groundAnchorY = 208 / 224;
 
@@ -28,17 +27,19 @@ class PlayerSpriteComponent
     Image image, {
     required double displaySize,
   }) {
+    final frameEdge = image.height / rows;
+    final columns = (image.width / frameEdge).round();
     final frameSize = Vector2(image.width / columns, image.height / rows);
     SpriteAnimation animation(
       PlayerAnimationState state, {
       required double stepTime,
       bool loop = true,
-      int amount = columns,
+      int? amount,
     }) {
       return SpriteAnimation.fromFrameData(
         image,
         SpriteAnimationData.sequenced(
-          amount: amount,
+          amount: amount ?? columns,
           stepTime: stepTime,
           textureSize: frameSize,
           texturePosition: Vector2(0, state.index * frameSize.y),

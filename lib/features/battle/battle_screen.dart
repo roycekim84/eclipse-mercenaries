@@ -157,42 +157,41 @@ class _BattleScreenState extends State<BattleScreen>
             ),
           ),
         ),
-        ValueListenableBuilder<BattleChoice?>(
-          valueListenable: game.choice,
-          builder: (context, choice, _) => choice == null
-              ? const SizedBox.shrink()
-              : LevelUpOverlay(choice: choice, onPick: game.selectUpgrade),
-        ),
-        ValueListenableBuilder<BattleEvent?>(
-          valueListenable: game.event,
-          builder: (context, event, _) => event == null
-              ? const SizedBox.shrink()
-              : EventBanner(event: event),
-        ),
-        ValueListenableBuilder<BossTelegraph?>(
-          valueListenable: game.bossTelegraph,
-          builder: (context, warning, _) => warning == null
-              ? const SizedBox.shrink()
-              : BossWarningBanner(warning: warning),
-        ),
-        ValueListenableBuilder<BattlefieldEventSpec?>(
-          valueListenable: game.eventPrompt,
-          builder: (context, prompt, _) => prompt == null
-              ? const SizedBox.shrink()
-              : BattlefieldEventChoiceOverlay(
-                  event: prompt,
-                  onPick: game.selectBattlefieldEventChoice,
-                ),
-        ),
-        ValueListenableBuilder<UltimateSequence?>(
-          valueListenable: game.ultimate,
-          builder: (context, sequence, _) => sequence == null
-              ? const SizedBox.shrink()
-              : UltimateCutIn(
-                  key: ValueKey(sequence.activation),
-                  sequence: sequence,
-                  mercenary: widget.mercenary,
-                ),
+        AnimatedBuilder(
+          animation: Listenable.merge([
+            game.choice,
+            game.event,
+            game.bossTelegraph,
+            game.eventPrompt,
+            game.ultimate,
+          ]),
+          builder: (context, _) {
+            final sequence = game.ultimate.value;
+            if (sequence != null) {
+              return UltimateCutIn(
+                key: ValueKey(sequence.activation),
+                sequence: sequence,
+                mercenary: widget.mercenary,
+              );
+            }
+            final prompt = game.eventPrompt.value;
+            if (prompt != null) {
+              return BattlefieldEventChoiceOverlay(
+                event: prompt,
+                onPick: game.selectBattlefieldEventChoice,
+              );
+            }
+            final choice = game.choice.value;
+            if (choice != null) {
+              return LevelUpOverlay(choice: choice, onPick: game.selectUpgrade);
+            }
+            final warning = game.bossTelegraph.value;
+            if (warning != null) return BossWarningBanner(warning: warning);
+            final event = game.event.value;
+            return event == null
+                ? const SizedBox.shrink()
+                : EventBanner(event: event);
+          },
         ),
         ValueListenableBuilder<bool>(
           valueListenable: game.combatPaused,
@@ -779,8 +778,8 @@ class BattleMiniMap extends StatelessWidget {
       BattlefieldCondition.moonlitNight => '월광 야전 · 야행성',
     };
     return Container(
-      width: dense ? 122 : 150,
-      height: dense ? 70 : 86,
+      width: dense ? 110 : 140,
+      height: dense ? 64 : 80,
       decoration: BoxDecoration(
         color: const Color(0xcc0b0e13),
         border: Border.all(color: const Color(0xff6b5b3d)),

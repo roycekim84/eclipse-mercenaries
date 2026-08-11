@@ -202,6 +202,21 @@ String battlefieldArtAsset(BattlefieldCondition condition) =>
     };
 
 String enemyArtAsset(EnemyArchetypeSpec enemy) {
+  final authoredVariant = switch (enemy.id) {
+    'iron_guard' => 'veteran_shield',
+    'vargar_longbow' => 'crimson_marksman',
+    'black_lancer' => 'lancer_officer',
+    'cinder_hexer' => 'ash_hexer',
+    'powder_sapper' => 'plague_sapper',
+    'free_skirmisher' => 'ochre_skirmisher',
+    'bone_warder' || 'frost_paladin' => 'frost_veteran',
+    'siege_alchemist' => 'siege_engineer',
+    'siege_marshal' || 'dusk_general' => 'battle_commander',
+    _ => null,
+  };
+  if (authoredVariant != null) {
+    return 'assets/images/enemies/$authoredVariant.png';
+  }
   if (enemy.rank == EnemyRank.boss) {
     return switch (enemy.id) {
       'hunt_captain' => 'assets/images/enemies/cavalry.png',

@@ -64,7 +64,8 @@ extension BattlefieldEventSystem on SurvivorGame {
     }
     if (_levelUpPending) {
       _requestLevelUp();
-    } else if (!_pausedByUser && !_pausedByLifecycle && !_pausedForChoice) {
+    }
+    if (!_pausedByUser && !_pausedByLifecycle && !_pausedForChoice) {
       resumeEngine();
     }
     _publishStats();
@@ -187,8 +188,26 @@ extension BattlefieldEventSystem on SurvivorGame {
     final archetype = archetypeId == null
         ? null
         : EnemyCatalog.byId(archetypeId);
+    var siegeSlots = math.max(
+      0,
+      6 -
+          _units
+              .where(
+                (unit) =>
+                    !unit.dead && !unit.ally && unit.role == UnitRole.siege,
+              )
+              .length,
+    );
     for (var i = 0; i < count; i++) {
-      final role = archetype?.role ?? _roleForFactionIndex(i + 1);
+      var role = archetype?.role ?? _roleForFactionIndex(i + 1);
+      if (!ally && role == UnitRole.siege) {
+        if (siegeSlots <= 0) {
+          if (archetype?.role == UnitRole.siege) break;
+          role = UnitRole.infantry;
+        } else {
+          siegeSlots--;
+        }
+      }
       final hpBonus = (archetype?.hpBonus ?? 0).clamp(-8, 80).toInt();
       final maxHp = UnitRoleRules.maxHp(role) + hpBonus;
       final unit = BattleUnit(

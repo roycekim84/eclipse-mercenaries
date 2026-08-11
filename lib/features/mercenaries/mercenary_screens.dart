@@ -752,32 +752,90 @@ class _SkillTab extends StatelessWidget {
   final MercenarySpec mercenary;
   final WeaponSpec weapon;
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(14),
-    children: [
-      _SkillRow(
-        title: '종족 특성 · ${mercenary.race}',
-        detail: _raceTrait(mercenary.race),
-        icon: mercenary.visual.icon,
-      ),
-      _SkillRow(
-        title: '개인 특성 · ${mercenary.trait}',
-        detail: mercenary.traitDescription,
-        icon: Icons.person_outline,
-      ),
-      _SkillRow(
-        title: '무기 특성 · ${weapon.name}',
-        detail: weapon.description,
-        icon: weapon.visual.icon,
-      ),
-      _SkillRow(
-        title: '궁극기 · ${mercenary.ultimate}',
-        detail: weapon.ownerId == mercenary.id
-            ? '고유무기 공명 활성화 · 전장을 뒤집는 광역 필살기'
-            : '고유무기 장착 시 활성화',
-        icon: Icons.auto_awesome,
-      ),
-    ],
+  Widget build(BuildContext context) {
+    final signature = gameContent.weapons.firstWhere(
+      (candidate) => candidate.id == mercenary.signatureWeaponId,
+    );
+    final resonanceActive = weapon.id == signature.id;
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        const _SkillSectionLabel(
+          title: '캐릭터 고유 능력',
+          detail: '장비와 관계없이 항상 적용되는 영구 능력',
+        ),
+        _SkillRow(
+          title: '종족 특성 · ${mercenary.race}',
+          detail: _raceTrait(mercenary.race),
+          icon: mercenary.visual.icon,
+        ),
+        _SkillRow(
+          title: '개인 특성 · ${mercenary.trait}',
+          detail: mercenary.traitDescription,
+          icon: Icons.person_outline,
+        ),
+        const SizedBox(height: 5),
+        _SkillSectionLabel(
+          title: '고유무기 공명',
+          detail: resonanceActive
+              ? '${signature.name} 장착 중 · 궁극기 활성화'
+              : '현재 ${weapon.name} 장착 중 · ${signature.name} 장착 시 활성화',
+          active: resonanceActive,
+        ),
+        _SkillRow(
+          title: '고유무기 · ${signature.name}',
+          detail: signature.description,
+          icon: signature.visual.icon,
+          active: resonanceActive,
+        ),
+        _SkillRow(
+          title: '궁극기 · ${mercenary.ultimate}',
+          detail: resonanceActive
+              ? '공명 활성화 · 궁극기 게이지 충전 및 발동 가능'
+              : '공명 비활성 · 고유무기를 장착해야 발동 가능',
+          icon: resonanceActive ? Icons.auto_awesome : Icons.lock_outline,
+          active: resonanceActive,
+        ),
+        const SizedBox(height: 5),
+        const _SkillSectionLabel(
+          title: '런 전용 성장',
+          detail: '전투 중 획득한 무기·전술서는 해당 출전에서만 유지됩니다.',
+        ),
+      ],
+    );
+  }
+}
+
+class _SkillSectionLabel extends StatelessWidget {
+  const _SkillSectionLabel({
+    required this.title,
+    required this.detail,
+    this.active = true,
+  });
+  final String title;
+  final String detail;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(2, 2, 2, 9),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: active ? const Color(0xffffd27c) : Colors.white38,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+        Text(
+          detail,
+          style: const TextStyle(color: Colors.white54, fontSize: 9.5),
+        ),
+      ],
+    ),
   );
 }
 
@@ -786,10 +844,12 @@ class _SkillRow extends StatelessWidget {
     required this.title,
     required this.detail,
     required this.icon,
+    this.active = true,
   });
   final String title;
   final String detail;
   final IconData icon;
+  final bool active;
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 9),
@@ -800,7 +860,7 @@ class _SkillRow extends StatelessWidget {
     ),
     child: Row(
       children: [
-        Icon(icon, color: const Color(0xffc7a6df)),
+        Icon(icon, color: active ? const Color(0xffc7a6df) : Colors.white30),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -808,8 +868,8 @@ class _SkillRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Color(0xffffd27c),
+                style: TextStyle(
+                  color: active ? const Color(0xffffd27c) : Colors.white38,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -868,6 +928,11 @@ String _raceTrait(String race) => switch (race) {
   '묘족' => '치명타와 회피에 특화되며 이동 속도가 빠르다.',
   '늑대족' => '연속 처치와 출혈을 통해 전투가 길수록 강해진다.',
   '여우족' => '마법, 환영, 상태이상 연계에 특화된다.',
+  '토끼족' => '기동과 선제 공격에 특화되며 원거리 교전에서 유리하다.',
+  '사슴족' => '방어와 아군 보호에 특화되며 전선 유지력이 높다.',
+  '조류계' => '전황 파악과 전술 연계에 특화되며 재사용 주기를 단축한다.',
+  '파충류계' => '집중과 관통에 특화되며 자리를 지킬수록 강해진다.',
+  '환수계' => '마법과 무기 공격을 교차해 공명 피해를 증폭한다.',
   _ => '종족 고유의 전장 적응력을 발휘한다.',
 };
 

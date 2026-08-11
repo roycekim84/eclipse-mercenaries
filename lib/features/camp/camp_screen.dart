@@ -75,7 +75,7 @@ class CampScreen extends StatelessWidget {
                         left: 108,
                         right: 300,
                         top: 58,
-                        bottom: 70,
+                        bottom: 10,
                         child: IgnorePointer(
                           child: _CampLifeLayer(
                             compact: compactHeight,
@@ -181,20 +181,6 @@ class CampScreen extends StatelessWidget {
                         right: 300,
                         top: compactHeight ? 4 : 14,
                         child: _CampStateBanner(state: worldState),
-                      ),
-                      Positioned(
-                        left: 118,
-                        right: 306,
-                        bottom: compactHeight ? 8 : 18,
-                        height: 58,
-                        child: _CampFacilityStrip(
-                          woundedCount: worldState.woundedCount,
-                          onCommand: onDeploy,
-                          onForge: onForge,
-                          onGuild: onRecruitment,
-                          onMerchant: onShop,
-                          onInfirmary: onRoster,
-                        ),
                       ),
                     ],
                   );
@@ -402,103 +388,6 @@ class _CampStateBanner extends StatelessWidget {
           style: const TextStyle(fontSize: 9, color: Color(0xffd6bd82)),
         ),
       ],
-    ),
-  );
-}
-
-class _CampFacilityStrip extends StatelessWidget {
-  const _CampFacilityStrip({
-    required this.woundedCount,
-    required this.onCommand,
-    required this.onForge,
-    required this.onGuild,
-    required this.onMerchant,
-    required this.onInfirmary,
-  });
-
-  final int woundedCount;
-  final VoidCallback onCommand;
-  final VoidCallback onForge;
-  final VoidCallback onGuild;
-  final VoidCallback onMerchant;
-  final VoidCallback onInfirmary;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-      _FacilityMarker(
-        icon: Icons.map_outlined,
-        label: '지휘 천막',
-        onTap: onCommand,
-      ),
-      _FacilityMarker(
-        icon: Icons.handyman_outlined,
-        label: '대장간 시설',
-        onTap: onForge,
-      ),
-      _FacilityMarker(
-        icon: Icons.groups_2_outlined,
-        label: '용병 길드',
-        onTap: onGuild,
-      ),
-      _FacilityMarker(
-        icon: Icons.storefront_outlined,
-        label: '상인',
-        onTap: onMerchant,
-      ),
-      _FacilityMarker(
-        icon: Icons.medical_services_outlined,
-        label: woundedCount > 0 ? '의무소 $woundedCount' : '의무소',
-        alert: woundedCount > 0,
-        onTap: onInfirmary,
-      ),
-    ],
-  );
-}
-
-class _FacilityMarker extends StatelessWidget {
-  const _FacilityMarker({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.alert = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool alert;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: '$label 시설',
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(28),
-        child: Container(
-          width: 70,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xd915171d),
-            border: Border.all(
-              color: alert ? const Color(0xffbb5750) : const Color(0xff8b744a),
-            ),
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: const Color(0xffe2c57d)),
-              const SizedBox(height: 2),
-              Text(label, style: const TextStyle(fontSize: 8)),
-            ],
-          ),
-        ),
-      ),
     ),
   );
 }

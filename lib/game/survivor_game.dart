@@ -466,7 +466,7 @@ class SurvivorGame extends FlameGame {
       }
     }
     _playerSprite
-      ..position = _player
+      ..position = Vector2(_player.x.roundToDouble(), _player.y.roundToDouble())
       ..setMoving(isMoving);
     if (config.battlefield == BattlefieldType.evacuation) {
       _updateEvacuation(worldDt);
@@ -886,7 +886,11 @@ class SurvivorGame extends FlameGame {
             ..strokeWidth = 2,
         );
       }
-      if (unit.stance == UnitStance.retreat) {
+      if (unit.stance == UnitStance.retreat &&
+          (unit.elite ||
+              unit.role == UnitRole.commander ||
+              unit.archetype?.rank == EnemyRank.boss ||
+              unit.squadId % 12 == 0)) {
         canvas.drawArc(
           Rect.fromCircle(
             center: Offset(unit.position.x, unit.position.y),
@@ -908,8 +912,7 @@ class SurvivorGame extends FlameGame {
       unit.elite ||
       unit.role == UnitRole.commander ||
       unit.archetype?.rank == EnemyRank.boss ||
-      unit.status != StatusEffectType.none ||
-      unit.stance == UnitStance.retreat;
+      unit.status != StatusEffectType.none;
 
   Rect _unitBatchSource(BattleUnit unit) {
     final sources = unit.ally ? _alliedUnitSources : _enemyUnitSources;

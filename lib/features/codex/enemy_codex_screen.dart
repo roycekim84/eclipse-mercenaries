@@ -292,7 +292,7 @@ class EnemyCodexCard extends StatelessWidget {
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
-                          unitRoleName(enemy.role),
+                          '${unitRoleName(enemy.role)} · ${enemyThreatName(enemy)}',
                           style: const TextStyle(
                             fontSize: 7,
                             color: Colors.white38,
@@ -366,6 +366,39 @@ class EnemyCodexDetail extends StatelessWidget {
           const SizedBox(height: 5),
           Text(enemy.abilityDescription, style: const TextStyle(fontSize: 11)),
           const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: enemy.visual.color.withValues(alpha: .10),
+              border: Border.all(
+                color: enemy.visual.color.withValues(alpha: .55),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '위협도 · ${enemyThreatName(enemy)}',
+                  style: TextStyle(
+                    color: enemy.visual.color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  enemyCounterAdvice(enemy),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
           const Text('전장 기록', style: TextStyle(color: Color(0xffd6bd81))),
           const SizedBox(height: 5),
           Text(
@@ -379,8 +412,18 @@ class EnemyCodexDetail extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: CodexStat('체력', '${100 + enemy.hpBonus}')),
-              Expanded(child: CodexStat('공격', '${10 + enemy.damageBonus}')),
+              Expanded(
+                child: CodexStat(
+                  '체력',
+                  '${UnitRoleRules.maxHp(enemy.role) + enemy.hpBonus}',
+                ),
+              ),
+              Expanded(
+                child: CodexStat(
+                  '공격',
+                  '${UnitRoleRules.damage(enemy.role) + enemy.damageBonus}',
+                ),
+              ),
               Expanded(child: CodexStat('방어', '${enemy.defenseBonus}')),
               Expanded(
                 child: CodexStat(
@@ -446,6 +489,26 @@ String unitRoleName(UnitRole role) => switch (role) {
   UnitRole.mage => '마법병',
   UnitRole.siege => '공성병기',
   UnitRole.commander => '지휘관',
+};
+
+String enemyThreatName(EnemyArchetypeSpec enemy) {
+  if (enemy.rank == EnemyRank.boss) return '최고';
+  if (enemy.rank == EnemyRank.elite) return '높음';
+  return switch (enemy.ability) {
+    EnemyAbility.breach || EnemyAbility.blast || EnemyAbility.bloodNova => '주의',
+    _ => '보통',
+  };
+}
+
+String enemyCounterAdvice(EnemyArchetypeSpec enemy) => switch (enemy.role) {
+  UnitRole.infantry => '밀집하기 전에 범위 공격으로 수를 줄이고, 방패병 뒤의 약한 측면을 노리십시오.',
+  UnitRole.shield => '정면 피해가 경감됩니다. 후방 이동이나 마법·관통 공격으로 방패 대형을 무너뜨리십시오.',
+  UnitRole.archer => '전열 뒤에서 누적 피해를 줍니다. 대시로 사선을 벗어난 뒤 빠르게 거리를 좁히십시오.',
+  UnitRole.cavalry => '첫 돌격의 피해가 큽니다. 이동 경로를 비운 후 돌진이 끝난 순간 집중 공격하십시오.',
+  UnitRole.mage => '상태이상과 광역 공격을 사용합니다. 시전 표식을 확인하고 우선 처치하십시오.',
+  UnitRole.siege => '성문과 호위 목표를 직접 노립니다. 일반 병사보다 먼저 파괴해야 계약 손실을 막을 수 있습니다.',
+  UnitRole.commander =>
+    '주변 병력을 강화하고 특수 패턴을 지휘합니다. 경고 범위를 피한 뒤 증원 사이의 빈틈을 노리십시오.',
 };
 
 String rareDropName(String id) => switch (id) {

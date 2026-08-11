@@ -96,7 +96,11 @@ extension RunGrowthSystem on SurvivorGame {
 
   void _requestLevelUp() {
     if (_xp < _nextXp || _pausedForChoice) return;
-    if (_pausedForEvent || eventPrompt.value != null || _ultimateClock > 0) {
+    if (_pausedForEvent ||
+        eventPrompt.value != null ||
+        event.value != null ||
+        _bossPhaseBannerClock > 0 ||
+        _ultimateClock > 0) {
       _levelUpPending = true;
       return;
     }
