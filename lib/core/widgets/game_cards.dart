@@ -168,15 +168,21 @@ class ContractSummary extends StatelessWidget {
 }
 
 class SkillOrb extends StatelessWidget {
-  const SkillOrb({super.key, required this.icon, required this.label});
+  const SkillOrb({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.compact = false,
+  });
   final IconData icon;
   final String label;
+  final bool compact;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(left: 6),
+    padding: EdgeInsets.only(left: compact ? 3 : 6),
     child: Container(
-      width: 50,
-      height: 50,
+      width: compact ? 34 : 50,
+      height: compact ? 34 : 50,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const RadialGradient(
@@ -187,8 +193,8 @@ class SkillOrb extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 20, color: Colors.white),
-          Text(label, style: const TextStyle(fontSize: 8)),
+          Icon(icon, size: compact ? 14 : 20, color: Colors.white),
+          Text(label, style: TextStyle(fontSize: compact ? 6 : 8)),
         ],
       ),
     ),

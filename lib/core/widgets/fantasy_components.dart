@@ -296,18 +296,54 @@ class GoldPanel extends StatelessWidget {
   const GoldPanel({super.key, required this.child});
   final Widget child;
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xf522242b), Color(0xf50b0d12)],
+  Widget build(BuildContext context) => CustomPaint(
+    foregroundPainter: const _FantasyCornerPainter(),
+    child: Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xf522242b), Color(0xf50b0d12)],
+        ),
+        border: Border.all(color: const Color(0xff76613c)),
+        boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 12)],
       ),
-      border: Border.all(color: const Color(0xff76613c)),
-      boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 12)],
+      child: child,
     ),
-    child: child,
   );
+}
+
+class _FantasyCornerPainter extends CustomPainter {
+  const _FantasyCornerPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 36 || size.height < 36) return;
+    final paint = Paint()
+      ..color = const Color(0xffc49a54)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    const length = 13.0;
+    const inset = 4.0;
+    for (final flipX in [false, true]) {
+      for (final flipY in [false, true]) {
+        final x = flipX ? size.width - inset : inset;
+        final y = flipY ? size.height - inset : inset;
+        final sx = flipX ? -1.0 : 1.0;
+        final sy = flipY ? -1.0 : 1.0;
+        final path = Path()
+          ..moveTo(x, y + sy * length)
+          ..lineTo(x, y)
+          ..lineTo(x + sx * length, y)
+          ..moveTo(x + sx * 3, y + sy * 8)
+          ..lineTo(x + sx * 8, y + sy * 3);
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class HudPanel extends StatelessWidget {

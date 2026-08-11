@@ -67,6 +67,17 @@ const alphaShopProducts = <ShopProductSpec>[
     description: '특별 모집 1회에 사용하는 계약서',
   ),
   ShopProductSpec(
+    id: 'field_medicine',
+    category: ShopCategory.general,
+    itemId: 'field_ration',
+    name: '응급 치료 키트',
+    quantity: 2,
+    price: 1200,
+    currency: ShopCurrency.gold,
+    purchaseLimit: 3,
+    description: '전투 후 부상 회복과 원정 준비용 치료품',
+  ),
+  ShopProductSpec(
     id: 'black_iron',
     category: ShopCategory.war,
     itemId: 'tempered_iron',
@@ -98,6 +109,17 @@ const alphaShopProducts = <ShopProductSpec>[
     currency: ShopCurrency.warSeal,
     purchaseLimit: 1,
     description: '전쟁 영웅 모집에 사용하는 특별 계약서',
+  ),
+  ShopProductSpec(
+    id: 'siege_core',
+    category: ShopCategory.war,
+    itemId: 'tempered_iron',
+    name: '공성 병기 핵',
+    quantity: 1,
+    price: 45,
+    currency: ShopCurrency.warSeal,
+    purchaseLimit: 2,
+    description: '고등급 무기 성장 단계 돌파에 쓰는 전쟁 유물',
   ),
   ShopProductSpec(
     id: 'veteran_mark',
@@ -132,6 +154,17 @@ const alphaShopProducts = <ShopProductSpec>[
     purchaseLimit: 2,
     description: '마력 장비를 보강하는 희귀 직물',
   ),
+  ShopProductSpec(
+    id: 'royal_writ',
+    category: ShopCategory.honor,
+    itemId: 'royal_writ',
+    name: '왕실 전공 증서',
+    quantity: 1,
+    price: 45,
+    currency: ShopCurrency.honor,
+    purchaseLimit: 1,
+    description: '지휘관급 용병 승급에 필요한 최고급 명예 증표',
+  ),
 ];
 
 class RecruitmentReceipt {
@@ -151,6 +184,7 @@ abstract final class RecruitmentRules {
   static const singleCrystalCost = 300;
   static const tenCrystalCost = 2700;
   static const duplicateTokenReward = 10;
+  static const featuredGuarantee = 40;
   static const _pool = [
     'luna',
     'kael',
@@ -164,8 +198,18 @@ abstract final class RecruitmentRules {
 
   static List<String> roll({required int startIndex, required int count}) => [
     for (var i = 0; i < count; i++)
-      _pool[((startIndex + i) * 7 + 2) % _pool.length],
+      if ((startIndex + i + 1) % featuredGuarantee == 0)
+        'luna'
+      else
+        _pool[((startIndex + i) * 7 + 2) % _pool.length],
   ];
+
+  static int guaranteeRemaining(int recruitmentCount) {
+    final progress = recruitmentCount % featuredGuarantee;
+    return progress == 0 && recruitmentCount > 0
+        ? featuredGuarantee
+        : featuredGuarantee - progress;
+  }
 
   static bool canRecruit({
     required int count,

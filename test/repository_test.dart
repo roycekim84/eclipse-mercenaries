@@ -587,6 +587,13 @@ void main() {
       RecruitmentRules.canRecruit(count: 10, crystals: 2700, tickets: 0),
       isTrue,
     );
+    expect(
+      RecruitmentRules.roll(startIndex: 39, count: 1),
+      ['luna'],
+      reason: '40번째 계약은 픽업 용병을 보증해야 한다.',
+    );
+    expect(RecruitmentRules.guaranteeRemaining(0), 40);
+    expect(RecruitmentRules.guaranteeRemaining(39), 1);
   });
 
   test('shop rules enforce balance and per-refresh purchase limits', () {

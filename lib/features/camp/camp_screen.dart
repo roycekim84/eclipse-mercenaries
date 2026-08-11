@@ -64,6 +64,18 @@ class CampScreen extends StatelessWidget {
                   final compactHeight = constraints.maxHeight < 440;
                   return Stack(
                     children: [
+                      Positioned(
+                        left: 108,
+                        right: 300,
+                        top: 58,
+                        bottom: 70,
+                        child: IgnorePointer(
+                          child: _CampLifeLayer(
+                            compact: compactHeight,
+                            woundedCount: worldState.woundedCount,
+                          ),
+                        ),
+                      ),
                       Row(
                         children: [
                           SizedBox(
@@ -187,6 +199,146 @@ class CampScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CampLifeLayer extends StatefulWidget {
+  const _CampLifeLayer({required this.compact, required this.woundedCount});
+
+  final bool compact;
+  final int woundedCount;
+
+  @override
+  State<_CampLifeLayer> createState() => _CampLifeLayerState();
+}
+
+class _CampLifeLayerState extends State<_CampLifeLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _controller,
+    builder: (_, _) {
+      final drift = Curves.easeInOut.transform(_controller.value);
+      return Stack(
+        children: [
+          _CampActor(
+            asset: 'assets/images/luna_belhardt.png',
+            label: '루나 · 야간 경계',
+            left: 12 + drift * 16,
+            bottom: 4,
+            height: widget.compact ? 82 : 116,
+          ),
+          _CampActor(
+            asset: 'assets/images/kael_rozenfang.png',
+            label: '카일 · 장비 점검',
+            right: 18 + (1 - drift) * 14,
+            bottom: 0,
+            height: widget.compact ? 84 : 120,
+          ),
+          Positioned(
+            left: 0,
+            top: 4,
+            child: _CampActivityChip(
+              icon: Icons.forum_outlined,
+              label:
+                  '용병 대화 ${widget.woundedCount > 0 ? '· 부상자 보고' : '· 다음 계약 준비'}',
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _CampActor extends StatelessWidget {
+  const _CampActor({
+    required this.asset,
+    required this.label,
+    required this.bottom,
+    required this.height,
+    this.left,
+    this.right,
+  });
+
+  final String asset;
+  final String label;
+  final double bottom;
+  final double height;
+  final double? left;
+  final double? right;
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    left: left,
+    right: right,
+    bottom: bottom,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          color: const Color(0xbb080a0e),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 7, color: Color(0xffe1c889)),
+          ),
+        ),
+        SizedBox(
+          height: height,
+          width: height * .66,
+          child: ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.white, Colors.transparent],
+              stops: [0, .72, 1],
+            ).createShader(bounds),
+            blendMode: BlendMode.dstIn,
+            child: Opacity(
+              opacity: .82,
+              child: Image.asset(
+                asset,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _CampActivityChip extends StatelessWidget {
+  const _CampActivityChip({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    decoration: BoxDecoration(
+      color: const Color(0xaa0b0d12),
+      border: Border.all(color: const Color(0x99765f3b)),
+    ),
+    child: Row(
+      children: [
+        Icon(icon, size: 12, color: const Color(0xffd8bd7b)),
+        const SizedBox(width: 5),
+        Text(label, style: const TextStyle(fontSize: 8, color: Colors.white70)),
+      ],
+    ),
+  );
 }
 
 class _CampStateBanner extends StatelessWidget {

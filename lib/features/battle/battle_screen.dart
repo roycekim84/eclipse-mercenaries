@@ -524,43 +524,73 @@ class BattleHud extends StatelessWidget {
         Positioned(
           right: 14,
           bottom: 10,
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              BattleActionOrb(
-                icon: Icons.double_arrow,
-                label: '대시',
-                cooldown: controls.dashCooldown,
-                maxCooldown: BattleControlRules.dashCooldownSeconds,
-                color: const Color(0xff507aa1),
-                onTap: onDash,
-              ),
-              BattleActionOrb(
-                icon: contract.battlefield == BattlefieldType.evacuation
-                    ? Icons.directions_run
-                    : Icons.flag,
-                label: contract.battlefield == BattlefieldType.evacuation
-                    ? '강행군'
-                    : '집결',
-                cooldown: controls.tacticalCooldown,
-                maxCooldown: BattleControlRules.tacticalCooldownSeconds,
-                active: controls.tacticalActive,
-                color: const Color(0xffb58a42),
-                onTap: onTactical,
-              ),
-              for (final entry in stats.build.take(compact ? 2 : 6))
-                SkillOrb(
-                  icon: entry.kind == RunUpgradeKind.weapon
-                      ? gameContent.weaponById(entry.id).visual.icon
-                      : gameIcon(entry.id),
-                  label: entry.level >= entry.maxLevel
-                      ? 'MAX'
-                      : 'LV.${entry.level}',
+              Container(
+                constraints: BoxConstraints(maxWidth: compact ? 310 : 420),
+                padding: const EdgeInsets.fromLTRB(7, 5, 7, 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xcc090b10),
+                  border: Border.all(color: const Color(0xff6b5939)),
                 ),
-              UltimateOrb(
-                charge: stats.ultimateCharge,
-                enabled: stats.ultimateEnabled,
-                color: mercenary.visual.accent,
-                onTap: onUltimate,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'BUILD',
+                      style: TextStyle(
+                        color: Color(0xffd7bd7c),
+                        fontSize: 7,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    for (final entry in stats.build.take(compact ? 5 : 6))
+                      SkillOrb(
+                        compact: true,
+                        icon: entry.kind == RunUpgradeKind.weapon
+                            ? gameContent.weaponById(entry.id).visual.icon
+                            : gameIcon(entry.id),
+                        label: entry.level >= entry.maxLevel
+                            ? 'MAX'
+                            : 'LV.${entry.level}',
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  BattleActionOrb(
+                    icon: Icons.double_arrow,
+                    label: '대시',
+                    cooldown: controls.dashCooldown,
+                    maxCooldown: BattleControlRules.dashCooldownSeconds,
+                    color: const Color(0xff507aa1),
+                    onTap: onDash,
+                  ),
+                  BattleActionOrb(
+                    icon: contract.battlefield == BattlefieldType.evacuation
+                        ? Icons.directions_run
+                        : Icons.flag,
+                    label: contract.battlefield == BattlefieldType.evacuation
+                        ? '강행군'
+                        : '집결',
+                    cooldown: controls.tacticalCooldown,
+                    maxCooldown: BattleControlRules.tacticalCooldownSeconds,
+                    active: controls.tacticalActive,
+                    color: const Color(0xffb58a42),
+                    onTap: onTactical,
+                  ),
+                  UltimateOrb(
+                    charge: stats.ultimateCharge,
+                    enabled: stats.ultimateEnabled,
+                    color: mercenary.visual.accent,
+                    onTap: onUltimate,
+                  ),
+                ],
               ),
             ],
           ),
@@ -1041,6 +1071,8 @@ class BattlefieldEventChoiceOverlay extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _BattlefieldEventArt(effect: event.effect),
+                    const SizedBox(height: 12),
                     Text(
                       rarityLabel,
                       style: TextStyle(
@@ -1071,77 +1103,130 @@ class BattlefieldEventChoiceOverlay extends StatelessWidget {
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(event.choices.length, (index) {
-                        final choice = event.choices[index];
-                        final danger =
-                            choice.retreat ||
-                            choice.id == 'fight_company' ||
-                            choice.id == 'challenge_royal_guard';
-                        return Flexible(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 310),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                              ),
-                              child: InkWell(
-                                onTap: () => onPick(index),
-                                child: Container(
-                                  height: 118,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: danger
-                                        ? const Color(0x663b1719)
-                                        : const Color(0x66203549),
-                                    border: Border.all(
+                      children: List.generate(
+                        event.choices.length == 1 ? 2 : event.choices.length,
+                        (index) {
+                          final synthetic = index >= event.choices.length;
+                          final choice = synthetic
+                              ? const BattlefieldEventChoiceSpec(
+                                  id: 'continue_mission',
+                                  label: '계약 목표 유지',
+                                  description: '사건에 개입하지 않고 본래 임무를 계속합니다.',
+                                  resultText: '계약 목표를 우선했습니다.',
+                                )
+                              : event.choices[index];
+                          final danger =
+                              choice.retreat ||
+                              choice.id == 'fight_company' ||
+                              choice.id == 'challenge_royal_guard';
+                          return Flexible(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 310),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                child: InkWell(
+                                  onTap: () => onPick(synthetic ? -1 : index),
+                                  child: Container(
+                                    height: 118,
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
                                       color: danger
-                                          ? const Color(0xff9e554e)
-                                          : const Color(0xff668cac),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        choice.retreat
-                                            ? Icons.directions_run
-                                            : danger
-                                            ? Icons.gavel
-                                            : Icons.shield_outlined,
+                                          ? const Color(0x663b1719)
+                                          : const Color(0x66203549),
+                                      border: Border.all(
                                         color: danger
-                                            ? const Color(0xffe28a78)
-                                            : const Color(0xff8fc4dd),
+                                            ? const Color(0xff9e554e)
+                                            : const Color(0xff668cac),
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        choice.label,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          choice.retreat
+                                              ? Icons.directions_run
+                                              : danger
+                                              ? Icons.gavel
+                                              : Icons.shield_outlined,
+                                          color: danger
+                                              ? const Color(0xffe28a78)
+                                              : const Color(0xff8fc4dd),
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        choice.description,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 9,
-                                          color: Colors.white54,
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          choice.label,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          choice.description,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.white54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BattlefieldEventArt extends StatelessWidget {
+  const _BattlefieldEventArt({required this.effect});
+
+  final BattlefieldEventEffect effect;
+
+  @override
+  Widget build(BuildContext context) {
+    final quadrant = switch (effect) {
+      BattlefieldEventEffect.reinforcements ||
+      BattlefieldEventEffect.eliteKnight => const Alignment(-1, -1),
+      BattlefieldEventEffect.supplyWagon ||
+      BattlefieldEventEffect.woundedCommander => const Alignment(1, -1),
+      BattlefieldEventEffect.mercenaryIntervention ||
+      BattlefieldEventEffect.monsterIncursion => const Alignment(-1, 1),
+      BattlefieldEventEffect.redMoon ||
+      BattlefieldEventEffect.royalPresence => const Alignment(1, 1),
+    };
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height < 500 ? 78 : 120,
+      width: double.infinity,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xff80643c)),
+        ),
+        child: ClipRect(
+          child: Align(
+            alignment: quadrant,
+            widthFactor: .5,
+            heightFactor: .5,
+            child: Image.asset(
+              'assets/images/events/battlefield_event_atlas.jpg',
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.medium,
             ),
           ),
         ),

@@ -457,8 +457,8 @@ void main() {
     expect(find.text('MVP · 북문의 철벽'), findsOneWidget);
     expect(find.text('보상 명세'), findsOneWidget);
     expect(find.text('희귀 · 장교의 전술지도'), findsOneWidget);
-    expect(find.text('성능 프로파일'), findsOneWidget);
-    expect(find.textContaining('렌더 CPU'), findsOneWidget);
+    expect(find.text('성능 프로파일'), findsNothing);
+    expect(find.textContaining('렌더 CPU'), findsNothing);
   });
 
   testWidgets('result screen explains a valid empty loot state', (

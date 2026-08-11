@@ -7,6 +7,7 @@ class RecruitmentScreen extends StatefulWidget {
     super.key,
     required this.crystals,
     required this.tickets,
+    required this.recruitmentCount,
     required this.mercenaryCopies,
     required this.notice,
     required this.onRecruit,
@@ -15,6 +16,7 @@ class RecruitmentScreen extends StatefulWidget {
   });
   final int crystals;
   final int tickets;
+  final int recruitmentCount;
   final Map<String, int> mercenaryCopies;
   final String? notice;
   final RecruitmentReceipt? Function(int count) onRecruit;
@@ -82,6 +84,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
                       key: const ValueKey('recruit-lobby'),
                       crystals: widget.crystals,
                       tickets: widget.tickets,
+                      recruitmentCount: widget.recruitmentCount,
                       onSingle: () => _recruit(1),
                       onTen: () => _recruit(10),
                     ),
@@ -110,11 +113,13 @@ class _RecruitLobby extends StatelessWidget {
     super.key,
     required this.crystals,
     required this.tickets,
+    required this.recruitmentCount,
     required this.onSingle,
     required this.onTen,
   });
   final int crystals;
   final int tickets;
+  final int recruitmentCount;
   final VoidCallback onSingle;
   final VoidCallback onTen;
   @override
@@ -158,6 +163,51 @@ class _RecruitLobby extends StatelessWidget {
                   color: Colors.white70,
                   height: 1.5,
                   fontSize: 12,
+                ),
+              ),
+              SizedBox(height: compact ? 6 : 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xbb17101f),
+                  border: Border.all(color: const Color(0xff8e67a5)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.workspace_premium_outlined,
+                      size: 17,
+                      color: Color(0xffffd27c),
+                    ),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '달빛 계약 보증 · ${RecruitmentRules.guaranteeRemaining(recruitmentCount)}회 이내 루나 확정',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          LinearProgressIndicator(
+                            minHeight: 4,
+                            value:
+                                (recruitmentCount %
+                                    RecruitmentRules.featuredGuarantee) /
+                                RecruitmentRules.featuredGuarantee,
+                            backgroundColor: Color(0xff14121a),
+                            color: Color(0xffa878c3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: compact ? 10 : 22),
@@ -453,7 +503,7 @@ class _ProbabilityDialog extends StatelessWidget {
     backgroundColor: const Color(0xff15171d),
     title: const Text('계약 확률 안내'),
     content: const Text(
-      '루나 벨하르트  33.33%\n카일 로젠팽  33.33%\n세라 이나리온  33.34%\n\n보유 용병 중복 획득 시 해당 용병 전용 증표 10개로 변환됩니다.',
+      '일반 계약 풀 8명 균등 등장\n픽업 용병: 루나 벨하르트\n40회 이내 픽업 용병 확정\n\n보유 용병 중복 획득 시 해당 용병 전용 증표 10개로 변환됩니다.',
       style: TextStyle(height: 1.7),
     ),
     actions: [

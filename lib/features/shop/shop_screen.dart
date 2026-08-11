@@ -118,6 +118,30 @@ class _ShopScreenState extends State<ShopScreen> {
                   ),
                 ),
               ),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0x66211910),
+                border: Border.all(color: const Color(0x996f5936)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.schedule, size: 14, color: Color(0xffd8bd7b)),
+                  SizedBox(width: 7),
+                  Text(
+                    '보급 교대까지 13:22:45',
+                    style: TextStyle(fontSize: 9, color: Colors.white60),
+                  ),
+                  Spacer(),
+                  Text(
+                    '오늘의 추천 · 계약/강화 재료 입고',
+                    style: TextStyle(fontSize: 9, color: Color(0xffffd27c)),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: products.isEmpty
                   ? Padding(
@@ -372,6 +396,9 @@ IconData _itemIcon(String id) => switch (id) {
   'veteran_badge' => Icons.military_tech_outlined,
   'contract_seal' => Icons.approval_outlined,
   'mooncloth' => Icons.nights_stay_outlined,
+  'field_medicine' => Icons.medical_services_outlined,
+  'siege_core' => Icons.settings_suggest_outlined,
+  'royal_writ' => Icons.history_edu_outlined,
   _ => Icons.inventory_2_outlined,
 };
 

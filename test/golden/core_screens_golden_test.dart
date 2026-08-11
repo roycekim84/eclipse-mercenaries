@@ -75,6 +75,12 @@ void main() {
         ),
       ),
     );
+    await tester.runAsync(
+      () => precacheImage(
+        const AssetImage('assets/images/ui/war_contract_map.jpg'),
+        tester.element(find.byType(ContractScreen)),
+      ),
+    );
     await _settleImages(tester);
 
     await expectLater(

@@ -34,7 +34,33 @@ class ContractScreen extends StatelessWidget {
                   return Stack(
                     children: [
                       Positioned.fill(
-                        child: CustomPaint(painter: MapPainter()),
+                        child: Image.asset(
+                          'assets/images/ui/war_contract_map.jpg',
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          filterQuality: FilterQuality.medium,
+                        ),
+                      ),
+                      const Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0x4405090f),
+                                Color(0x1105090f),
+                                Color(0xbb05070b),
+                              ],
+                              stops: [0, .55, 1],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Positioned(
+                        left: 16,
+                        top: 10,
+                        child: _WarMapLegend(),
                       ),
                       ...List.generate(contracts.length, (index) {
                         final item = contracts[index];
@@ -104,6 +130,35 @@ class ContractScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WarMapLegend extends StatelessWidget {
+  const _WarMapLegend();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xd5090b10),
+      border: Border.all(color: const Color(0xff765f3b)),
+      boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 8)],
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.public, size: 14, color: Color(0xffd8bd7b)),
+        SizedBox(width: 6),
+        Text('대륙 전황', style: TextStyle(fontSize: 9)),
+        SizedBox(width: 12),
+        Text(
+          '● 아군 계약',
+          style: TextStyle(fontSize: 8, color: Color(0xff78aed2)),
+        ),
+        SizedBox(width: 8),
+        Text('● 격전지', style: TextStyle(fontSize: 8, color: Color(0xffd06d62))),
+      ],
+    ),
+  );
 }
 
 class MercenarySelectScreen extends StatefulWidget {

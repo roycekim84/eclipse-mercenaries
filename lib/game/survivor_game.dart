@@ -559,8 +559,8 @@ class SurvivorGame extends FlameGame {
     final cy = _spatialGrid.cellY(unit.position.y);
     final push = Vector2.zero();
     var neighbours = 0;
-    for (var gx = cx - 1; gx <= cx + 1 && neighbours < 10; gx++) {
-      for (var gy = cy - 1; gy <= cy + 1 && neighbours < 10; gy++) {
+    for (var gx = cx - 1; gx <= cx + 1 && neighbours < 8; gx++) {
+      for (var gy = cy - 1; gy <= cy + 1 && neighbours < 8; gy++) {
         for (final index in _spatialGrid.bucketAt(gx, gy)) {
           final other = _units[index];
           if (identical(other, unit) || other.dead || other.ally != unit.ally) {
@@ -568,10 +568,12 @@ class SurvivorGame extends FlameGame {
           }
           final delta = unit.position - other.position;
           final distance = delta.length;
-          final spacing =
-              unit.role == UnitRole.siege || other.role == UnitRole.siege
-              ? 34.0
-              : 21.0;
+          final spacing = switch ((unit.role, other.role)) {
+            (UnitRole.siege, _) || (_, UnitRole.siege) => 48.0,
+            (UnitRole.cavalry, _) || (_, UnitRole.cavalry) => 36.0,
+            (UnitRole.commander, _) || (_, UnitRole.commander) => 34.0,
+            _ => 28.0,
+          };
           if (distance >= spacing) continue;
           if (distance > .1) {
             push.add(delta.normalized() * (1 - distance / spacing));
@@ -579,7 +581,7 @@ class SurvivorGame extends FlameGame {
             push.add(Vector2(math.cos(unit.phase), math.sin(unit.phase)));
           }
           neighbours++;
-          if (neighbours >= 10) break;
+          if (neighbours >= 8) break;
         }
       }
     }
@@ -590,7 +592,7 @@ class SurvivorGame extends FlameGame {
       push.add(playerDelta.normalized() * (1 - playerDistance / playerSpacing));
     }
     if (push.length2 <= .001) return;
-    unit.position.add(push.normalized() * 22 * dt);
+    unit.position.add(push.normalized() * 34 * dt);
     unit.position
       ..x = unit.position.x.clamp(12, size.x - 12)
       ..y = unit.position.y.clamp(12, size.y - 12);
@@ -767,6 +769,7 @@ class SurvivorGame extends FlameGame {
     _visibleUnitDetails.clear();
     _unitTransforms.clear();
     _unitSources.clear();
+    var detailedEffects = 0;
     for (final unit in _units) {
       if (unit.dead) continue;
       if (unit.position.x < -20 ||
@@ -778,18 +781,19 @@ class SurvivorGame extends FlameGame {
       _visibleUnits.add(unit);
       final distance = _player.distanceTo(unit.position);
       final important = _isImportantRenderUnit(unit);
-      final detailed = policy.showsDetail(
+      final wantsDetail = policy.showsDetail(
         distance: distance,
         viewportLongestSide: viewportLongestSide,
         important: important,
       );
+      final detailed = important || (wantsDetail && detailedEffects++ < 34);
       _visibleUnitDetails.add(detailed);
       final bob = detailed ? math.sin(unit.phase) * 1.2 : 0.0;
       final displaySize = switch (unit.role) {
-        UnitRole.cavalry => const Size(68, 74),
-        UnitRole.siege => const Size(74, 66),
-        UnitRole.commander => const Size(54, 72),
-        _ => const Size(44, 62),
+        UnitRole.cavalry => const Size(58, 66),
+        UnitRole.siege => const Size(62, 56),
+        UnitRole.commander => const Size(52, 68),
+        _ => const Size(40, 56),
       };
       final rankScale = switch (unit.archetype?.rank) {
         EnemyRank.elite => 1.18,
@@ -997,6 +1001,26 @@ class SurvivorGame extends FlameGame {
               )
         ..style = PaintingStyle.stroke
         ..strokeWidth = _playerInvulnerability > 0 ? 4 : 3,
+    );
+    final pointerY = _player.y - 53 - math.sin(_elapsed * 5) * 3;
+    final pointer = Path()
+      ..moveTo(_player.x, pointerY + 10)
+      ..lineTo(_player.x - 7, pointerY)
+      ..lineTo(_player.x, pointerY - 7)
+      ..lineTo(_player.x + 7, pointerY)
+      ..close();
+    canvas.drawPath(
+      pointer,
+      Paint()
+        ..color = const Color(0xffffdf86)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      pointer,
+      Paint()
+        ..color = const Color(0xff392511)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4,
     );
   }
 }

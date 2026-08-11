@@ -1,5 +1,7 @@
 # 월식 용병단: Eclipse Mercenaries
 
+최근 레퍼런스 비교 기반 UI/전투 개선 내역은 [VISUAL_POLISH_1_10.md](VISUAL_POLISH_1_10.md)에서 확인할 수 있습니다.
+
 Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. Web을 우선 개발·검증 환경으로 사용하고 iOS와 Android를 최종 타깃으로 합니다.
 
 ## 베타 Web 플레이

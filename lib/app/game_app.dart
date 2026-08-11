@@ -629,6 +629,25 @@ class GameShellState extends State<GameShell> {
           children: [
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 320),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOut,
+                ),
+                child: SlideTransition(
+                  position:
+                      Tween<Offset>(
+                        begin: const Offset(.025, 0),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                  child: child,
+                ),
+              ),
               child: switch (scene) {
                 AppScene.camp => CampScreen(
                   key: const ValueKey('camp'),
@@ -821,6 +840,7 @@ class GameShellState extends State<GameShell> {
                   key: const ValueKey('recruitment'),
                   crystals: crystals,
                   tickets: account.inventory['contract_ticket'] ?? 0,
+                  recruitmentCount: account.recruitmentCount,
                   mercenaryCopies: account.mercenaryCopies,
                   notice: actionNotice,
                   onRecruit: recruitMercenaries,

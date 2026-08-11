@@ -28,6 +28,9 @@
 
 ## 생성 자산
 
+- `assets/images/ui/war_contract_map.jpg`: 설원 요새·검은숲·성벽·적 점령지를 한 화면에서 식별하는 전쟁 계약 지도. UI 텍스트와 노드는 Flutter 레이어에서 배치한다.
+- `assets/images/events/battlefield_event_atlas.jpg`: 증원, 보급마차, 제3세력, 붉은 달/왕의 친정의 2×2 사건 아틀라스. 런타임에서 사분면을 크롭한다.
+
 - `assets/images/mercenary_camp.png`: 내비게이션 영역을 고려한 야전 캠프 배경
 - `assets/images/luna_belhardt.png`: 캐릭터 상세용 루나 전신 일러스트
 - `assets/images/kael_rozenfang.png`: 늑대족 검투사 카일 전신 일러스트

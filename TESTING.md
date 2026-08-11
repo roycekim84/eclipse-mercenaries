@@ -457,3 +457,12 @@ Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임
 - 각 화면 정착 후 `tester.takeException()`이 null인지 검사해 RenderFlex overflow를 실패 처리한다.
 - 도감 필터는 실제 콘텐츠 수량 전체 27/일반 16/정예 6/지휘관 5를 검증한다.
 - Android 리소스 테스트에서 `sensorLandscape`와 주/야간 fullscreen 테마를 검증한다.
+# 2026-08-11 시각 개선 1~10 회귀
+
+- `flutter analyze`: 통과, 이슈 0건
+- `flutter test`: 전체 91개 통과
+- 1280×720 캠프/전쟁 계약/결과 Golden 갱신 후 비갱신 전체 테스트 통과
+- 콘텐츠 카탈로그 12개 상점 상품 참조와 40번째 픽업 확정 테스트 통과
+- 1024×461 Android compact landscape overflow 회귀 통과
+- Pages base href Web release 및 Android debug APK 빌드 통과
+- 실기기 및 외부 사용자 측정은 사용자 요청대로 생략

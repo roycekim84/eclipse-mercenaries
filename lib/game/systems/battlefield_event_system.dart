@@ -20,12 +20,17 @@ extension BattlefieldEventSystem on SurvivorGame {
 
   void selectBattlefieldEventChoice(int index) {
     final activeEvent = eventPrompt.value;
-    if (activeEvent == null ||
-        index < 0 ||
-        index >= activeEvent.choices.length) {
+    if (activeEvent == null || index >= activeEvent.choices.length) {
       return;
     }
-    final selected = activeEvent.choices[index];
+    final selected = index < 0
+        ? const BattlefieldEventChoiceSpec(
+            id: 'continue_mission',
+            label: '계약 목표 유지',
+            description: '위험한 사건에 개입하지 않고 본래 임무를 계속합니다.',
+            resultText: '사건에 개입하지 않고 계약 목표를 우선했습니다.',
+          )
+        : activeEvent.choices[index];
     _applyBattlefieldEventChoice(selected);
     _eventRecords.add(
       BattlefieldEventRecord(
@@ -65,6 +70,8 @@ extension BattlefieldEventSystem on SurvivorGame {
         _eventGoldBonus += 650;
         _eventXpBonus += 180;
       case 'tactical_retreat' || 'royal_retreat':
+        return;
+      case 'continue_mission':
         return;
       case 'secure_supplies':
         _eventGoldBonus += 900;

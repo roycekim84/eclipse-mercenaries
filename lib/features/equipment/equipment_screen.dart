@@ -412,11 +412,31 @@ class WeaponDetailPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: GameAssetArt(
-                        asset: weaponArtAsset(weapon.id),
-                        fallbackIcon: weapon.visual.icon,
-                        fallbackColor: weapon.visual.color,
-                        size: 104,
+                      child: Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            colors: [
+                              weapon.visual.color.withValues(alpha: .32),
+                              const Color(0xff090b10),
+                            ],
+                          ),
+                          border: Border.all(color: weapon.visual.color),
+                          boxShadow: [
+                            BoxShadow(
+                              color: weapon.visual.color.withValues(alpha: .25),
+                              blurRadius: 20,
+                            ),
+                          ],
+                        ),
+                        child: GameAssetArt(
+                          asset: weaponArtAsset(weapon.id),
+                          fallbackIcon: weapon.visual.icon,
+                          fallbackColor: weapon.visual.color,
+                          size: MediaQuery.sizeOf(context).height < 500
+                              ? 92
+                              : 136,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -436,6 +456,29 @@ class WeaponDetailPanel extends StatelessWidget {
                       style: const TextStyle(
                         color: Color(0xffc7a6df),
                         fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        minHeight: 6,
+                        value:
+                            ((progress?.xp ?? 0) /
+                                    ProgressionRules.weaponXpToNext(
+                                      progress?.level ?? 1,
+                                    ))
+                                .clamp(0, 1),
+                        backgroundColor: const Color(0xff090b10),
+                        color: weapon.visual.color,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '무기 경험치 ${progress?.xp ?? 0} / ${ProgressionRules.weaponXpToNext(progress?.level ?? 1)}',
+                      style: const TextStyle(
+                        fontSize: 8,
+                        color: Colors.white38,
                       ),
                     ),
                     const Divider(color: Color(0xff665536)),
