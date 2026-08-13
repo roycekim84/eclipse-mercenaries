@@ -129,9 +129,13 @@ void main() {
       final header = ByteData.sublistView(atlas.readAsBytesSync());
       final width = header.getUint32(16);
       final height = header.getUint32(20);
-      expect(width, greaterThanOrEqualTo(1600));
-      expect(height, greaterThanOrEqualTo(800));
-      expect(width / height, closeTo(2, .15));
+      expect(width, 2048);
+      expect(height, 768);
+      expect(width % 4, 0);
+      expect(height % 2, 0);
+      expect(width / 4 / (height / 2), closeTo(4 / 3, .001));
+      expect(header.getUint8(25), 6, reason: 'VFX atlas must retain alpha');
+      expect(File('tool/normalize_ultimate_vfx.py').existsSync(), isTrue);
     },
   );
 

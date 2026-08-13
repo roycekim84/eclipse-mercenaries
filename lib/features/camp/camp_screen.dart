@@ -153,7 +153,7 @@ class CampScreen extends StatelessWidget {
                                   const SizedBox(height: 9),
                                   FantasyButton(
                                     label: '용병 모집',
-                                    icon: Icons.description_outlined,
+                                    icon: Icons.group_add_outlined,
                                     onTap: onRecruitment,
                                   ),
                                   const SizedBox(height: 9),

@@ -3,8 +3,10 @@ part of '../../app/game_app.dart';
 /// Production UI glyphs. Gameplay-facing symbols are painted assets instead of
 /// platform Material icons so the same visual language is used on Web, Android
 /// and iOS. Navigation primitives deliberately keep their familiar geometry.
-String? _premiumGlyphAsset(IconData icon) {
+String? premiumGlyphAsset(IconData icon) {
   if (icon == Icons.groups_2_outlined ||
+      icon == Icons.group_add_outlined ||
+      icon == Icons.person_add_alt_1_outlined ||
       icon == Icons.person_outline ||
       icon == Icons.pets ||
       icon == Icons.cruelty_free) {
@@ -105,7 +107,7 @@ class PremiumGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final asset = _premiumGlyphAsset(icon);
+    final asset = premiumGlyphAsset(icon);
     if (asset == null) {
       return Icon(icon, size: size, color: color, semanticLabel: semanticLabel);
     }

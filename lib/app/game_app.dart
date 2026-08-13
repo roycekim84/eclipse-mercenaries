@@ -534,7 +534,7 @@ class GameShellState extends State<GameShell> {
     );
   }
 
-  int get claimableMissionCount => alphaMissions
+  int get claimableMissionCount => releaseMissions
       .where(
         (mission) =>
             !account.claimedMissionIds.contains(mission.id) &&

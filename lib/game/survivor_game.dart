@@ -39,6 +39,28 @@ double _permanentPlayerMaxHp(BattleConfig config) {
       config.gearBonus.hpMultiplier;
 }
 
+/// Source rectangles for the seven battlefield roles in the production atlas.
+/// Kept public so release validation can reject a cropped or reordered atlas.
+const alliedUnitAtlasSources = <Rect>[
+  Rect.fromLTWH(0, 0, 88, 124),
+  Rect.fromLTWH(88, 0, 88, 124),
+  Rect.fromLTWH(176, 0, 88, 124),
+  Rect.fromLTWH(264, 0, 136, 148),
+  Rect.fromLTWH(400, 0, 88, 124),
+  Rect.fromLTWH(488, 0, 148, 132),
+  Rect.fromLTWH(636, 0, 108, 144),
+];
+
+const enemyUnitAtlasSources = <Rect>[
+  Rect.fromLTWH(0, 148, 88, 124),
+  Rect.fromLTWH(88, 148, 88, 124),
+  Rect.fromLTWH(176, 148, 88, 124),
+  Rect.fromLTWH(264, 148, 136, 148),
+  Rect.fromLTWH(400, 148, 88, 124),
+  Rect.fromLTWH(488, 148, 148, 132),
+  Rect.fromLTWH(636, 148, 108, 144),
+];
+
 class SurvivorGame extends FlameGame {
   SurvivorGame({
     required this.config,
@@ -198,24 +220,6 @@ class SurvivorGame extends FlameGame {
   static const _performanceRenderPolicy = BattleRenderPolicy(
     performanceMode: true,
   );
-  static const _alliedUnitSources = <Rect>[
-    Rect.fromLTWH(0, 0, 88, 124),
-    Rect.fromLTWH(88, 0, 88, 124),
-    Rect.fromLTWH(176, 0, 88, 124),
-    Rect.fromLTWH(264, 0, 136, 148),
-    Rect.fromLTWH(400, 0, 88, 124),
-    Rect.fromLTWH(488, 0, 148, 132),
-    Rect.fromLTWH(636, 0, 108, 144),
-  ];
-  static const _enemyUnitSources = <Rect>[
-    Rect.fromLTWH(0, 148, 88, 124),
-    Rect.fromLTWH(88, 148, 88, 124),
-    Rect.fromLTWH(176, 148, 88, 124),
-    Rect.fromLTWH(264, 148, 136, 148),
-    Rect.fromLTWH(400, 148, 88, 124),
-    Rect.fromLTWH(488, 148, 148, 132),
-    Rect.fromLTWH(636, 148, 108, 144),
-  ];
 
   BattleRenderPolicy get _renderPolicy =>
       performanceMode.value ? _performanceRenderPolicy : _standardRenderPolicy;
@@ -992,7 +996,7 @@ class SurvivorGame extends FlameGame {
       unit.status != StatusEffectType.none;
 
   Rect _unitBatchSource(BattleUnit unit) {
-    final sources = unit.ally ? _alliedUnitSources : _enemyUnitSources;
+    final sources = unit.ally ? alliedUnitAtlasSources : enemyUnitAtlasSources;
     return sources[unit.role.index];
   }
 

@@ -551,3 +551,10 @@ Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임
 - `flutter build web --release --base-href /eclipse-mercenaries/`: 통과, Wasm dry run 통과
 - `flutter build apk --debug`: 통과
 - 궁극기 VFX 아틀라스 4×2/고해상도, 24단계 임무 순서·분류·보상을 자동 검사
+# 2026-08-13 전투 시각·임무·아이콘 계약 검증
+
+- `battle_visual_contract_test.dart`에서 아군·적군 14개 병과 셀의 범위와 불투명 픽셀을 검사한다.
+- 궁극기 8개 셀은 512×384 규격, 외곽 12px 투명 거터, 실제 VFX 픽셀 존재를 검사한다.
+- 8명 용병의 Idle/Walk/Attack/Hit/Dead 프레임이 각 전투 시트 열 범위를 벗어나지 않는지 검사한다.
+- 24단계 임무는 이전 단계 수령 전 잠금과 1→24 전 단계 완료 가능성을 시뮬레이션한다.
+- 캠프 출전/모집/대장간은 contract/roster/forge 글리프가 중복 없이 연결되는지 검사한다.

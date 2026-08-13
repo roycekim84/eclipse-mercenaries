@@ -171,13 +171,13 @@ extension UltimateSystem on SurvivorGame {
     final index = mercenary.ultimatePattern.index;
     final column = index % 4;
     final row = index ~/ 4;
-    final cellWidth = _ultimateVfxAtlas.width / 4;
-    final cellHeight = _ultimateVfxAtlas.height / 2;
+    final cellWidth = _ultimateVfxAtlas.width ~/ 4;
+    final cellHeight = _ultimateVfxAtlas.height ~/ 2;
     final source = Rect.fromLTWH(
-      column * cellWidth + 4,
-      row * cellHeight + 4,
-      cellWidth - 8,
-      cellHeight - 8,
+      column * cellWidth.toDouble(),
+      row * cellHeight.toDouble(),
+      cellWidth.toDouble(),
+      cellHeight.toDouble(),
     );
     final baseExtent =
         math.min(size.x, size.y) * (_reducedVisualLoad ? .72 : .92);
@@ -193,7 +193,7 @@ extension UltimateSystem on SurvivorGame {
       source,
       destination,
       Paint()
-        ..filterQuality = FilterQuality.medium
+        ..filterQuality = FilterQuality.high
         ..blendMode = BlendMode.screen
         ..color = Color.fromRGBO(255, 255, 255, .42 + pulse * .58),
     );
@@ -208,7 +208,7 @@ extension UltimateSystem on SurvivorGame {
         source,
         echo,
         Paint()
-          ..filterQuality = FilterQuality.medium
+          ..filterQuality = FilterQuality.high
           ..blendMode = BlendMode.screen
           ..color = color.withValues(alpha: (1 - progress) * .24),
       );

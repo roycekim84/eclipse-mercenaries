@@ -18,6 +18,8 @@ import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:eclipse_mercenaries/domain/game_settings.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:eclipse_mercenaries/domain/run_growth.dart';
+import 'package:eclipse_mercenaries/game/survivor_game.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -753,6 +755,84 @@ void main() {
         );
       }
     }
+  });
+
+  test(
+    'release mission campaign unlocks and completes strictly 1 through 24',
+    () {
+      final claimed = <String>{};
+      const inventory = <String, int>{'war_scrap': 99, 'field_ration': 99};
+      const weapons = <String, WeaponProgress>{
+        'moon_blades': WeaponProgress(level: 15, xp: 0, stage: 5),
+      };
+      for (var index = 0; index < releaseMissions.length; index++) {
+        final mission = releaseMissions[index];
+        expect(
+          CampMetaRules.missionUnlocked(mission.id, claimed),
+          isTrue,
+          reason: '${mission.id} must unlock after its predecessor',
+        );
+        if (index + 1 < releaseMissions.length) {
+          expect(
+            CampMetaRules.missionUnlocked(
+              releaseMissions[index + 1].id,
+              claimed,
+            ),
+            isFalse,
+            reason: 'future mission must remain locked',
+          );
+        }
+        expect(
+          CampMetaRules.missionComplete(
+            mission.id,
+            inventory: inventory,
+            weaponProgress: weapons,
+            commanderLevel: 20,
+            ownedMercenaries: 8,
+            factionReputation: const {'aurum': 80},
+            operationProgress: const {'aurum': 4},
+          ),
+          isTrue,
+          reason: mission.id,
+        );
+        claimed.add(mission.id);
+      }
+      expect(claimed, hasLength(24));
+    },
+  );
+
+  test('battle sprite contracts cover every mercenary and army role', () {
+    expect(alliedUnitAtlasSources, hasLength(UnitRole.values.length));
+    expect(enemyUnitAtlasSources, hasLength(UnitRole.values.length));
+    for (final mercenary in content.mercenaries) {
+      final visual = mercenary.visual;
+      expect(visual.battleFrameIndices, hasLength(5), reason: mercenary.id);
+      for (final stateFrames in visual.battleFrameIndices) {
+        expect(stateFrames, isNotEmpty, reason: mercenary.id);
+        expect(
+          stateFrames.every(
+            (index) => index >= 0 && index < visual.battleColumns,
+          ),
+          isTrue,
+          reason: '${mercenary.id} frame outside sheet',
+        );
+      }
+    }
+  });
+
+  test('camp primary buttons use distinct production glyphs', () {
+    expect(
+      premiumGlyphAsset(Icons.gavel),
+      'assets/images/ui/glyphs/contract.png',
+    );
+    expect(
+      premiumGlyphAsset(Icons.group_add_outlined),
+      'assets/images/ui/glyphs/roster.png',
+    );
+    expect(
+      premiumGlyphAsset(Icons.handyman_outlined),
+      'assets/images/ui/glyphs/forge.png',
+    );
   });
 
   test('camp costs reject incomplete resource sets', () {
