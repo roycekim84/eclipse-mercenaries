@@ -22,8 +22,24 @@ class GameAssetArt extends StatelessWidget {
         asset,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
-        errorBuilder: (_, _, _) =>
-            Icon(fallbackIcon, color: fallbackColor, size: size * .58),
+        errorBuilder: (_, error, stack) {
+          assert(() {
+            throw FlutterError('출시 에셋 누락: $asset\n$error');
+          }());
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xff2b1012),
+              border: Border.all(color: const Color(0xffd9675d)),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: fallbackColor,
+                size: size * .48,
+              ),
+            ),
+          );
+        },
       ),
     ),
   );
@@ -94,14 +110,45 @@ class _CompactContractNode extends StatelessWidget {
       Image.asset(
         battlefieldArtAsset(contract.condition),
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         color: locked ? const Color(0xaa646464) : null,
         colorBlendMode: locked ? BlendMode.saturation : null,
       ),
-      const ColoredBox(color: Color(0x66000000)),
-      PremiumGameIcon(
-        locked ? Icons.lock_outline : contract.icon,
-        color: locked ? Colors.white38 : const Color(0xffffd77b),
-        size: 25,
+      const ColoredBox(color: Color(0x44000000)),
+      Center(
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xbb090b10),
+            border: Border.all(
+              color: locked ? Colors.white30 : const Color(0xffd2ad62),
+            ),
+            boxShadow: const [BoxShadow(color: Colors.black87, blurRadius: 8)],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Transform.rotate(
+                angle: .785398,
+                child: Container(
+                  width: 27,
+                  height: 27,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: locked ? Colors.white24 : const Color(0x99d2ad62),
+                    ),
+                  ),
+                ),
+              ),
+              PremiumGameIcon(
+                locked ? Icons.lock_outline : contract.icon,
+                color: locked ? Colors.white38 : const Color(0xffffd77b),
+                size: 22,
+              ),
+            ],
+          ),
+        ),
       ),
       Positioned(
         left: 4,

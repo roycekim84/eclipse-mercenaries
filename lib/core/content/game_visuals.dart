@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/battle_models.dart';
+import '../../domain/battlefield_events.dart';
 import '../../domain/game_data.dart';
 import '../../domain/enemy_catalog.dart';
 
@@ -264,6 +265,40 @@ extension EnemyVisualLookup on EnemyArchetypeSpec {
 }
 
 String weaponArtAsset(String id) => 'assets/images/items/$id.png';
+
+String? lootArtAsset(String id) => switch (id) {
+  'contract_seal' ||
+  'contract_ticket' ||
+  'field_medicine' ||
+  'field_ration' ||
+  'mooncloth' ||
+  'officer_map' ||
+  'royal_writ' ||
+  'siege_core' ||
+  'tempered_iron' ||
+  'veteran_badge' ||
+  'war_hero_contract' ||
+  'war_scrap' => 'assets/images/shop/final/$id.png',
+  _ => null,
+};
+
+String battlefieldEventArtAsset(
+  BattlefieldEventEffect effect,
+) => switch (effect) {
+  BattlefieldEventEffect.reinforcements =>
+    'assets/images/events/reinforcements.png',
+  BattlefieldEventEffect.eliteKnight => 'assets/images/events/elite_knight.png',
+  BattlefieldEventEffect.supplyWagon => 'assets/images/events/supply_wagon.png',
+  BattlefieldEventEffect.woundedCommander =>
+    'assets/images/events/wounded_commander.png',
+  BattlefieldEventEffect.mercenaryIntervention =>
+    'assets/images/events/mercenary_intervention.png',
+  BattlefieldEventEffect.monsterIncursion =>
+    'assets/images/events/monster_incursion.png',
+  BattlefieldEventEffect.redMoon => 'assets/images/events/red_moon.png',
+  BattlefieldEventEffect.royalPresence =>
+    'assets/images/events/royal_presence.png',
+};
 
 String battlefieldArtAsset(BattlefieldCondition condition) =>
     switch (condition) {

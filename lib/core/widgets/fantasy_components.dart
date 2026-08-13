@@ -23,7 +23,6 @@ String? _premiumGlyphAsset(IconData icon) {
     return 'assets/images/ui/glyphs/shop.png';
   }
   if (icon == Icons.menu_book_outlined ||
-      icon == Icons.description_outlined ||
       icon == Icons.history_edu_outlined ||
       icon == Icons.edit_document ||
       icon == Icons.school_outlined) {
@@ -119,7 +118,7 @@ class PremiumGameIcon extends StatelessWidget {
         dimension: dimension,
         child: Image.asset(
           asset,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           filterQuality: FilterQuality.medium,
           color: color,
           colorBlendMode: color == null ? null : BlendMode.modulate,
@@ -192,10 +191,21 @@ class TopBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const CircleAvatar(
-              radius: 19,
-              backgroundColor: Color(0xff4f3821),
-              child: Icon(Icons.pets, color: Color(0xffddb870)),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                gradient: const RadialGradient(
+                  colors: [Color(0xff765029), Color(0xff2f2116)],
+                ),
+                border: Border.all(color: const Color(0xffc49a54)),
+                shape: BoxShape.circle,
+              ),
+              child: const PremiumGameIcon(
+                Icons.pets,
+                size: 22,
+                color: Color(0xffddb870),
+              ),
             ),
             SizedBox(width: compact ? 5 : 9),
             if (!compact)

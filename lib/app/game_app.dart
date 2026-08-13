@@ -372,6 +372,10 @@ class GameShellState extends State<GameShell> {
           mission.id,
           inventory: account.inventory,
           weaponProgress: account.weaponProgress,
+          commanderLevel: account.commanderLevel,
+          ownedMercenaries: account.mercenaryProgress.length,
+          factionReputation: account.factionReputation,
+          operationProgress: account.operationProgress,
         )) {
       return;
     }
@@ -542,6 +546,10 @@ class GameShellState extends State<GameShell> {
               mission.id,
               inventory: account.inventory,
               weaponProgress: account.weaponProgress,
+              commanderLevel: account.commanderLevel,
+              ownedMercenaries: account.mercenaryProgress.length,
+              factionReputation: account.factionReputation,
+              operationProgress: account.operationProgress,
             ),
       )
       .length;
@@ -910,6 +918,10 @@ class GameShellState extends State<GameShell> {
                   inventory: account.inventory,
                   weaponProgress: account.weaponProgress,
                   claimedMissionIds: account.claimedMissionIds,
+                  commanderLevel: account.commanderLevel,
+                  ownedMercenaries: account.mercenaryProgress.length,
+                  factionReputation: account.factionReputation,
+                  operationProgress: account.operationProgress,
                   notice: actionNotice,
                   onClaim: claimMission,
                   onBack: () => go(AppScene.camp),

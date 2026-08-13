@@ -167,121 +167,51 @@ extension UltimateSystem on SurvivorGame {
       Offset.zero & Size(size.x, size.y),
       Paint()..color = color.withValues(alpha: .05 + pulse * .11),
     );
-    final paint = Paint()
-      ..color = color.withValues(alpha: .3 + pulse * .62)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 3 + pulse * 5;
     final center = Offset(_player.x, _player.y);
-
-    switch (mercenary.ultimatePattern) {
-      case UltimatePattern.lunarFlurry:
-        final count = _reducedVisualLoad ? 7 : 18;
-        for (var i = 0; i < count; i++) {
-          final phase = i / count;
-          final x = size.x * phase + math.sin(progress * 18 + i) * 95;
-          final y = size.y * (.12 + phase * .7);
-          canvas.drawLine(
-            Offset(x - 115, y + 58),
-            Offset(x + 115, y - 58),
-            paint,
-          );
-        }
-      case UltimatePattern.bloodMoonRampage:
-        for (var i = 0; i < 3; i++) {
-          canvas.drawArc(
-            Rect.fromCircle(
-              center: center,
-              radius: 90 + i * 74 + progress * 80,
-            ),
-            -.9 + i * .65,
-            2.2,
-            false,
-            paint..strokeWidth = 12 - i * 2,
-          );
-        }
-      case UltimatePattern.foxfireIllusion:
-        final count = _reducedVisualLoad ? 5 : 9;
-        for (var i = 0; i < count; i++) {
-          final angle = math.pi * 2 * i / count + progress * 3.2;
-          final radius = 70 + progress * 180;
-          final flame = Offset(
-            center.dx + math.cos(angle) * radius,
-            center.dy + math.sin(angle) * radius,
-          );
-          canvas.drawCircle(flame, 13 + pulse * 18, paint);
-          canvas.drawLine(center, flame, paint..strokeWidth = 2);
-        }
-      case UltimatePattern.meteorPursuit:
-        final count = _reducedVisualLoad ? 6 : 14;
-        for (var i = 0; i < count; i++) {
-          final impact = Offset(
-            size.x * ((i * .137 + .08) % .86 + .07),
-            size.y * ((i * .223 + .16) % .68 + .14),
-          );
-          canvas.drawLine(
-            impact.translate(-130 - progress * 80, -180),
-            impact,
-            paint..strokeWidth = 4 + (i % 3) * 2,
-          );
-          canvas.drawCircle(impact, 7 + pulse * 10, paint);
-        }
-      case UltimatePattern.goldenSanctuary:
-        final path = Path();
-        for (var i = 0; i < 6; i++) {
-          final angle = -math.pi / 2 + math.pi * 2 * i / 6;
-          final point =
-              center +
-              Offset(math.cos(angle), math.sin(angle)) * (95 + progress * 120);
-          if (i == 0) {
-            path.moveTo(point.dx, point.dy);
-          } else {
-            path.lineTo(point.dx, point.dy);
-          }
-        }
-        path.close();
-        canvas.drawPath(path, paint..strokeWidth = 9);
-        canvas.drawCircle(center, 58 + progress * 130, paint..strokeWidth = 3);
-      case UltimatePattern.skyTactics:
-        final spacing = _reducedVisualLoad ? 100.0 : 64.0;
-        for (double x = -size.y; x < size.x + size.y; x += spacing) {
-          canvas.drawLine(
-            Offset(x + progress * spacing, 0),
-            Offset(x - size.y + progress * spacing, size.y),
-            paint..strokeWidth = 2.5,
-          );
-        }
-        canvas.drawCircle(center, 70 + progress * 250, paint..strokeWidth = 5);
-      case UltimatePattern.earthPiercer:
-        final end = Offset(
-          size.x + 80,
-          center.dy - 180 * math.sin(progress * math.pi),
-        );
-        canvas.drawLine(center.translate(-40, 0), end, paint..strokeWidth = 24);
-        canvas.drawLine(
-          center.translate(-40, 0),
-          end,
-          Paint()
-            ..color = const Color(0xffe7fff2)
-            ..strokeWidth = 4,
-        );
-      case UltimatePattern.twinMoonSigil:
-        final radius = 105 + progress * 165;
-        canvas.drawArc(
-          Rect.fromCircle(center: center.translate(-55, 0), radius: radius),
-          -.9,
-          1.8,
-          false,
-          paint..strokeWidth = 9,
-        );
-        canvas.drawArc(
-          Rect.fromCircle(center: center.translate(55, 0), radius: radius),
-          math.pi - .9,
-          1.8,
-          false,
-          paint,
-        );
-        canvas.drawCircle(center, 32 + pulse * 34, paint..strokeWidth = 4);
+    final index = mercenary.ultimatePattern.index;
+    final column = index % 4;
+    final row = index ~/ 4;
+    final cellWidth = _ultimateVfxAtlas.width / 4;
+    final cellHeight = _ultimateVfxAtlas.height / 2;
+    final source = Rect.fromLTWH(
+      column * cellWidth + 4,
+      row * cellHeight + 4,
+      cellWidth - 8,
+      cellHeight - 8,
+    );
+    final baseExtent =
+        math.min(size.x, size.y) * (_reducedVisualLoad ? .72 : .92);
+    final eased = 1 - math.pow(1 - progress, 3).toDouble();
+    final impactScale = .72 + eased * .32;
+    final destination = Rect.fromCenter(
+      center: center.translate(0, -18),
+      width: baseExtent * impactScale,
+      height: baseExtent * .72 * impactScale,
+    );
+    canvas.drawImageRect(
+      _ultimateVfxAtlas,
+      source,
+      destination,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..blendMode = BlendMode.screen
+        ..color = Color.fromRGBO(255, 255, 255, .42 + pulse * .58),
+    );
+    if (!_reducedVisualLoad && progress > .38) {
+      final echo = Rect.fromCenter(
+        center: center.translate(0, -12),
+        width: baseExtent * (1.02 + progress * .26),
+        height: baseExtent * .72 * (1.02 + progress * .26),
+      );
+      canvas.drawImageRect(
+        _ultimateVfxAtlas,
+        source,
+        echo,
+        Paint()
+          ..filterQuality = FilterQuality.medium
+          ..blendMode = BlendMode.screen
+          ..color = color.withValues(alpha: (1 - progress) * .24),
+      );
     }
   }
 }

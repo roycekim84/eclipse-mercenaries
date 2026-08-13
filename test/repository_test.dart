@@ -731,6 +731,30 @@ void main() {
     });
   });
 
+  test('release mission campaign contains 24 sequential data-driven goals', () {
+    expect(releaseMissions, hasLength(24));
+    expect(releaseMissions.map((mission) => mission.id).toSet(), hasLength(24));
+    expect(
+      releaseMissions.map((mission) => mission.category).toSet(),
+      containsAll(MissionCategory.values),
+    );
+    for (var index = 0; index < releaseMissions.length; index++) {
+      final mission = releaseMissions[index];
+      expect(mission.level, index + 1, reason: mission.id);
+      expect(mission.target, greaterThan(0), reason: mission.id);
+      expect(mission.rewardLabel, isNotEmpty, reason: mission.id);
+      if (index == 0) {
+        expect(mission.prerequisiteId, isNull);
+      } else {
+        expect(
+          mission.prerequisiteId,
+          releaseMissions[index - 1].id,
+          reason: mission.id,
+        );
+      }
+    }
+  });
+
   test('camp costs reject incomplete resource sets', () {
     const mercenary = MercenaryProgress(level: 45, xp: 0, ascension: 0);
     expect(

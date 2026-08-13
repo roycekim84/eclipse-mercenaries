@@ -542,3 +542,12 @@ Chrome Performance와 Flutter DevTools로 330, 500, 1,000유닛 프레임 타임
 - 1024×461 Android compact landscape overflow 회귀 통과
 - Pages base href Web release 및 Android debug APK 빌드 통과
 - 실기기 및 외부 사용자 측정은 사용자 요청대로 생략
+# 0.11.0 출시 완성도 검증 — 2026-08-13
+
+- `flutter analyze`: 이슈 0건
+- `flutter test`: 104개 통과
+- 1280×720 캠프·전쟁 계약·결과 Golden 갱신 후 비갱신 재실행 통과
+- `dart run tool/content_audit.dart`: 8명, 16무기, 27적, 24사건, 13전리품, 12상품 참조 통과
+- `flutter build web --release --base-href /eclipse-mercenaries/`: 통과, Wasm dry run 통과
+- `flutter build apk --debug`: 통과
+- 궁극기 VFX 아틀라스 4×2/고해상도, 24단계 임무 순서·분류·보상을 자동 검사

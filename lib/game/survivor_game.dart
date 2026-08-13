@@ -135,6 +135,7 @@ class SurvivorGame extends FlameGame {
   late final Image _unitAtlas;
   late final Image _projectileAtlas;
   late final Image _vfxAtlas;
+  late final Image _ultimateVfxAtlas;
   Image? _battlefieldBackground;
   BattleUnit? _allyCommander;
   BattleUnit? _enemyCommander;
@@ -246,6 +247,9 @@ class SurvivorGame extends FlameGame {
     _unitAtlas = await images.load('battlefield/unit_role_batch.png');
     _projectileAtlas = await images.load('battlefield/projectile_atlas.png');
     _vfxAtlas = await images.load('battlefield/final_vfx_atlas.png');
+    _ultimateVfxAtlas = await images.load(
+      'battlefield/ultimate_vfx_atlas_v2.png',
+    );
     _battlefieldBackground = await images.load(switch (config.condition) {
       BattlefieldCondition.moonlitNight =>
         'battlefield/north_gate_battlefield.png',
@@ -925,13 +929,16 @@ class SurvivorGame extends FlameGame {
           StatusEffectType.slow => const Color(0xff62c9e8),
           StatusEffectType.none => const Color(0x00000000),
         };
-        canvas.drawCircle(
-          Offset(unit.position.x, unit.position.y + 2),
-          11,
-          Paint()
-            ..color = statusColor.withValues(alpha: .7)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
+        final statusCenter = Offset(unit.position.x, unit.position.y + 10);
+        final statusMark = Path()
+          ..moveTo(statusCenter.dx, statusCenter.dy - 4)
+          ..lineTo(statusCenter.dx + 7, statusCenter.dy)
+          ..lineTo(statusCenter.dx, statusCenter.dy + 4)
+          ..lineTo(statusCenter.dx - 7, statusCenter.dy)
+          ..close();
+        canvas.drawPath(
+          statusMark,
+          Paint()..color = statusColor.withValues(alpha: .66),
         );
       }
       if (unit.archetype?.rank != null &&
@@ -939,15 +946,22 @@ class SurvivorGame extends FlameGame {
         _drawEnemyArchetypeMark(canvas, unit);
       }
       if (unit.elite || unit.role == UnitRole.commander) {
-        canvas.drawCircle(
-          Offset(unit.position.x, unit.position.y),
-          unit.role == UnitRole.commander ? 28 : 19,
+        final rankColor = unit.archetype?.rank == EnemyRank.boss
+            ? const Color(0xccf0c96c)
+            : const Color(0x99ce8be0);
+        final markerWidth = unit.role == UnitRole.commander ? 20.0 : 14.0;
+        final markerY = unit.position.y + 13;
+        final rankMarker = Path()
+          ..moveTo(unit.position.x - markerWidth, markerY - 4)
+          ..lineTo(unit.position.x, markerY + 2)
+          ..lineTo(unit.position.x + markerWidth, markerY - 4);
+        canvas.drawPath(
+          rankMarker,
           Paint()
-            ..color = unit.archetype?.rank == EnemyRank.boss
-                ? const Color(0xccf0c96c)
-                : const Color(0x99ce8be0)
+            ..color = rankColor
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
+            ..strokeWidth = 2.2
+            ..strokeCap = StrokeCap.square,
         );
       }
       if (unit.stance == UnitStance.retreat &&
@@ -955,18 +969,17 @@ class SurvivorGame extends FlameGame {
               unit.role == UnitRole.commander ||
               unit.archetype?.rank == EnemyRank.boss ||
               unit.squadId % 12 == 0)) {
-        canvas.drawArc(
-          Rect.fromCircle(
-            center: Offset(unit.position.x, unit.position.y),
-            radius: 18,
-          ),
-          0,
-          math.pi * 1.4,
-          false,
+        final retreatY = unit.position.y - 39;
+        final retreatMarker = Path()
+          ..moveTo(unit.position.x + 7, retreatY - 5)
+          ..lineTo(unit.position.x - 6, retreatY)
+          ..lineTo(unit.position.x + 7, retreatY + 5);
+        canvas.drawPath(
+          retreatMarker,
           Paint()
             ..color = const Color(0xffe1b75e)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
+            ..strokeWidth = 2.2,
         );
       }
     }
@@ -1061,31 +1074,35 @@ class SurvivorGame extends FlameGame {
 
   void _drawPlayerMarker(Canvas canvas) {
     final pulse = .72 + math.sin(_elapsed * 5).abs() * .18;
-    canvas.drawCircle(
-      Offset(_player.x, _player.y + 9),
-      16,
-      Paint()..color = const Color(0x77000000),
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(_player.x, _player.y + 10),
+        width: 30,
+        height: 10,
+      ),
+      Paint()..color = const Color(0x88000000),
     );
-    canvas.drawCircle(
-      Offset(_player.x, _player.y),
-      18,
-      Paint()
-        ..color = const Color(0xffffdf86).withValues(alpha: pulse)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-    canvas.drawCircle(
-      Offset(_player.x, _player.y),
-      14,
-      Paint()
-        ..color = _playerHitFlash > 0
-            ? const Color(0xffffe8df)
-            : mercenary.visual.accent.withValues(
-                alpha: _playerInvulnerability > 0 ? .9 : .45,
-              )
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = _playerInvulnerability > 0 ? 4 : 3,
-    );
+    final focusColor = _playerHitFlash > 0
+        ? const Color(0xffffe8df)
+        : mercenary.visual.accent.withValues(
+            alpha: _playerInvulnerability > 0 ? .95 : pulse,
+          );
+    final focusPaint = Paint()
+      ..color = focusColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _playerInvulnerability > 0 ? 3.2 : 2.2;
+    for (final segment in <(Offset, Offset)>[
+      (
+        Offset(_player.x - 18, _player.y + 4),
+        Offset(_player.x - 11, _player.y + 9),
+      ),
+      (
+        Offset(_player.x + 18, _player.y + 4),
+        Offset(_player.x + 11, _player.y + 9),
+      ),
+    ]) {
+      canvas.drawLine(segment.$1, segment.$2, focusPaint);
+    }
     final pointerY =
         _player.y - _playerSprite.markerTopOffset - math.sin(_elapsed * 5) * 3;
     final pointer = Path()

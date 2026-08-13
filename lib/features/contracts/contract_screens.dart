@@ -3,7 +3,7 @@ part of '../../app/game_app.dart';
 // The first contract sits below the legend and the final branch is pushed
 // outward so an expanded selection card never covers a neighbouring node.
 const _contractXFactors = [.12, .30, .48, .66, .84, .88];
-const _contractYFactors = [.50, .53, .20, .51, .20, .72];
+const _contractYFactors = [.60, .53, .20, .51, .20, .72];
 
 class ContractScreen extends StatelessWidget {
   const ContractScreen({
@@ -203,9 +203,15 @@ class _ContractRoutePainter extends CustomPainter {
         ..strokeWidth = 1.4,
     );
     for (var index = 0; index < points.length; index++) {
-      canvas.drawCircle(
-        points[index],
-        index == selectedIndex ? 8 : 5,
+      final center = points[index];
+      final marker = Path()
+        ..moveTo(center.dx, center.dy - (index == selectedIndex ? 9 : 6))
+        ..lineTo(center.dx + (index == selectedIndex ? 9 : 6), center.dy)
+        ..lineTo(center.dx, center.dy + (index == selectedIndex ? 9 : 6))
+        ..lineTo(center.dx - (index == selectedIndex ? 9 : 6), center.dy)
+        ..close();
+      canvas.drawPath(
+        marker,
         Paint()
           ..color = index == selectedIndex
               ? const Color(0xffffd36e)

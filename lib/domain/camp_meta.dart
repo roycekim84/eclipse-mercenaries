@@ -325,6 +325,18 @@ abstract final class GearRules {
       '$mercenaryId:${slot.name}';
 }
 
+enum MissionCategory { prologue, growth, war, faction, mastery }
+
+enum MissionRequirement {
+  immediate,
+  inventoryTotal,
+  weaponLevel,
+  commanderLevel,
+  ownedMercenaries,
+  factionReputation,
+  operationProgress,
+}
+
 class MissionSpec {
   const MissionSpec({
     required this.id,
@@ -332,6 +344,12 @@ class MissionSpec {
     required this.title,
     required this.description,
     required this.rewardLabel,
+    required this.category,
+    required this.requirement,
+    required this.target,
+    this.prerequisiteId,
+    this.inventoryReward = const {},
+    this.goldReward = 0,
   });
 
   final String id;
@@ -339,15 +357,25 @@ class MissionSpec {
   final String title;
   final String description;
   final String rewardLabel;
+  final MissionCategory category;
+  final MissionRequirement requirement;
+  final int target;
+  final String? prerequisiteId;
+  final Map<String, int> inventoryReward;
+  final int goldReward;
 }
 
-const alphaMissions = <MissionSpec>[
+const releaseMissions = <MissionSpec>[
   MissionSpec(
     id: 'camp_arrival',
     level: 1,
     title: '첫 보급품 확인',
     description: '용병단 캠프의 보급 담당관과 대화한다.',
     rewardLabel: '야전 식량 ×2 · 전장 고철 ×3',
+    category: MissionCategory.prologue,
+    requirement: MissionRequirement.immediate,
+    target: 1,
+    inventoryReward: {'field_ration': 2, 'war_scrap': 3},
   ),
   MissionSpec(
     id: 'field_scavenger',
@@ -355,6 +383,11 @@ const alphaMissions = <MissionSpec>[
     title: '전장의 몫',
     description: '전리품을 합계 3개 이상 확보한다.',
     rewardLabel: '1,200 골드',
+    category: MissionCategory.prologue,
+    requirement: MissionRequirement.inventoryTotal,
+    target: 3,
+    prerequisiteId: 'camp_arrival',
+    goldReward: 1200,
   ),
   MissionSpec(
     id: 'tempered_edge',
@@ -362,8 +395,269 @@ const alphaMissions = <MissionSpec>[
     title: '단련된 칼날',
     description: '무기 하나를 영구 레벨 2 이상으로 강화한다.',
     rewardLabel: '피 묻은 계약 인장 ×2',
+    category: MissionCategory.prologue,
+    requirement: MissionRequirement.weaponLevel,
+    target: 2,
+    prerequisiteId: 'field_scavenger',
+    inventoryReward: {'contract_seal': 2},
+  ),
+  MissionSpec(
+    id: 'commander_3',
+    level: 4,
+    title: '단장의 첫 명성',
+    description: '단장 레벨 3을 달성한다.',
+    rewardLabel: '1,500 골드',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.commanderLevel,
+    target: 3,
+    prerequisiteId: 'tempered_edge',
+    goldReward: 1500,
+  ),
+  MissionSpec(
+    id: 'weapon_3',
+    level: 5,
+    title: '숙련된 병기',
+    description: '무기 하나를 영구 레벨 3으로 강화한다.',
+    rewardLabel: '단련된 흑철 ×2',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.weaponLevel,
+    target: 3,
+    prerequisiteId: 'commander_3',
+    inventoryReward: {'tempered_iron': 2},
+  ),
+  MissionSpec(
+    id: 'roster_2',
+    level: 6,
+    title: '두 자루의 검',
+    description: '용병 2명을 계약한다.',
+    rewardLabel: '고급 용병 계약서 ×1',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.ownedMercenaries,
+    target: 2,
+    prerequisiteId: 'weapon_3',
+    inventoryReward: {'contract_ticket': 1},
+  ),
+  MissionSpec(
+    id: 'commander_6',
+    level: 7,
+    title: '이름을 알리다',
+    description: '단장 레벨 6을 달성한다.',
+    rewardLabel: '2,500 골드',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.commanderLevel,
+    target: 6,
+    prerequisiteId: 'roster_2',
+    goldReward: 2500,
+  ),
+  MissionSpec(
+    id: 'weapon_5',
+    level: 8,
+    title: '병기의 진가',
+    description: '무기 하나를 영구 레벨 5로 강화한다.',
+    rewardLabel: '전장 고철 ×6',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.weaponLevel,
+    target: 5,
+    prerequisiteId: 'commander_6',
+    inventoryReward: {'war_scrap': 6},
+  ),
+  MissionSpec(
+    id: 'roster_3',
+    level: 9,
+    title: '작은 용병단',
+    description: '용병 3명을 계약한다.',
+    rewardLabel: '크리스탈 대신 계약서 ×2',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.ownedMercenaries,
+    target: 3,
+    prerequisiteId: 'weapon_5',
+    inventoryReward: {'contract_ticket': 2},
+  ),
+  MissionSpec(
+    id: 'operation_1',
+    level: 10,
+    title: '첫 전쟁 기록',
+    description: '세력 작전을 1단계 이상 진행한다.',
+    rewardLabel: '피 묻은 계약 인장 ×3',
+    category: MissionCategory.war,
+    requirement: MissionRequirement.operationProgress,
+    target: 1,
+    prerequisiteId: 'roster_3',
+    inventoryReward: {'contract_seal': 3},
+  ),
+  MissionSpec(
+    id: 'reputation_20',
+    level: 11,
+    title: '신뢰의 대가',
+    description: '한 세력의 평판 20을 달성한다.',
+    rewardLabel: '3,000 골드',
+    category: MissionCategory.faction,
+    requirement: MissionRequirement.factionReputation,
+    target: 20,
+    prerequisiteId: 'operation_1',
+    goldReward: 3000,
+  ),
+  MissionSpec(
+    id: 'commander_10',
+    level: 12,
+    title: '정식 계약자',
+    description: '단장 레벨 10을 달성한다.',
+    rewardLabel: '장교 지도함 ×1',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.commanderLevel,
+    target: 10,
+    prerequisiteId: 'reputation_20',
+    inventoryReward: {'officer_map': 1},
+  ),
+  MissionSpec(
+    id: 'weapon_8',
+    level: 13,
+    title: '전장의 애병',
+    description: '무기 하나를 영구 레벨 8로 강화한다.',
+    rewardLabel: '단련된 흑철 ×4',
+    category: MissionCategory.mastery,
+    requirement: MissionRequirement.weaponLevel,
+    target: 8,
+    prerequisiteId: 'commander_10',
+    inventoryReward: {'tempered_iron': 4},
+  ),
+  MissionSpec(
+    id: 'roster_4',
+    level: 14,
+    title: '네 개의 깃발',
+    description: '용병 4명을 계약한다.',
+    rewardLabel: '고급 용병 계약서 ×2',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.ownedMercenaries,
+    target: 4,
+    prerequisiteId: 'weapon_8',
+    inventoryReward: {'contract_ticket': 2},
+  ),
+  MissionSpec(
+    id: 'operation_2',
+    level: 15,
+    title: '흔들리는 전선',
+    description: '세력 작전을 합계 2단계 진행한다.',
+    rewardLabel: '노병의 증표 ×2',
+    category: MissionCategory.war,
+    requirement: MissionRequirement.operationProgress,
+    target: 2,
+    prerequisiteId: 'roster_4',
+    inventoryReward: {'veteran_badge': 2},
+  ),
+  MissionSpec(
+    id: 'reputation_40',
+    level: 16,
+    title: '고용주의 신뢰',
+    description: '한 세력의 평판 40을 달성한다.',
+    rewardLabel: '4,500 골드',
+    category: MissionCategory.faction,
+    requirement: MissionRequirement.factionReputation,
+    target: 40,
+    prerequisiteId: 'operation_2',
+    goldReward: 4500,
+  ),
+  MissionSpec(
+    id: 'commander_15',
+    level: 17,
+    title: '전쟁 중개인',
+    description: '단장 레벨 15를 달성한다.',
+    rewardLabel: '왕실 칙서 ×1',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.commanderLevel,
+    target: 15,
+    prerequisiteId: 'reputation_40',
+    inventoryReward: {'royal_writ': 1},
+  ),
+  MissionSpec(
+    id: 'weapon_12',
+    level: 18,
+    title: '장인의 검증',
+    description: '무기 하나를 영구 레벨 12로 강화한다.',
+    rewardLabel: '공성 핵 ×1',
+    category: MissionCategory.mastery,
+    requirement: MissionRequirement.weaponLevel,
+    target: 12,
+    prerequisiteId: 'commander_15',
+    inventoryReward: {'siege_core': 1},
+  ),
+  MissionSpec(
+    id: 'roster_6',
+    level: 19,
+    title: '전열 완성',
+    description: '용병 6명을 계약한다.',
+    rewardLabel: '고급 용병 계약서 ×3',
+    category: MissionCategory.growth,
+    requirement: MissionRequirement.ownedMercenaries,
+    target: 6,
+    prerequisiteId: 'weapon_12',
+    inventoryReward: {'contract_ticket': 3},
+  ),
+  MissionSpec(
+    id: 'operation_4',
+    level: 20,
+    title: '대륙의 전쟁',
+    description: '세력 작전을 합계 4단계 진행한다.',
+    rewardLabel: '7,000 골드',
+    category: MissionCategory.war,
+    requirement: MissionRequirement.operationProgress,
+    target: 4,
+    prerequisiteId: 'roster_6',
+    goldReward: 7000,
+  ),
+  MissionSpec(
+    id: 'reputation_80',
+    level: 21,
+    title: '맹약의 칼날',
+    description: '한 세력의 평판 80을 달성한다.',
+    rewardLabel: '전쟁 영웅 계약서 ×1',
+    category: MissionCategory.faction,
+    requirement: MissionRequirement.factionReputation,
+    target: 80,
+    prerequisiteId: 'operation_4',
+    inventoryReward: {'war_hero_contract': 1},
+  ),
+  MissionSpec(
+    id: 'commander_20',
+    level: 22,
+    title: '전장의 이름',
+    description: '단장 레벨 20을 달성한다.',
+    rewardLabel: '10,000 골드',
+    category: MissionCategory.mastery,
+    requirement: MissionRequirement.commanderLevel,
+    target: 20,
+    prerequisiteId: 'reputation_80',
+    goldReward: 10000,
+  ),
+  MissionSpec(
+    id: 'weapon_15',
+    level: 23,
+    title: '전설의 병기',
+    description: '무기 하나를 영구 레벨 15로 강화한다.',
+    rewardLabel: '월광천 ×5',
+    category: MissionCategory.mastery,
+    requirement: MissionRequirement.weaponLevel,
+    target: 15,
+    prerequisiteId: 'commander_20',
+    inventoryReward: {'mooncloth': 5},
+  ),
+  MissionSpec(
+    id: 'roster_8',
+    level: 24,
+    title: '월식 용병단',
+    description: '용병 8명을 모두 계약한다.',
+    rewardLabel: '왕실 칙서 ×2 · 15,000 골드',
+    category: MissionCategory.mastery,
+    requirement: MissionRequirement.ownedMercenaries,
+    target: 8,
+    prerequisiteId: 'weapon_15',
+    inventoryReward: {'royal_writ': 2},
+    goldReward: 15000,
   ),
 ];
+
+@Deprecated('Use releaseMissions')
+const alphaMissions = releaseMissions;
 
 abstract final class CampMetaRules {
   static const trainingGoldCost = 1000;
@@ -374,9 +668,9 @@ abstract final class CampMetaRules {
   static const forgeXp = 500;
 
   static bool missionUnlocked(String id, Set<String> claimedMissionIds) {
-    final index = alphaMissions.indexWhere((mission) => mission.id == id);
-    return index <= 0 ||
-        claimedMissionIds.contains(alphaMissions[index - 1].id);
+    final mission = releaseMissions.firstWhere((item) => item.id == id);
+    return mission.prerequisiteId == null ||
+        claimedMissionIds.contains(mission.prerequisiteId);
   }
 
   static bool canTrain({
@@ -391,25 +685,63 @@ abstract final class CampMetaRules {
   static bool canForge({required int gold, required int scrap}) =>
       gold >= forgeGoldCost && scrap >= forgeScrapCost;
 
+  static int missionProgress(
+    MissionSpec mission, {
+    required Map<String, int> inventory,
+    required Map<String, WeaponProgress> weaponProgress,
+    int commanderLevel = 1,
+    int ownedMercenaries = 1,
+    Map<String, int> factionReputation = const {},
+    Map<String, int> operationProgress = const {},
+  }) => switch (mission.requirement) {
+    MissionRequirement.immediate => 1,
+    MissionRequirement.inventoryTotal => inventory.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    ),
+    MissionRequirement.weaponLevel => weaponProgress.values.fold<int>(
+      0,
+      (best, value) => value.level > best ? value.level : best,
+    ),
+    MissionRequirement.commanderLevel => commanderLevel,
+    MissionRequirement.ownedMercenaries => ownedMercenaries,
+    MissionRequirement.factionReputation => factionReputation.values.fold<int>(
+      0,
+      (best, value) => value > best ? value : best,
+    ),
+    MissionRequirement.operationProgress => operationProgress.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    ),
+  };
+
   static bool missionComplete(
     String id, {
     required Map<String, int> inventory,
     required Map<String, WeaponProgress> weaponProgress,
-  }) => switch (id) {
-    'camp_arrival' => true,
-    'field_scavenger' =>
-      inventory.values.fold<int>(0, (sum, value) => sum + value) >= 3,
-    'tempered_edge' => weaponProgress.values.any((value) => value.level >= 2),
-    _ => false,
-  };
+    int commanderLevel = 1,
+    int ownedMercenaries = 1,
+    Map<String, int> factionReputation = const {},
+    Map<String, int> operationProgress = const {},
+  }) {
+    final mission = releaseMissions.firstWhere((item) => item.id == id);
+    return missionProgress(
+          mission,
+          inventory: inventory,
+          weaponProgress: weaponProgress,
+          commanderLevel: commanderLevel,
+          ownedMercenaries: ownedMercenaries,
+          factionReputation: factionReputation,
+          operationProgress: operationProgress,
+        ) >=
+        mission.target;
+  }
 
-  static Map<String, int> missionInventoryReward(String id) => switch (id) {
-    'camp_arrival' => const {'field_ration': 2, 'war_scrap': 3},
-    'tempered_edge' => const {'contract_seal': 2},
-    _ => const {},
-  };
+  static Map<String, int> missionInventoryReward(String id) =>
+      releaseMissions.firstWhere((item) => item.id == id).inventoryReward;
 
-  static int missionGoldReward(String id) => id == 'field_scavenger' ? 1200 : 0;
+  static int missionGoldReward(String id) =>
+      releaseMissions.firstWhere((item) => item.id == id).goldReward;
 }
 
 const lootAcquisitionSources = <String, String>{

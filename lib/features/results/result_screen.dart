@@ -175,7 +175,10 @@ class ResultScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 14),
-                        _MvpPanel(award: report.award),
+                        _MvpPanel(
+                          award: report.award,
+                          mercenaryId: growthReceipt.mercenaryId,
+                        ),
                         const SizedBox(height: 18),
                         const Divider(color: Color(0xff665536)),
                         const SizedBox(height: 12),
@@ -395,9 +398,10 @@ class _GrowthLine extends StatelessWidget {
 }
 
 class _MvpPanel extends StatelessWidget {
-  const _MvpPanel({required this.award});
+  const _MvpPanel({required this.award, required this.mercenaryId});
 
   final BattleAward award;
+  final String mercenaryId;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -411,7 +415,24 @@ class _MvpPanel extends StatelessWidget {
     ),
     child: Row(
       children: [
-        const Icon(Icons.workspace_premium, color: Color(0xffffd27c), size: 30),
+        Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xffffd27c), width: 1.4),
+            boxShadow: const [
+              BoxShadow(color: Color(0x668e6732), blurRadius: 12),
+            ],
+          ),
+          child: ClipRect(
+            child: Image.asset(
+              gameContent.mercenaryById(mercenaryId).visual.portraitAsset,
+              fit: BoxFit.cover,
+              alignment: const Alignment(0, -.45),
+              filterQuality: FilterQuality.high,
+            ),
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -551,6 +572,7 @@ class _LootDropCard extends StatelessWidget {
       LootRarity.epic => '영웅',
       LootRarity.legendary => '전설',
     };
+    final asset = lootArtAsset(drop.id);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: Duration(milliseconds: 360 + revealIndex * 120),
@@ -573,12 +595,27 @@ class _LootDropCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              drop.rarity == LootRarity.legendary
-                  ? Icons.auto_awesome
-                  : Icons.inventory_2_outlined,
-              color: color,
-              size: 22,
+            Container(
+              width: 44,
+              height: 44,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: const Color(0xbb080b11),
+                border: Border.all(color: color.withValues(alpha: .8)),
+              ),
+              child: asset == null
+                  ? PremiumGameIcon(
+                      drop.rarity == LootRarity.legendary
+                          ? Icons.auto_awesome
+                          : Icons.inventory_2_outlined,
+                      color: color,
+                      size: 26,
+                    )
+                  : Image.asset(
+                      asset,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
             ),
             const SizedBox(width: 9),
             Expanded(

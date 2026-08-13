@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.10.0+19'));
+    expect(pubspec, contains('version: 0.11.0+20'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));
@@ -118,6 +118,20 @@ void main() {
       final width = recruitmentHeader.getUint32(16);
       final height = recruitmentHeader.getUint32(20);
       expect(width / height, closeTo(16 / 9, .02));
+    },
+  );
+
+  test(
+    'release ultimate atlas is a high-resolution 4 by 2 presentation set',
+    () {
+      final atlas = File('assets/images/battlefield/ultimate_vfx_atlas_v2.png');
+      expect(atlas.existsSync(), isTrue);
+      final header = ByteData.sublistView(atlas.readAsBytesSync());
+      final width = header.getUint32(16);
+      final height = header.getUint32(20);
+      expect(width, greaterThanOrEqualTo(1600));
+      expect(height, greaterThanOrEqualTo(800));
+      expect(width / height, closeTo(2, .15));
     },
   );
 

@@ -1250,7 +1250,7 @@ class _BattlefieldEventChoiceOverlayState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _BattlefieldEventArt(effect: event.effect),
+                    _BattlefieldEventArt(event: event),
                     const SizedBox(height: 12),
                     Text(
                       rarityLabel,
@@ -1382,43 +1382,78 @@ class _BattlefieldEventChoiceOverlayState
 }
 
 class _BattlefieldEventArt extends StatelessWidget {
-  const _BattlefieldEventArt({required this.effect});
+  const _BattlefieldEventArt({required this.event});
 
-  final BattlefieldEventEffect effect;
+  final BattlefieldEventSpec event;
 
   @override
   Widget build(BuildContext context) {
-    final asset = switch (effect) {
-      BattlefieldEventEffect.reinforcements =>
-        'assets/images/events/reinforcements.png',
-      BattlefieldEventEffect.eliteKnight =>
-        'assets/images/events/elite_knight.png',
-      BattlefieldEventEffect.supplyWagon =>
-        'assets/images/events/supply_wagon.png',
-      BattlefieldEventEffect.woundedCommander =>
-        'assets/images/events/wounded_commander.png',
-      BattlefieldEventEffect.mercenaryIntervention =>
-        'assets/images/events/mercenary_intervention.png',
-      BattlefieldEventEffect.monsterIncursion =>
-        'assets/images/events/monster_incursion.png',
-      BattlefieldEventEffect.redMoon => 'assets/images/events/red_moon.png',
-      BattlefieldEventEffect.royalPresence =>
-        'assets/images/events/royal_presence.png',
+    final asset = battlefieldEventArtAsset(event.effect);
+    final rarityColor = switch (event.rarity) {
+      BattlefieldEventRarity.common => const Color(0xffaab4bf),
+      BattlefieldEventRarity.special => const Color(0xff66b9da),
+      BattlefieldEventRarity.rare => const Color(0xffc28adc),
+      BattlefieldEventRarity.legendary => const Color(0xffffbd5d),
     };
     return SizedBox(
       height: MediaQuery.sizeOf(context).height < 500 ? 78 : 120,
       width: double.infinity,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xff80643c)),
+          border: Border.all(color: rarityColor, width: 1.4),
+          boxShadow: [
+            BoxShadow(
+              color: rarityColor.withValues(alpha: .18),
+              blurRadius: 18,
+            ),
+          ],
         ),
         child: ClipRect(
-          child: Image.asset(
-            asset,
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.cover,
-            filterQuality: FilterQuality.high,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                asset,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                alignment: Alignment(((event.id.hashCode % 5) - 2) * .08, -.08),
+                filterQuality: FilterQuality.high,
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x08000000), Color(0xcc05070c)],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 8,
+                child: Row(
+                  children: [
+                    Container(width: 22, height: 2, color: rarityColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        event.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: rarityColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

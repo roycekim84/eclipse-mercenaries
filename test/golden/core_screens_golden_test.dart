@@ -1,5 +1,6 @@
 import 'package:eclipse_mercenaries/app/game_app.dart';
 import 'package:eclipse_mercenaries/core/theme/game_theme.dart';
+import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
@@ -91,12 +92,20 @@ void main() {
         ),
       ),
     );
-    await tester.runAsync(
-      () => precacheImage(
-        const AssetImage('assets/images/ui/war_contract_map.jpg'),
-        tester.element(find.byType(ContractScreen)),
-      ),
-    );
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(ContractScreen));
+      await Future.wait([
+        precacheImage(
+          const AssetImage('assets/images/ui/war_contract_map.jpg'),
+          context,
+        ),
+        for (final contract in contracts)
+          precacheImage(
+            AssetImage(battlefieldArtAsset(contract.condition)),
+            context,
+          ),
+      ]);
+    });
     await _settleImages(tester);
 
     await expectLater(
@@ -186,6 +195,23 @@ void main() {
         ),
       ),
     );
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(ResultScreen));
+      await Future.wait([
+        precacheImage(
+          AssetImage(gameContent.mercenaryById('luna').visual.portraitAsset),
+          context,
+        ),
+        precacheImage(
+          const AssetImage('assets/images/shop/final/officer_map.png'),
+          context,
+        ),
+        precacheImage(
+          const AssetImage('assets/images/shop/final/mooncloth.png'),
+          context,
+        ),
+      ]);
+    });
     await _settleImages(tester);
 
     await expectLater(

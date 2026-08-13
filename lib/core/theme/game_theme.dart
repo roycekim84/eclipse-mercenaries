@@ -20,5 +20,43 @@ ThemeData buildGameTheme() {
       secondary: GamePalette.navy,
       surface: GamePalette.panel,
     ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color(0xff111319),
+      surfaceTintColor: Colors.transparent,
+      shape: const BeveledRectangleBorder(
+        side: BorderSide(color: GamePalette.gold, width: 1.2),
+      ),
+      titleTextStyle: const TextStyle(
+        fontFamily: 'NotoSansKR',
+        color: Color(0xffffd27c),
+        fontSize: 19,
+        fontWeight: FontWeight.bold,
+      ),
+      contentTextStyle: const TextStyle(
+        fontFamily: 'NotoSansKR',
+        color: Color(0xffd5d5d8),
+        fontSize: 12,
+        height: 1.55,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xffffd27c),
+        shape: const BeveledRectangleBorder(
+          side: BorderSide(color: Color(0xff8b7045)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: const Color(0xff263f5e),
+        foregroundColor: Colors.white,
+        shape: const BeveledRectangleBorder(
+          side: BorderSide(color: Color(0xff7691ad)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+      ),
+    ),
   );
 }
