@@ -849,6 +849,22 @@ void main() {
       premiumGlyphAsset(Icons.approval_outlined),
       'assets/images/ui/glyphs/reputation.png',
     );
+    expect(
+      premiumGlyphAsset(Icons.gps_fixed),
+      'assets/images/ui/glyphs/assassination.png',
+    );
+    expect(
+      premiumGlyphAsset(Icons.castle_outlined),
+      'assets/images/ui/glyphs/fortress.png',
+    );
+  });
+
+  test('all six battlefield contracts use production glyph assets', () {
+    final assets = contracts.map(
+      (contract) => premiumGlyphAsset(contract.icon),
+    );
+    expect(assets, everyElement(isNotNull));
+    expect(assets.toSet(), hasLength(contracts.length));
   });
 
   test('camp costs reject incomplete resource sets', () {

@@ -74,6 +74,12 @@ String? premiumGlyphAsset(IconData icon) {
       icon == Icons.card_giftcard) {
     return 'assets/images/ui/glyphs/contract.png';
   }
+  if (icon == Icons.gps_fixed || icon == Icons.center_focus_strong) {
+    return 'assets/images/ui/glyphs/assassination.png';
+  }
+  if (icon == Icons.castle || icon == Icons.castle_outlined) {
+    return 'assets/images/ui/glyphs/fortress.png';
+  }
   if (icon == Icons.directions_run ||
       icon == Icons.double_arrow ||
       icon == Icons.speed ||

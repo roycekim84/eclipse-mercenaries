@@ -206,6 +206,8 @@ void main() {
       'gold',
       'crystal',
       'contract',
+      'assassination',
+      'fortress',
       'reputation',
       'dash',
       'rally',
