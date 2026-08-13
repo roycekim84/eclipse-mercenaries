@@ -22,6 +22,7 @@ extension BossSystem on SurvivorGame {
         : 3;
     if (nextPhase != _bossPhase) {
       _bossPhase = nextPhase;
+      unawaited(GameAudioFeedback.cue(AudioCue.bossPhase, audioSettings));
       event.value = BattleEvent(
         '${boss.archetype!.name} · PHASE $_bossPhase',
         _bossPhase == 2 ? '전선 압박 강화' : '최후 공세',

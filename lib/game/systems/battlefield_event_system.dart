@@ -18,6 +18,14 @@ extension BattlefieldEventSystem on SurvivorGame {
     _nextEventAt += config.balance.eventInterval;
     if (selected == null) return;
     _triggeredEventIds.add(selected.id);
+    unawaited(
+      GameAudioFeedback.cue(switch (selected.rarity) {
+        BattlefieldEventRarity.common => AudioCue.eventCommon,
+        BattlefieldEventRarity.special => AudioCue.eventSpecial,
+        BattlefieldEventRarity.rare => AudioCue.eventRare,
+        BattlefieldEventRarity.legendary => AudioCue.eventLegendary,
+      }, audioSettings),
+    );
     _pausedForEvent = true;
     pauseEngine();
     eventPrompt.value = selected;
@@ -36,6 +44,7 @@ extension BattlefieldEventSystem on SurvivorGame {
             resultText: '사건에 개입하지 않고 계약 목표를 우선했습니다.',
           )
         : activeEvent.choices[index];
+    unawaited(GameAudioFeedback.cue(AudioCue.choice, audioSettings));
     _applyBattlefieldEventChoice(selected);
     _eventRecords.add(
       BattlefieldEventRecord(

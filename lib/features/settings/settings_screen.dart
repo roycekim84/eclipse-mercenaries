@@ -37,6 +37,7 @@ class SettingsScreen extends StatelessWidget {
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 children: [
+                  _AudioMixerTile(settings: settings, onChanged: onChanged),
                   _SettingTile(
                     icon: Icons.volume_up_outlined,
                     title: '배경음 · 효과음',
@@ -288,6 +289,129 @@ class _BattleDiagnosticsTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AudioMixerTile extends StatelessWidget {
+  const _AudioMixerTile({required this.settings, required this.onChanged});
+
+  final GameSettings settings;
+  final ValueChanged<GameSettings> onChanged;
+
+  @override
+  Widget build(BuildContext context) => GoldPanel(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.graphic_eq, color: Color(0xffd8bd7b), size: 25),
+              SizedBox(width: 9),
+              Text('사운드 믹서', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _VolumeRow(
+                  label: '전체',
+                  value: settings.masterVolume,
+                  onChanged: (value) =>
+                      onChanged(settings.copyWith(masterVolume: value)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _VolumeRow(
+                  label: '음악',
+                  value: settings.musicVolume,
+                  onChanged: (value) =>
+                      onChanged(settings.copyWith(musicVolume: value)),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _VolumeRow(
+                  label: '효과',
+                  value: settings.sfxVolume,
+                  onChanged: (value) =>
+                      onChanged(settings.copyWith(sfxVolume: value)),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _VolumeRow(
+                  label: 'UI',
+                  value: settings.uiVolume,
+                  onChanged: (value) =>
+                      onChanged(settings.copyWith(uiVolume: value)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _VolumeRow(
+                  label: '음성',
+                  value: settings.voiceVolume,
+                  onChanged: (value) =>
+                      onChanged(settings.copyWith(voiceVolume: value)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _VolumeRow extends StatelessWidget {
+  const _VolumeRow({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+  final String label;
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 24,
+    child: Row(
+      children: [
+        SizedBox(
+          width: 25,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 9, color: Colors.white60),
+          ),
+        ),
+        Expanded(
+          child: Slider(
+            value: value.clamp(0, 1),
+            min: 0,
+            max: 1,
+            divisions: 10,
+            activeColor: const Color(0xffd8bd7b),
+            inactiveColor: const Color(0xff302c35),
+            onChanged: onChanged,
+          ),
+        ),
+        SizedBox(
+          width: 23,
+          child: Text(
+            '${(value * 100).round()}',
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 9, color: Color(0xffffd889)),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _SettingTile extends StatelessWidget {

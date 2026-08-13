@@ -68,6 +68,7 @@ class SurvivorGame extends FlameGame {
     this.targetPriority = AutoTargetPriority.nearest,
     this.screenShakeEnabled = true,
     this.soundEnabled = true,
+    this.audioSettings = const GameSettings.defaults(),
   }) : _random = math.Random(config.seed),
        _upgradeRandom = math.Random(config.seed ^ 0x5f3759df),
        _eventRandom = math.Random(config.seed ^ 0x6c8e9cf5) {
@@ -102,6 +103,7 @@ class SurvivorGame extends FlameGame {
   final AutoTargetPriority targetPriority;
   final bool screenShakeEnabled;
   final bool soundEnabled;
+  final GameSettings audioSettings;
   MercenarySpec get mercenary => config.mercenary;
   WeaponSpec get weapon => config.weapon;
   double get _permanentDamageMultiplier =>
@@ -442,7 +444,9 @@ class SurvivorGame extends FlameGame {
       return;
     }
     _ultimateCharge = 0;
-    unawaited(GameAudioFeedback.ultimateEnabled(soundEnabled));
+    unawaited(
+      GameAudioFeedback.ultimateCharge(mercenary.id, enabled: soundEnabled),
+    );
     _ultimateClock = 1.2;
     _pausedForUltimate = true;
     _ultimateActivation++;
@@ -462,6 +466,9 @@ class SurvivorGame extends FlameGame {
     _pausedForUltimate = false;
     ultimate.value = null;
     _applyUltimateImpact();
+    unawaited(
+      GameAudioFeedback.ultimateImpact(mercenary.id, enabled: soundEnabled),
+    );
     if (!_pausedByUser &&
         !_pausedByLifecycle &&
         !_pausedForChoice &&

@@ -119,11 +119,16 @@ class GameShellState extends State<GameShell> {
   int get crystals => account.crystals;
 
   void updateSettings(GameSettings settings) {
-    _updateAccount(account.copyWith(settings: settings), '환경 설정을 저장했습니다.');
+    setState(() {
+      _account = account.copyWith(settings: settings);
+      actionNotice = '환경 설정을 저장했습니다.';
+    });
+    unawaited(_persistAccount());
+    unawaited(GameAudioFeedback.applySettings(settings));
     if (settings.soundEnabled) {
       unawaited(GameAudioFeedback.campAmbience(settings));
     } else {
-      unawaited(GameAudioFeedback.stop());
+      unawaited(GameAudioFeedback.stopMusic());
     }
   }
 
@@ -220,14 +225,22 @@ class GameShellState extends State<GameShell> {
   }
 
   void go(AppScene next) {
-    unawaited(GameAudioFeedback.navigation(account.settings));
-    if (next != AppScene.battle) {
+    unawaited(
+      GameAudioFeedback.cue(
+        next == AppScene.camp ? AudioCue.back : AudioCue.navigation,
+        account.settings,
+      ),
+    );
+    if (next == AppScene.recruitment) {
+      unawaited(GameAudioFeedback.recruitmentAmbience(account.settings));
+    } else if (next != AppScene.battle && next != AppScene.result) {
       unawaited(GameAudioFeedback.campAmbience(account.settings));
     }
     setState(() => scene = next);
   }
 
   void openEquipment(AppScene returnTo) {
+    unawaited(GameAudioFeedback.cue(AudioCue.navigation, account.settings));
     setState(() {
       equipmentReturn = returnTo;
       scene = AppScene.equipment;
@@ -251,6 +264,7 @@ class GameShellState extends State<GameShell> {
       rations: rations,
       progress: progress,
     )) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(
         () => actionNotice = progress.level >= progress.levelCap
             ? '현재 승급 단계의 레벨 한계입니다.'
@@ -280,6 +294,7 @@ class GameShellState extends State<GameShell> {
     final seals = account.inventory['contract_seal'] ?? 0;
     final cost = ProgressionRules.ascensionCost(progress.ascension);
     if (!ProgressionRules.canAscend(progress, seals)) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(
         () => actionNotice = progress.level < progress.levelCap
             ? 'Lv.${progress.levelCap} 달성 후 승급할 수 있습니다.'
@@ -305,11 +320,13 @@ class GameShellState extends State<GameShell> {
   void forgeWeapon(WeaponSpec weapon) {
     final scrap = account.inventory['war_scrap'] ?? 0;
     if (!CampMetaRules.canForge(gold: gold, scrap: scrap)) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(() => actionNotice = '강화에는 700 골드와 전장 고철 2개가 필요합니다.');
       return;
     }
     final progress = account.weaponProgress[weapon.id]!;
     if (progress.level >= 20) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(() => actionNotice = '이미 최대 강화 단계입니다.');
       return;
     }
@@ -327,11 +344,13 @@ class GameShellState extends State<GameShell> {
       ),
       '${weapon.name} 강화 완료 · 무기 경험치 +${CampMetaRules.forgeXp}',
     );
+    unawaited(GameAudioFeedback.cue(AudioCue.forge, account.settings));
   }
 
   void craftTemperedIron() {
     final scrap = account.inventory['war_scrap'] ?? 0;
     if (scrap < 3) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(() => actionNotice = '제작에는 전장 고철 3개가 필요합니다.');
       return;
     }
@@ -350,6 +369,7 @@ class GameShellState extends State<GameShell> {
   void dismantleTemperedIron() {
     final iron = account.inventory['tempered_iron'] ?? 0;
     if (iron < 1) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(() => actionNotice = '분해할 단련된 흑철이 없습니다.');
       return;
     }
@@ -393,6 +413,7 @@ class GameShellState extends State<GameShell> {
       ),
       '${mission.title} 보상을 수령했습니다.',
     );
+    unawaited(GameAudioFeedback.cue(AudioCue.reward, account.settings));
   }
 
   RecruitmentReceipt? recruitMercenaries(int count) {
@@ -402,6 +423,8 @@ class GameShellState extends State<GameShell> {
       crystals: crystals,
       tickets: tickets,
     )) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(
         () => actionNotice = count == 1
             ? '계약서 또는 크리스탈이 부족합니다.'
@@ -471,6 +494,9 @@ class GameShellState extends State<GameShell> {
       ),
       '$count명과 용병 계약을 체결했습니다.',
     );
+    unawaited(
+      GameAudioFeedback.cue(AudioCue.recruitContract, account.settings),
+    );
     return receipt;
   }
 
@@ -517,10 +543,12 @@ class GameShellState extends State<GameShell> {
       ),
       '${product.name} ×${product.quantity} 구매 완료',
     );
+    unawaited(GameAudioFeedback.cue(AudioCue.purchase, account.settings));
   }
 
   void refreshShop() {
     if (crystals < ShopRules.refreshCrystalCost) {
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(() => actionNotice = '상점 갱신에 필요한 크리스탈이 부족합니다.');
       return;
     }
@@ -643,6 +671,7 @@ class GameShellState extends State<GameShell> {
       saveNotice = '자동 저장에 실패했습니다. 현재 실행의 진행 상태는 유지됩니다.';
     }
     if (!mounted) return;
+    unawaited(GameAudioFeedback.result(value.outcome, account.settings));
     setState(() {
       _account = nextAccount;
       report = value;
@@ -662,7 +691,9 @@ class GameShellState extends State<GameShell> {
   }
 
   void startBattle() {
-    unawaited(GameAudioFeedback.battleAmbience(account.settings));
+    unawaited(
+      GameAudioFeedback.battleAmbience(account.settings, selected.battlefield),
+    );
     setState(() {
       _rewardApplied = false;
       report = null;
@@ -796,6 +827,9 @@ class GameShellState extends State<GameShell> {
                       ),
                   },
                   onEquip: (weapon) {
+                    unawaited(
+                      GameAudioFeedback.cue(AudioCue.equip, account.settings),
+                    );
                     setState(() {
                       equippedWeapon = weapon;
                       _account = account.copyWith(
@@ -808,6 +842,9 @@ class GameShellState extends State<GameShell> {
                     });
                   },
                   onEquipGear: (slot, gear) {
+                    unawaited(
+                      GameAudioFeedback.cue(AudioCue.equip, account.settings),
+                    );
                     _updateAccount(
                       account.copyWith(
                         equippedGearByMercenary: {
@@ -869,6 +906,7 @@ class GameShellState extends State<GameShell> {
                   performanceMode: account.settings.performanceMode,
                   screenShakeEnabled: account.settings.screenShakeEnabled,
                   soundEnabled: account.settings.soundEnabled,
+                  audioSettings: account.settings,
                   inputMode: account.settings.battleInputMode,
                   targetPriority: account.settings.autoTargetPriority,
                   gearBonus: GearRules.combatBonus(

@@ -117,6 +117,7 @@ extension RunGrowthSystem on SurvivorGame {
     _xp -= _nextXp;
     _nextXp = (_nextXp * 1.32).roundToDouble();
     _level++;
+    unawaited(GameAudioFeedback.cue(AudioCue.levelUp, audioSettings));
     final definitions = RunGrowthRules.generateChoices(
       definitions: _upgradeDefinitions,
       state: _runGrowthState,
@@ -197,6 +198,7 @@ extension RunGrowthSystem on SurvivorGame {
       return;
     }
     final selected = activeChoice.options[index];
+    unawaited(GameAudioFeedback.cue(AudioCue.choice, audioSettings));
     switch (selected.kind) {
       case RunUpgradeKind.weapon:
         final existing = _findRunWeapon(selected.id);

@@ -517,6 +517,11 @@ void main() {
       shopPurchaseCounts: {'ration_pack': 2},
       settings: const GameSettings.defaults().copyWith(
         tutorialCompleted: true,
+        masterVolume: .65,
+        musicVolume: .55,
+        sfxVolume: .75,
+        uiVolume: .45,
+        voiceVolume: .35,
         reducedFlash: true,
         performanceMode: true,
         largeText: true,
@@ -535,6 +540,11 @@ void main() {
     expect(restored.mercenaryCopies['kael'], 5);
     expect(restored.shopPurchaseCounts['ration_pack'], 2);
     expect(restored.settings.tutorialCompleted, isTrue);
+    expect(restored.settings.masterVolume, .65);
+    expect(restored.settings.musicVolume, .55);
+    expect(restored.settings.sfxVolume, .75);
+    expect(restored.settings.uiVolume, .45);
+    expect(restored.settings.voiceVolume, .35);
     expect(restored.settings.reducedFlash, isTrue);
     expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);
@@ -636,6 +646,8 @@ void main() {
 
     expect(settings.tutorialCompleted, isTrue);
     expect(settings.soundEnabled, isFalse);
+    expect(settings.masterVolume, const GameSettings.defaults().masterVolume);
+    expect(settings.uiVolume, const GameSettings.defaults().uiVolume);
     expect(settings.hapticsEnabled, isTrue);
     expect(settings.screenShakeEnabled, isTrue);
     expect(settings.reducedFlash, isFalse);

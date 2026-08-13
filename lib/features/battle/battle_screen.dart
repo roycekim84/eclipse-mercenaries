@@ -12,6 +12,7 @@ class BattleScreen extends StatefulWidget {
     required this.performanceMode,
     required this.screenShakeEnabled,
     this.soundEnabled = true,
+    required this.audioSettings,
     required this.inputMode,
     required this.targetPriority,
     required this.gearBonus,
@@ -27,6 +28,7 @@ class BattleScreen extends StatefulWidget {
   final bool performanceMode;
   final bool screenShakeEnabled;
   final bool soundEnabled;
+  final GameSettings audioSettings;
   final BattleInputMode inputMode;
   final AutoTargetPriority targetPriority;
   final GearCombatBonus gearBonus;
@@ -68,6 +70,7 @@ class _BattleScreenState extends State<BattleScreen>
       targetPriority: widget.targetPriority,
       screenShakeEnabled: widget.screenShakeEnabled,
       soundEnabled: widget.soundEnabled,
+      audioSettings: widget.audioSettings,
     );
     game.reducedEffects.value = widget.reducedEffects;
     game.performanceMode.value = widget.performanceMode;
@@ -84,8 +87,10 @@ class _BattleScreenState extends State<BattleScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       game.resumeFromLifecycle();
+      unawaited(GameAudioFeedback.resumeAll());
     } else {
       game.pauseForLifecycle();
+      unawaited(GameAudioFeedback.pauseAll());
     }
   }
 

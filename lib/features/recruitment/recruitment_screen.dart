@@ -39,9 +39,26 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
       receipt = result;
       stage = _RecruitStage.seal;
     });
-    await Future<void>.delayed(const Duration(milliseconds: 650));
+    unawaited(GameAudioFeedback.cue(AudioCue.recruitSeal));
+    await Future<void>.delayed(const Duration(milliseconds: 360));
+    unawaited(GameAudioFeedback.cue(AudioCue.recruitRarity));
+    await Future<void>.delayed(const Duration(milliseconds: 480));
     if (!mounted) return;
     setState(() => stage = _RecruitStage.reveal);
+    final featured = result.mercenaryIds.contains('luna');
+    unawaited(
+      GameAudioFeedback.cue(
+        featured ? AudioCue.recruitFeatured : AudioCue.recruitReveal,
+      ),
+    );
+    if (result.duplicateTokens.isNotEmpty) {
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 520),
+          () => GameAudioFeedback.cue(AudioCue.duplicate),
+        ),
+      );
+    }
   }
 
   void _again() => setState(() {

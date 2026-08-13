@@ -240,11 +240,67 @@ void main() {
     ];
     const audio = <String>[
       'ui_click',
+      'ui_back',
+      'ui_error',
       'confirm',
+      'purchase',
+      'equip',
+      'forge',
+      'reward_claim',
+      'choice_select',
       'battle_hit',
       'ultimate',
       'camp_loop',
       'battle_loop',
+      'recruitment_loop',
+      'battle_gate_loop',
+      'battle_ash_loop',
+      'battle_forest_loop',
+      'battle_siege_loop',
+      'battle_fortress_loop',
+      'hit_slash_1',
+      'hit_slash_2',
+      'hit_slash_3',
+      'hit_blunt',
+      'hit_pierce',
+      'hit_magic',
+      'critical_hit',
+      'shield_block',
+      'player_hurt',
+      'boss_impact',
+      'enemy_defeat',
+      'victory',
+      'defeat',
+      'retreat',
+      'level_up',
+      'event_common',
+      'event_special',
+      'event_rare',
+      'event_legendary',
+      'boss_phase',
+      'loot_rare',
+      'recruit_contract',
+      'recruit_seal',
+      'recruit_rarity',
+      'recruit_reveal',
+      'recruit_featured',
+      'duplicate_convert',
+      'ultimate_luna_charge',
+      'ultimate_luna_impact',
+      'ultimate_kael_charge',
+      'ultimate_kael_impact',
+      'ultimate_sera_charge',
+      'ultimate_sera_impact',
+      'ultimate_nyra_charge',
+      'ultimate_nyra_impact',
+      'ultimate_aurel_charge',
+      'ultimate_aurel_impact',
+      'ultimate_vesta_charge',
+      'ultimate_vesta_impact',
+      'ultimate_rask_charge',
+      'ultimate_rask_impact',
+      'ultimate_iris_charge',
+      'ultimate_iris_impact',
     ];
 
     for (final id in glyphs) {
@@ -280,6 +336,10 @@ void main() {
       expect(file.lengthSync(), greaterThan(4096), reason: file.path);
       final header = file.readAsBytesSync().take(4).toList();
       expect(header, <int>[82, 73, 70, 70], reason: '${file.path} RIFF');
+      final waveHeader = ByteData.sublistView(file.readAsBytesSync());
+      expect(waveHeader.getUint16(20, Endian.little), 1, reason: file.path);
+      expect(waveHeader.getUint16(22, Endian.little), 2, reason: file.path);
+      expect(waveHeader.getUint32(24, Endian.little), 22050, reason: file.path);
     }
   });
 }

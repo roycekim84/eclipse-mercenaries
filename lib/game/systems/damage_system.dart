@@ -12,6 +12,14 @@ extension DamageSystem on SurvivorGame {
     _playerInvulnerability = invulnerabilitySeconds;
     _emitSlash(_player, .2, style);
     _triggerImpact(hitStop: .04, impulse: 5.5);
+    unawaited(
+      GameAudioFeedback.combat(
+        CombatAudioCue.playerHurt,
+        style: style,
+        enabled: soundEnabled,
+        haptics: true,
+      ),
+    );
   }
 
   DamageResult _resolveAgainstUnit(
@@ -81,6 +89,18 @@ extension DamageSystem on SurvivorGame {
             ? 2.2
             : .8,
       );
+      unawaited(
+        GameAudioFeedback.combat(
+          result.isCritical
+              ? CombatAudioCue.critical
+              : bossHit
+              ? CombatAudioCue.bossImpact
+              : CombatAudioCue.slash,
+          style: mercenary.style,
+          enabled: soundEnabled,
+          haptics: result.isCritical,
+        ),
+      );
     }
     if (showNumber) {
       _emitDamageNumber(target.position, result.amount, result.isCritical);
@@ -95,6 +115,14 @@ extension DamageSystem on SurvivorGame {
       EnemyRank.boss => 45,
     };
     _collectRareDrop(target);
+    if (rank != EnemyRank.common) {
+      unawaited(
+        GameAudioFeedback.combat(
+          CombatAudioCue.enemyDefeat,
+          enabled: soundEnabled,
+        ),
+      );
+    }
     if (grantUltimateCharge && _signatureWeaponActive) {
       _ultimateCharge = math.min(
         1,
@@ -153,6 +181,7 @@ extension DamageSystem on SurvivorGame {
     final rareDrop = target.archetype?.rareDropId;
     if (rareDrop != null && !_rareDrops.contains(rareDrop)) {
       _rareDrops.add(rareDrop);
+      unawaited(GameAudioFeedback.cue(AudioCue.lootRare, audioSettings));
     }
   }
 
