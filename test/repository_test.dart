@@ -656,6 +656,22 @@ void main() {
     expect(settings.autoTargetPriority, AutoTargetPriority.nearest);
   });
 
+  test('game settings sanitize damaged audio volume values', () {
+    final settings = GameSettings.fromJson({
+      'masterVolume': 9,
+      'musicVolume': -2,
+      'sfxVolume': double.nan,
+      'uiVolume': double.infinity,
+      'voiceVolume': .45,
+    });
+
+    expect(settings.masterVolume, 1);
+    expect(settings.musicVolume, 0);
+    expect(settings.sfxVolume, const GameSettings.defaults().sfxVolume);
+    expect(settings.uiVolume, const GameSettings.defaults().uiVolume);
+    expect(settings.voiceVolume, .45);
+  });
+
   test('recruitment rolls are deterministic and respect currency gates', () {
     expect(RecruitmentRules.roll(startIndex: 0, count: 3), [
       'sera',

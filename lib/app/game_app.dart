@@ -113,6 +113,7 @@ class GameShellState extends State<GameShell> {
   String? saveNotice;
   String? actionNotice;
   int tutorialStep = 0;
+  Future<void> _saveQueue = Future<void>.value();
 
   AccountSave get account => _account!;
   int get gold => account.gold;
@@ -121,7 +122,7 @@ class GameShellState extends State<GameShell> {
   void updateSettings(GameSettings settings) {
     setState(() {
       _account = account.copyWith(settings: settings);
-      actionNotice = '환경 설정을 저장했습니다.';
+      actionNotice = null;
     });
     unawaited(_persistAccount());
     unawaited(GameAudioFeedback.applySettings(settings));
@@ -198,8 +199,14 @@ class GameShellState extends State<GameShell> {
   }
 
   Future<void> _persistAccount() async {
+    final snapshot = account;
+    _saveQueue = _saveQueue
+        .catchError((_) {
+          // A prior failed write must not poison later automatic saves.
+        })
+        .then((_) => _saveRepository.save(snapshot));
     try {
-      await _saveRepository.save(account);
+      await _saveQueue;
     } on Object {
       if (!mounted) return;
       setState(() {

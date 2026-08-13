@@ -308,7 +308,10 @@ class _AudioMixerTile extends StatelessWidget {
             children: [
               Icon(Icons.graphic_eq, color: Color(0xffd8bd7b), size: 25),
               SizedBox(width: 9),
-              Text('사운드 믹서', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                '사운드 믹서 · 즉시 적용',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           Row(
@@ -354,7 +357,7 @@ class _AudioMixerTile extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _VolumeRow(
-                  label: '음성',
+                  label: '알림',
                   value: settings.voiceVolume,
                   onChanged: (value) =>
                       onChanged(settings.copyWith(voiceVolume: value)),
@@ -391,14 +394,19 @@ class _VolumeRow extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: Slider(
-            value: value.clamp(0, 1),
-            min: 0,
-            max: 1,
-            divisions: 10,
-            activeColor: const Color(0xffd8bd7b),
-            inactiveColor: const Color(0xff302c35),
-            onChanged: onChanged,
+          child: Semantics(
+            label: '$label 음량 ${(value * 100).round()}%',
+            slider: true,
+            child: Slider(
+              key: ValueKey('audio-volume-$label'),
+              value: value.clamp(0, 1),
+              min: 0,
+              max: 1,
+              divisions: 10,
+              activeColor: const Color(0xffd8bd7b),
+              inactiveColor: const Color(0xff302c35),
+              onChanged: onChanged,
+            ),
           ),
         ),
         SizedBox(

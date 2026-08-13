@@ -147,7 +147,17 @@ void main() {
     await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle();
     expect(find.text('환경 설정'), findsOneWidget);
+    final masterSlider = find.byKey(const ValueKey('audio-volume-전체'));
+    final sliderRect = tester.getRect(masterSlider);
+    await tester.tapAt(Offset(sliderRect.left + 4, sliderRect.center.dy));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('섬광 줄이기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('배경음 · 효과음'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('진동 피드백'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('화면 흔들림'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('저사양 전투 모드'));
     await tester.pumpAndSettle();
@@ -161,6 +171,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final restored = await repository.load();
+    expect(restored.settings.soundEnabled, isFalse);
+    expect(restored.settings.hapticsEnabled, isFalse);
+    expect(restored.settings.screenShakeEnabled, isFalse);
+    expect(restored.settings.masterVolume, lessThan(.2));
     expect(restored.settings.reducedFlash, isTrue);
     expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);

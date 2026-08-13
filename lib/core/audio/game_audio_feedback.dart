@@ -142,6 +142,15 @@ abstract final class GameAudioFeedback {
     AudioCue.choice,
   };
 
+  static const _voiceCues = <AudioCue>{
+    AudioCue.bossPhase,
+    AudioCue.victory,
+    AudioCue.defeat,
+    AudioCue.retreat,
+    AudioCue.recruitRarity,
+    AudioCue.recruitFeatured,
+  };
+
   static Future<void> prepare() => _preparing ??= _prepare();
 
   static Future<void> _prepare() async {
@@ -213,8 +222,19 @@ abstract final class GameAudioFeedback {
     final active = settings ?? _settings;
     _settings = active;
     final uiCue = _uiCues.contains(cue);
-    if (uiCue ? !_uiEnabled(active) : !_sfxEnabled(active)) return;
-    final busVolume = uiCue ? active.uiVolume : active.sfxVolume;
+    final voiceCue = _voiceCues.contains(cue);
+    if (uiCue
+        ? !_uiEnabled(active)
+        : voiceCue
+        ? !_voiceEnabled(active)
+        : !_sfxEnabled(active)) {
+      return;
+    }
+    final busVolume = uiCue
+        ? active.uiVolume
+        : voiceCue
+        ? active.voiceVolume
+        : active.sfxVolume;
     await _play(
       _cueAssets[cue]!,
       volume: (_cueGain[cue] ?? .5) * active.masterVolume * busVolume,
@@ -436,6 +456,11 @@ abstract final class GameAudioFeedback {
       settings.soundEnabled &&
       settings.masterVolume > 0 &&
       settings.uiVolume > 0;
+
+  static bool _voiceEnabled(GameSettings settings) =>
+      settings.soundEnabled &&
+      settings.masterVolume > 0 &&
+      settings.voiceVolume > 0;
 
   static String _safeMercenaryId(String id) =>
       const {

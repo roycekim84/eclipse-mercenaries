@@ -103,17 +103,20 @@ class GameSettings {
   factory GameSettings.fromJson(Object? raw) {
     const defaults = GameSettings.defaults();
     if (raw is! Map) return defaults;
+    double volume(String key, double fallback) {
+      final value = (raw[key] as num?)?.toDouble();
+      if (value == null || !value.isFinite) return fallback;
+      return value.clamp(0.0, 1.0).toDouble();
+    }
+
     return GameSettings(
       tutorialCompleted: raw['tutorialCompleted'] as bool? ?? false,
       soundEnabled: raw['soundEnabled'] as bool? ?? defaults.soundEnabled,
-      masterVolume:
-          (raw['masterVolume'] as num?)?.toDouble() ?? defaults.masterVolume,
-      musicVolume:
-          (raw['musicVolume'] as num?)?.toDouble() ?? defaults.musicVolume,
-      sfxVolume: (raw['sfxVolume'] as num?)?.toDouble() ?? defaults.sfxVolume,
-      uiVolume: (raw['uiVolume'] as num?)?.toDouble() ?? defaults.uiVolume,
-      voiceVolume:
-          (raw['voiceVolume'] as num?)?.toDouble() ?? defaults.voiceVolume,
+      masterVolume: volume('masterVolume', defaults.masterVolume),
+      musicVolume: volume('musicVolume', defaults.musicVolume),
+      sfxVolume: volume('sfxVolume', defaults.sfxVolume),
+      uiVolume: volume('uiVolume', defaults.uiVolume),
+      voiceVolume: volume('voiceVolume', defaults.voiceVolume),
       hapticsEnabled: raw['hapticsEnabled'] as bool? ?? defaults.hapticsEnabled,
       screenShakeEnabled:
           raw['screenShakeEnabled'] as bool? ?? defaults.screenShakeEnabled,
