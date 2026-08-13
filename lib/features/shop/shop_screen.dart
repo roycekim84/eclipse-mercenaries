@@ -86,7 +86,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     value: widget.gold,
                   ),
                   _ShopBalance(
-                    icon: Icons.shield_outlined,
+                    icon: Icons.approval_outlined,
                     label: '전쟁 인장',
                     value: widget.warSeals,
                   ),

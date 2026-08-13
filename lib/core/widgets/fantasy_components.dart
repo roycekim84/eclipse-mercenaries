@@ -12,7 +12,13 @@ String? premiumGlyphAsset(IconData icon) {
       icon == Icons.cruelty_free) {
     return 'assets/images/ui/glyphs/roster.png';
   }
+  if (icon == Icons.groups ||
+      icon == Icons.groups_outlined ||
+      icon == Icons.diversity_3_outlined) {
+    return 'assets/images/ui/glyphs/guild.png';
+  }
   if (icon == Icons.inventory_2_outlined ||
+      icon == Icons.auto_awesome_mosaic_outlined ||
       icon == Icons.shield_outlined ||
       icon == Icons.shield ||
       icon == Icons.architecture ||
@@ -26,9 +32,12 @@ String? premiumGlyphAsset(IconData icon) {
   }
   if (icon == Icons.menu_book_outlined ||
       icon == Icons.history_edu_outlined ||
-      icon == Icons.edit_document ||
       icon == Icons.school_outlined) {
     return 'assets/images/ui/glyphs/missions.png';
+  }
+  if (icon == Icons.auto_stories_outlined ||
+      icon == Icons.collections_bookmark_outlined) {
+    return 'assets/images/ui/glyphs/codex.png';
   }
   if (icon == Icons.map_outlined ||
       icon == Icons.public ||
@@ -43,7 +52,9 @@ String? premiumGlyphAsset(IconData icon) {
   if (icon == Icons.workspace_premium ||
       icon == Icons.workspace_premium_outlined ||
       icon == Icons.military_tech_outlined ||
-      icon == Icons.approval_outlined) {
+      icon == Icons.approval_outlined ||
+      icon == Icons.star_outline ||
+      icon == Icons.trending_up) {
     return 'assets/images/ui/glyphs/reputation.png';
   }
   if (icon == Icons.medical_services_outlined ||
@@ -59,6 +70,7 @@ String? premiumGlyphAsset(IconData icon) {
   }
   if (icon == Icons.gavel ||
       icon == Icons.description_outlined ||
+      icon == Icons.edit_document ||
       icon == Icons.card_giftcard) {
     return 'assets/images/ui/glyphs/contract.png';
   }

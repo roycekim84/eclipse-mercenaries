@@ -88,7 +88,7 @@ class TutorialOverlay extends StatelessWidget {
                                     color: const Color(0xffb28a5c),
                                   ),
                                 ),
-                                child: Icon(
+                                child: PremiumGameIcon(
                                   item.icon,
                                   color: const Color(0xffffd27c),
                                   size: 28,

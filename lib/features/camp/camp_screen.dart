@@ -123,7 +123,7 @@ class CampScreen extends StatelessWidget {
                                     badge: missionBadge > 0,
                                   ),
                                   NavButton(
-                                    icon: Icons.local_fire_department_outlined,
+                                    icon: Icons.auto_stories_outlined,
                                     label: '도감',
                                     onTap: onCodex,
                                   ),

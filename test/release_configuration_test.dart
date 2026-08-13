@@ -198,6 +198,7 @@ void main() {
       'equipment',
       'shop',
       'missions',
+      'codex',
       'map',
       'forge',
       'guild',
@@ -245,7 +246,17 @@ void main() {
     ];
 
     for (final id in glyphs) {
-      _expectProductionAsset('assets/images/ui/glyphs/$id.png', minBytes: 500);
+      final path = 'assets/images/ui/glyphs/$id.png';
+      _expectProductionAsset(path, minBytes: 500);
+      final bytes = File(path).readAsBytesSync();
+      final header = ByteData.sublistView(bytes);
+      expect(header.getUint32(16), 313, reason: '$id width');
+      expect(header.getUint32(20), 313, reason: '$id height');
+      expect(
+        header.getUint8(25),
+        6,
+        reason: '$id must be RGBA; opaque square mattes are forbidden',
+      );
     }
     for (final id in events) {
       _expectProductionAsset('assets/images/events/$id.png', minBytes: 10000);
@@ -260,6 +271,7 @@ void main() {
       'assets/images/battlefield/final_vfx_atlas.png',
       minBytes: 10000,
     );
+    expect(File('tool/normalize_ui_glyphs.py').existsSync(), isTrue);
     for (final id in audio) {
       final file = File('assets/audio/$id.wav');
       expect(file.existsSync(), isTrue, reason: file.path);

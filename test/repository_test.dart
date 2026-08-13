@@ -833,6 +833,22 @@ void main() {
       premiumGlyphAsset(Icons.handyman_outlined),
       'assets/images/ui/glyphs/forge.png',
     );
+    expect(
+      premiumGlyphAsset(Icons.auto_awesome_mosaic_outlined),
+      'assets/images/ui/glyphs/equipment.png',
+    );
+    expect(
+      premiumGlyphAsset(Icons.auto_stories_outlined),
+      'assets/images/ui/glyphs/codex.png',
+    );
+    expect(
+      premiumGlyphAsset(Icons.edit_document),
+      'assets/images/ui/glyphs/contract.png',
+    );
+    expect(
+      premiumGlyphAsset(Icons.approval_outlined),
+      'assets/images/ui/glyphs/reputation.png',
+    );
   });
 
   test('camp costs reject incomplete resource sets', () {
