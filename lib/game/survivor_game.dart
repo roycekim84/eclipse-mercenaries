@@ -932,8 +932,7 @@ class SurvivorGame extends FlameGame {
       final unit = _visibleUnits[index];
       if (!_visibleUnitDetails[index]) continue;
       final important = _isImportantRenderUnit(unit);
-      if (unit.status != StatusEffectType.none &&
-          (important || unit.squadId % 6 == 0)) {
+      if (unit.status != StatusEffectType.none && important) {
         final statusColor = switch (unit.status) {
           StatusEffectType.bleed => const Color(0xffd94f58),
           StatusEffectType.burn => const Color(0xffff8a43),
@@ -952,11 +951,12 @@ class SurvivorGame extends FlameGame {
           Paint()..color = statusColor.withValues(alpha: .66),
         );
       }
-      if (unit.archetype?.rank != null &&
-          unit.archetype!.rank != EnemyRank.common) {
+      if (unit.archetype?.rank == EnemyRank.elite ||
+          unit.archetype?.rank == EnemyRank.boss) {
         _drawEnemyArchetypeMark(canvas, unit);
       }
-      if (unit.elite || unit.role == UnitRole.commander) {
+      if (unit.archetype?.rank == EnemyRank.boss ||
+          unit.role == UnitRole.commander) {
         final rankColor = unit.archetype?.rank == EnemyRank.boss
             ? const Color(0xccf0c96c)
             : const Color(0x99ce8be0);

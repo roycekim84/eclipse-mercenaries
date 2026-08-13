@@ -516,7 +516,7 @@ class WeaponDetailPanel extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            const PremiumGameIcon(
                               Icons.auto_awesome,
                               color: Color(0xffcaa6df),
                             ),
@@ -544,7 +544,7 @@ class WeaponDetailPanel extends StatelessWidget {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  PremiumGameIcon(
                     Icons.check_circle_outline,
                     size: 17,
                     color: Color(0xffffd27c),

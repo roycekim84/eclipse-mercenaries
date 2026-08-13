@@ -2,6 +2,8 @@
 
 최근 레퍼런스 비교 기반 UI/전투 개선 내역은 [VISUAL_POLISH_1_10.md](VISUAL_POLISH_1_10.md)에서 확인할 수 있습니다.
 
+출시 화면 최종화 12개 항목과 검증 기준은 [RELEASE_FINALIZATION_1_12.md](RELEASE_FINALIZATION_1_12.md)에서 확인할 수 있습니다.
+
 Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. Web을 우선 개발·검증 환경으로 사용하고 iOS와 Android를 최종 타깃으로 합니다.
 
 ## 베타 Web 플레이
@@ -50,6 +52,7 @@ flutter run -d chrome
 - 개인정보처리방침: [PRIVACY.md](PRIVACY.md)
 - 베타 이용약관: [TERMS.md](TERMS.md)
 - B6 출시 체크리스트: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+- 출시 화면 최종화 1–12: [RELEASE_FINALIZATION_1_12.md](RELEASE_FINALIZATION_1_12.md)
 - 콘텐츠·밸런스 기준선: [BALANCE_BASELINE.md](BALANCE_BASELINE.md)
 - 현재 진행 상황: [PROGRESS.md](PROGRESS.md)
 - 테스트 기준: [TESTING.md](TESTING.md)

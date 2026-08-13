@@ -17,8 +17,11 @@ class MercenaryVisual {
     required this.battleFrameIndices,
     this.battleGroundAnchorY = .93,
     this.battleCombatOrigin = const Offset(.14, -.44),
-    this.portraitAlignment = Alignment.center,
+    this.portraitAlignment = Alignment.topCenter,
     this.portraitScale = 1,
+    this.rosterAlignment = const Alignment(0, -.72),
+    this.rosterScale = 1.85,
+    this.recruitAlignment = Alignment.topCenter,
   });
 
   final Color color;
@@ -33,6 +36,9 @@ class MercenaryVisual {
   final Offset battleCombatOrigin;
   final Alignment portraitAlignment;
   final double portraitScale;
+  final Alignment rosterAlignment;
+  final double rosterScale;
+  final Alignment recruitAlignment;
 }
 
 class WeaponVisual {
@@ -65,6 +71,10 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
       [0, 1, 2, 3, 4, 5],
       [0, 1, 2, 3, 4, 5, 6, 7],
     ],
+    portraitAlignment: Alignment(0, -.04),
+    rosterAlignment: Alignment(0, -.7),
+    rosterScale: 1.82,
+    recruitAlignment: Alignment(0, -.05),
   ),
   'kael': MercenaryVisual(
     color: Color(0xff49312f),
@@ -82,6 +92,10 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
       [0, 1, 2, 3, 4, 5, 6, 7],
     ],
     battleCombatOrigin: Offset(.22, -.42),
+    portraitAlignment: Alignment(0, -.02),
+    rosterAlignment: Alignment(0, -.67),
+    rosterScale: 1.78,
+    recruitAlignment: Alignment(0, -.03),
   ),
   'sera': MercenaryVisual(
     color: Color(0xff273d50),
@@ -99,6 +113,10 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
       [0, 1, 2, 3, 4, 5, 6],
     ],
     battleCombatOrigin: Offset(.2, -.58),
+    portraitAlignment: Alignment(0, -.03),
+    rosterAlignment: Alignment(0, -.69),
+    rosterScale: 1.8,
+    recruitAlignment: Alignment(0, -.04),
   ),
   'nyra': MercenaryVisual(
     color: Color(0xff183c43),
@@ -116,6 +134,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
       [0, 1, 2, 3, 4, 5, 6],
     ],
     portraitScale: 1.04,
+    rosterAlignment: Alignment(0, -.68),
+    rosterScale: 1.76,
   ),
   'aurel': MercenaryVisual(
     color: Color(0xff454331),
@@ -134,6 +154,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     ],
     battleGroundAnchorY: .94,
     portraitScale: 1.08,
+    rosterAlignment: Alignment(0, -.66),
+    rosterScale: 1.74,
   ),
   'vesta': MercenaryVisual(
     color: Color(0xff4a2631),
@@ -152,6 +174,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     ],
     battleCombatOrigin: Offset(.18, -.55),
     portraitScale: 1.06,
+    rosterAlignment: Alignment(0, -.7),
+    rosterScale: 1.8,
   ),
   'rask': MercenaryVisual(
     color: Color(0xff263b30),
@@ -170,6 +194,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     ],
     battleCombatOrigin: Offset(.24, -.46),
     portraitScale: 1.06,
+    rosterAlignment: Alignment(0, -.63),
+    rosterScale: 1.72,
   ),
   'iris': MercenaryVisual(
     color: Color(0xff302b52),
@@ -188,6 +214,8 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     ],
     battleCombatOrigin: Offset(.18, -.5),
     portraitScale: 1.06,
+    rosterAlignment: Alignment(0, -.67),
+    rosterScale: 1.78,
   ),
 };
 

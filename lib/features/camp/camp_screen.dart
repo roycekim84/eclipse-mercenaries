@@ -332,7 +332,7 @@ class _CampActivityChip extends StatelessWidget {
     ),
     child: Row(
       children: [
-        Icon(icon, size: 12, color: const Color(0xffd8bd7b)),
+        PremiumGameIcon(icon, size: 12, color: const Color(0xffd8bd7b)),
         const SizedBox(width: 5),
         Text(label, style: const TextStyle(fontSize: 8, color: Colors.white70)),
       ],
@@ -355,7 +355,7 @@ class _CampStateBanner extends StatelessWidget {
     ),
     child: Row(
       children: [
-        const Icon(
+        const PremiumGameIcon(
           Icons.local_fire_department,
           size: 17,
           color: Color(0xffe5b45d),

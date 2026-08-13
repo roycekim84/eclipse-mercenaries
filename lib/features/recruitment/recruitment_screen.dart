@@ -163,7 +163,10 @@ class _RecruitLobby extends StatelessWidget {
               child: Image.asset(
                 gameContent.mercenaryById('luna').visual.portraitAsset,
                 fit: BoxFit.contain,
-                alignment: Alignment.bottomRight,
+                alignment: gameContent
+                    .mercenaryById('luna')
+                    .visual
+                    .recruitAlignment,
               ),
             ),
           ),
@@ -220,7 +223,7 @@ class _RecruitLobby extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        const PremiumGameIcon(
                           Icons.workspace_premium_outlined,
                           size: 17,
                           color: Color(0xffffd27c),
@@ -411,7 +414,7 @@ class _RecruitReveal extends StatelessWidget {
             image: DecorationImage(
               image: AssetImage(featured.visual.portraitAsset),
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              alignment: featured.visual.recruitAlignment,
               opacity: .13,
             ),
           ),
@@ -433,7 +436,7 @@ class _RecruitReveal extends StatelessWidget {
                             Image.asset(
                               featured.visual.portraitAsset,
                               fit: BoxFit.cover,
-                              alignment: Alignment.topCenter,
+                              alignment: featured.visual.recruitAlignment,
                             ),
                             const DecoratedBox(
                               decoration: BoxDecoration(

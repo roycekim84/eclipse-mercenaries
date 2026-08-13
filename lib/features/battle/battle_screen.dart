@@ -421,7 +421,7 @@ class BattleHud extends StatelessWidget {
           left: dense ? 8 : 12,
           top: dense ? 5 : 8,
           child: SizedBox(
-            width: dense ? 188 : 220,
+            width: dense ? 174 : 204,
             child: HudPanel(
               backgroundColor: const Color(0xa8090b10),
               child: Column(
@@ -578,11 +578,11 @@ class BattleHud extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'BUILD',
+                      '전투 빌드',
                       style: TextStyle(
                         color: Color(0xffd7bd7c),
                         fontSize: 7,
-                        letterSpacing: 1.4,
+                        letterSpacing: .4,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -780,7 +780,7 @@ class BattleActionOrb extends StatelessWidget {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(icon, size: 18, color: Colors.white),
+                      PremiumGameIcon(icon, size: 18, color: Colors.white),
                       Text(
                         ready ? label : '${cooldown.ceil()}s',
                         style: const TextStyle(

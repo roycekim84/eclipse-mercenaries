@@ -34,7 +34,10 @@ extension UnitAiSystem on SurvivorGame {
     }
 
     final attackRange = UnitRoleRules.attackRange(unit.role);
-    final searchRange = math.max(285.0, attackRange + 120);
+    // Keep both armies actively interleaved around the player.  A wider query
+    // prevents edge columns from waiting in formation while the centre is
+    // visually empty on wide landscape devices.
+    final searchRange = math.max(360.0, attackRange + 180);
     final opponent = _nearestOpponent(unit, searchRange);
     if (opponent == null) {
       if (!unit.ally && unit.playerAggro) {
@@ -171,11 +174,15 @@ extension UnitAiSystem on SurvivorGame {
           _combatTop +
           (_combatBottom - _combatTop) * ((squad + 1) / 6) +
           (slot.isOdd ? 10 : -10);
-      final frontX = size.x * .50;
-      final depth = (42 + (slot % 3) * 20).toDouble();
+      // Squads occupy staggered pockets instead of forming two vertical walls.
+      // The phase offset is deterministic, so screenshots and replays remain
+      // stable while the battlefield still reads as a living melee.
+      final phase = ((unit.squadId * 37) % 11 - 5) / 5;
+      final frontX = size.x * (.50 + phase * .055);
+      final depth = (24 + (slot % 3) * 14).toDouble();
       final target = Vector2(
         frontX + (unit.ally ? -depth : depth),
-        _safeCombatY(laneY),
+        _safeCombatY(laneY + phase * 14),
       );
       unit.stance = unit.position.distanceTo(target) > 95
           ? UnitStance.support
@@ -186,7 +193,7 @@ extension UnitAiSystem on SurvivorGame {
     final fallback = Vector2(
       config.battlefield.isConvoy
           ? (unit.ally ? size.x * .48 : size.x * .68)
-          : (unit.ally ? size.x * .44 : size.x * .56),
+          : (unit.ally ? size.x * .48 : size.x * .52),
       _safeCombatY(unit.position.y),
     );
     _moveToward(unit, fallback, dt, stopDistance: 24);

@@ -467,10 +467,18 @@ class GoldPanel extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xf522242b), Color(0xf50b0d12)],
+          colors: [Color(0xf52b292d), Color(0xf5161619), Color(0xf5080a0e)],
+          stops: [0, .46, 1],
         ),
-        border: Border.all(color: const Color(0xff76613c)),
-        boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 12)],
+        border: Border.all(color: const Color(0xff8c7042), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black87,
+            blurRadius: 14,
+            offset: Offset(0, 5),
+          ),
+          BoxShadow(color: Color(0x227f6035), blurRadius: 3, spreadRadius: 1),
+        ],
       ),
       child: child,
     ),
@@ -549,16 +557,37 @@ class FantasyButton extends StatelessWidget {
           height: 52,
           decoration: BoxDecoration(
             gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: prominent
-                  ? const [Color(0xff263f5e), Color(0xff15253b)]
-                  : const [Color(0xff372a20), Color(0xff191512)],
+                  ? const [
+                      Color(0xff345579),
+                      Color(0xff203955),
+                      Color(0xff101d2c),
+                    ]
+                  : const [
+                      Color(0xff4a3827),
+                      Color(0xff2a2119),
+                      Color(0xff15110e),
+                    ],
             ),
             border: Border.all(
               color: prominent
                   ? const Color(0xff7691ad)
                   : const Color(0xff8b7045),
             ),
-            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 7)],
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black87,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Color(0x337f6035),
+                blurRadius: 2,
+                spreadRadius: 1,
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),

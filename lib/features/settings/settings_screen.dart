@@ -114,7 +114,6 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: (value) =>
                         onChanged(settings.copyWith(autoTargetPriority: value)),
                   ),
-                  _BattleDiagnosticsTile(diagnostics: diagnostics),
                   const _PrivacyTile(),
                   GoldPanel(
                     child: Padding(
@@ -178,12 +177,12 @@ class _PrivacyTile extends StatelessWidget {
       onTap: () => showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('개인정보 및 베타 정책'),
+          title: const Text('개인정보 및 서비스 정책'),
           content: const SingleChildScrollView(
             child: Text(
-              '현재 베타는 회원가입, 광고, 실제 결제, 외부 분석 SDK와 '
-              '개인정보 자동 전송을 사용하지 않습니다. 진행·설정과 최근 전투 '
-              '진단 최대 20건은 이 기기 또는 브라우저에만 저장됩니다. 앱 또는 '
+              '현재 버전은 회원가입, 광고, 실제 결제, 외부 분석 SDK와 '
+              '개인정보 자동 전송을 사용하지 않습니다. 진행과 환경 설정은 '
+              '이 기기 또는 브라우저에만 저장됩니다. 앱 또는 '
               '사이트 데이터를 삭제하면 함께 제거됩니다.\n\n'
               '정식 방침: github.com/roycekim84/eclipse-mercenaries/blob/main/PRIVACY.md\n'
               '지원: github.com/roycekim84/eclipse-mercenaries/issues',
@@ -213,7 +212,7 @@ class _PrivacyTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '개인정보 및 베타 정책',
+                    '개인정보 및 서비스 정책',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 3),
@@ -230,65 +229,6 @@ class _PrivacyTile extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _BattleDiagnosticsTile extends StatelessWidget {
-  const _BattleDiagnosticsTile({required this.diagnostics});
-
-  final List<BattleDiagnosticRecord> diagnostics;
-
-  @override
-  Widget build(BuildContext context) {
-    final latest = diagnostics.isEmpty ? null : diagnostics.last;
-    return GoldPanel(
-      child: Padding(
-        padding: const EdgeInsets.all(13),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.monitor_heart_outlined,
-              color: Color(0xffd8bd7b),
-              size: 28,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '전투 진단 기록 ${diagnostics.length}/20',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    latest == null
-                        ? '진단 기록 없음 · 전투 종료 시 자동 저장'
-                        : 'v${latest.contentVersion} · seed ${latest.seed} · '
-                              '${latest.contractId} · ${latest.outcome}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white60, fontSize: 10),
-                  ),
-                  if (latest != null)
-                    Text(
-                      'P95 ${latest.frameTimeP95Ms.toStringAsFixed(1)}ms · '
-                      '최대 ${latest.peakActiveUnits}명 · ${latest.terminationReason}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xffb7a77e),
-                        fontSize: 9,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _AudioMixerTile extends StatelessWidget {

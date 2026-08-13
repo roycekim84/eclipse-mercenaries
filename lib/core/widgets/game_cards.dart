@@ -99,6 +99,54 @@ class ContractMarker extends StatelessWidget {
   );
 }
 
+class ContractMarkerArt extends StatelessWidget {
+  const ContractMarkerArt({
+    super.key,
+    required this.contract,
+    this.size = 44,
+    this.locked = false,
+  });
+
+  final BattlefieldContract contract;
+  final double size;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) {
+    final index = contracts.indexWhere((item) => item.id == contract.id);
+    final sourceIndex = index < 0 ? 0 : index.clamp(0, 5);
+    return SizedBox.square(
+      dimension: size,
+      child: ShaderMask(
+        blendMode: BlendMode.modulate,
+        shaderCallback: (bounds) => LinearGradient(
+          colors: locked
+              ? const [Color(0xff777777), Color(0xff777777)]
+              : const [Colors.white, Colors.white],
+        ).createShader(bounds),
+        child: ClipRect(
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Positioned(
+                left: -sourceIndex * size,
+                top: -size,
+                width: size * 6,
+                height: size * 3,
+                child: Image.asset(
+                  'assets/images/ui/contract_marker_atlas_v2.png',
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CompactContractNode extends StatelessWidget {
   const _CompactContractNode({required this.contract, required this.locked});
   final BattlefieldContract contract;
@@ -116,39 +164,7 @@ class _CompactContractNode extends StatelessWidget {
       ),
       const ColoredBox(color: Color(0x44000000)),
       Center(
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xbb090b10),
-            border: Border.all(
-              color: locked ? Colors.white30 : const Color(0xffd2ad62),
-            ),
-            boxShadow: const [BoxShadow(color: Colors.black87, blurRadius: 8)],
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.rotate(
-                angle: .785398,
-                child: Container(
-                  width: 27,
-                  height: 27,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: locked ? Colors.white24 : const Color(0x99d2ad62),
-                    ),
-                  ),
-                ),
-              ),
-              PremiumGameIcon(
-                locked ? Icons.lock_outline : contract.icon,
-                color: locked ? Colors.white38 : const Color(0xffffd77b),
-                size: 22,
-              ),
-            ],
-          ),
-        ),
+        child: ContractMarkerArt(contract: contract, size: 48, locked: locked),
       ),
       Positioned(
         left: 4,
@@ -187,7 +203,7 @@ class _SelectedContractNode extends StatelessWidget {
       Positioned(
         left: 7,
         top: 7,
-        child: PremiumGameIcon(contract.icon, size: 22),
+        child: ContractMarkerArt(contract: contract, size: 24),
       ),
       Positioned(
         left: 34,

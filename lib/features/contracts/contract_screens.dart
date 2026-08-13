@@ -3,7 +3,7 @@ part of '../../app/game_app.dart';
 // The first contract sits below the legend and the final branch is pushed
 // outward so an expanded selection card never covers a neighbouring node.
 const _contractXFactors = [.12, .30, .48, .66, .84, .88];
-const _contractYFactors = [.60, .53, .20, .51, .20, .72];
+const _contractYFactors = [.66, .53, .20, .51, .20, .72];
 
 class ContractScreen extends StatelessWidget {
   const ContractScreen({
@@ -443,7 +443,7 @@ class DeploymentMercenaryCard extends StatelessWidget {
               child: Image.asset(
                 mercenary.visual.portraitAsset,
                 fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
+                alignment: mercenary.visual.rosterAlignment,
               ),
             ),
             Expanded(
@@ -525,7 +525,7 @@ class DeploymentSummary extends StatelessWidget {
               child: Image.asset(
                 mercenary.visual.portraitAsset,
                 fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
+                alignment: mercenary.visual.portraitAlignment,
               ),
             ),
           ),

@@ -38,7 +38,8 @@ class MercenaryCard extends StatelessWidget {
                   ? Image.asset(
                       gameContent.mercenaries[index].visual.portraitAsset,
                       fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
+                      alignment:
+                          gameContent.mercenaries[index].visual.rosterAlignment,
                     )
                   : Icon(
                       [
@@ -94,7 +95,7 @@ class MercenaryCard extends StatelessWidget {
             Positioned(
               right: 7,
               top: 7,
-              child: Icon(
+              child: PremiumGameIcon(
                 index == 0 ? Icons.dark_mode : Icons.change_history,
                 size: 16,
                 color: const Color(0xffdfc180),

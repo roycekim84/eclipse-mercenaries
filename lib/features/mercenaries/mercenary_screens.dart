@@ -165,12 +165,12 @@ class _RosterCard extends StatelessWidget {
         children: [
           ClipRect(
             child: Transform.scale(
-              scale: 1.9,
-              alignment: Alignment.topCenter,
+              scale: mercenary.visual.rosterScale,
+              alignment: mercenary.visual.rosterAlignment,
               child: Image.asset(
                 mercenary.visual.portraitAsset,
                 fit: BoxFit.cover,
-                alignment: const Alignment(0, -.78),
+                alignment: mercenary.visual.rosterAlignment,
               ),
             ),
           ),
@@ -320,10 +320,14 @@ class MercenaryPortrait extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          mercenary.visual.portraitAsset,
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
+        Transform.scale(
+          scale: mercenary.visual.portraitScale,
+          alignment: mercenary.visual.portraitAlignment,
+          child: Image.asset(
+            mercenary.visual.portraitAsset,
+            fit: BoxFit.cover,
+            alignment: mercenary.visual.portraitAlignment,
+          ),
         ),
         const DecoratedBox(
           decoration: BoxDecoration(

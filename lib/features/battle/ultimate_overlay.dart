@@ -20,7 +20,7 @@ class UltimateOrb extends StatelessWidget {
     final label = !enabled
         ? 'LOCK'
         : ready
-        ? 'READY'
+        ? '발동 가능'
         : '${(charge * 100).round()}%';
     return Padding(
       padding: const EdgeInsets.only(left: 6),
