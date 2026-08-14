@@ -902,6 +902,13 @@ class GameShellState extends State<GameShell> {
                   gold: gold,
                   crystals: crystals,
                   commanderLevel: account.commanderLevel,
+                  ownedCombatMercenaries: gameContent.mercenaries
+                      .where(
+                        (mercenary) =>
+                            mercenary.duty == MercenaryDuty.combat &&
+                            account.mercenaryProgress.containsKey(mercenary.id),
+                      )
+                      .toList(growable: false),
                   lastReport: report,
                   campaignCycle:
                       account.recruitmentCount +

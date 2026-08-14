@@ -6,6 +6,7 @@ class CampScreen extends StatelessWidget {
     required this.gold,
     required this.crystals,
     required this.commanderLevel,
+    required this.ownedCombatMercenaries,
     required this.lastReport,
     required this.campaignCycle,
     required this.onDeploy,
@@ -24,6 +25,7 @@ class CampScreen extends StatelessWidget {
   final int gold;
   final int crystals;
   final int commanderLevel;
+  final List<MercenarySpec> ownedCombatMercenaries;
   final BattleReport? lastReport;
   final int campaignCycle;
   final VoidCallback onDeploy;
@@ -80,6 +82,7 @@ class CampScreen extends StatelessWidget {
                           child: _CampLifeLayer(
                             compact: compactHeight,
                             woundedCount: worldState.woundedCount,
+                            mercenaries: ownedCombatMercenaries,
                           ),
                         ),
                       ),
@@ -195,10 +198,15 @@ class CampScreen extends StatelessWidget {
 }
 
 class _CampLifeLayer extends StatefulWidget {
-  const _CampLifeLayer({required this.compact, required this.woundedCount});
+  const _CampLifeLayer({
+    required this.compact,
+    required this.woundedCount,
+    required this.mercenaries,
+  });
 
   final bool compact;
   final int woundedCount;
+  final List<MercenarySpec> mercenaries;
 
   @override
   State<_CampLifeLayer> createState() => _CampLifeLayerState();
@@ -221,32 +229,27 @@ class _CampLifeLayerState extends State<_CampLifeLayer>
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _controller,
     builder: (_, _) {
-      final drift = Curves.easeInOut.transform(_controller.value);
+      final phase = Curves.easeInOut.transform(_controller.value);
       return Stack(
         children: [
-          _CampActor(
-            asset: 'characters/luna_battle_sheet.png',
-            label: '루나 · 야간 경계',
-            frame: (drift * 7.999).floor(),
-            left: 12 + drift * 16,
-            bottom: 4,
-            height: widget.compact ? 82 : 116,
-          ),
-          _CampActor(
-            asset: 'characters/kael_battle_sheet.png',
-            label: '카일 · 장비 점검',
-            frame: (drift * 7.999).floor(),
-            right: 18 + (1 - drift) * 14,
-            bottom: 0,
-            height: widget.compact ? 84 : 120,
-          ),
+          for (var index = 0; index < widget.mercenaries.length; index++)
+            Align(
+              alignment: _campActorAlignments[index],
+              child: _CampActor(
+                key: ValueKey('camp-actor-${widget.mercenaries[index].id}'),
+                mercenary: widget.mercenaries[index],
+                framePhase: (phase + index * .137) % 1,
+                height: widget.compact ? 58 : 82,
+              ),
+            ),
           Positioned(
             left: 0,
             top: 4,
             child: _CampActivityChip(
               icon: Icons.forum_outlined,
               label:
-                  '용병 대화 ${widget.woundedCount > 0 ? '· 부상자 보고' : '· 다음 계약 준비'}',
+                  '상주 영웅 ${widget.mercenaries.length}/8 '
+                  '${widget.woundedCount > 0 ? '· 부상자 보고' : '· 다음 계약 준비'}',
             ),
           ),
         ],
@@ -257,54 +260,52 @@ class _CampLifeLayerState extends State<_CampLifeLayer>
 
 class _CampActor extends StatelessWidget {
   const _CampActor({
-    required this.asset,
-    required this.label,
-    required this.frame,
-    required this.bottom,
+    super.key,
+    required this.mercenary,
+    required this.framePhase,
     required this.height,
-    this.left,
-    this.right,
   });
 
-  final String asset;
-  final String label;
-  final int frame;
-  final double bottom;
+  final MercenarySpec mercenary;
+  final double framePhase;
   final double height;
-  final double? left;
-  final double? right;
 
   @override
-  Widget build(BuildContext context) => Positioned(
-    left: left,
-    right: right,
-    bottom: bottom,
-    child: Column(
+  Widget build(BuildContext context) {
+    final visual = mercenary.visual;
+    final idleFrames = visual.battleFrameIndices.first;
+    final frame =
+        idleFrames[(framePhase * idleFrames.length).floor().clamp(
+          0,
+          idleFrames.length - 1,
+        )];
+    final frameWidth = height * 288 / 256;
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           color: const Color(0xbb080a0e),
           child: Text(
-            label,
+            '${mercenary.name.split(' ').first} · ${_campActivityById[mercenary.id] ?? '계약 준비'}',
             style: const TextStyle(fontSize: 7, color: Color(0xffe1c889)),
           ),
         ),
         SizedBox(
           height: height,
-          width: height,
+          width: frameWidth,
           child: ClipRect(
             child: OverflowBox(
               alignment: Alignment.topLeft,
-              maxWidth: height * 8,
+              maxWidth: frameWidth * visual.battleColumns,
               maxHeight: height * 5,
               child: Transform.translate(
-                offset: Offset(-frame * height, 0),
+                offset: Offset(-frame * frameWidth, 0),
                 child: SizedBox(
-                  width: height * 8,
+                  width: frameWidth * visual.battleColumns,
                   height: height * 5,
                   child: Image.asset(
-                    'assets/images/$asset',
+                    'assets/images/${visual.battleSpriteAsset}',
                     fit: BoxFit.fill,
                     filterQuality: FilterQuality.none,
                   ),
@@ -314,9 +315,31 @@ class _CampActor extends StatelessWidget {
           ),
         ),
       ],
-    ),
-  );
+    );
+  }
 }
+
+const _campActorAlignments = <Alignment>[
+  Alignment(-.88, .78),
+  Alignment(.88, .78),
+  Alignment(-.42, .62),
+  Alignment(.42, .62),
+  Alignment(-.72, .18),
+  Alignment(.72, .18),
+  Alignment(-.25, -.08),
+  Alignment(.25, -.08),
+];
+
+const _campActivityById = <String, String>{
+  'luna': '야간 경계',
+  'kael': '장비 점검',
+  'sera': '마력 조율',
+  'nyra': '전술 기록',
+  'aurel': '방패 수련',
+  'vesta': '계약 검토',
+  'rask': '창날 정비',
+  'iris': '월광 명상',
+};
 
 class _CampActivityChip extends StatelessWidget {
   const _CampActivityChip({required this.icon, required this.label});

@@ -118,6 +118,14 @@ void main() {
     expect(find.text('전쟁터 출전'), findsOneWidget);
     expect(find.text('용병 모집'), findsOneWidget);
     expect(find.text('대장간'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget.key is ValueKey<String> &&
+            (widget.key! as ValueKey<String>).value.startsWith('camp-actor-'),
+      ),
+      findsNWidgets(8),
+    );
   });
 
   testWidgets('new commander starts with Luna and unlocks the first recruit', (
@@ -132,6 +140,9 @@ void main() {
     expect(find.text('월영 Lv.1'), findsOneWidget);
     expect(find.text('5000'), findsOneWidget);
     expect(find.text('600'), findsOneWidget);
+    expect(find.byKey(const ValueKey('camp-actor-luna')), findsOneWidget);
+    expect(find.byKey(const ValueKey('camp-actor-kael')), findsNothing);
+    expect(find.textContaining('상주 영웅 1/8'), findsOneWidget);
     await tester.tap(find.text('용병'));
     await tester.pumpAndSettle();
     expect(find.textContaining('보유 용병  1 / 16'), findsOneWidget);

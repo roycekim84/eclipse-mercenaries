@@ -3,6 +3,7 @@ import 'package:eclipse_mercenaries/core/theme/game_theme.dart';
 import 'package:eclipse_mercenaries/core/content/game_visuals.dart';
 import 'package:eclipse_mercenaries/domain/battle_models.dart';
 import 'package:eclipse_mercenaries/domain/battle_rewards.dart';
+import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -22,6 +23,9 @@ void main() {
             gold: 45678,
             crystals: 3250,
             commanderLevel: 15,
+            ownedCombatMercenaries: gameContent.mercenaries
+                .where((mercenary) => mercenary.duty == MercenaryDuty.combat)
+                .toList(growable: false),
             lastReport: null,
             campaignCycle: 30,
             onDeploy: _noop,
@@ -47,14 +51,16 @@ void main() {
           const AssetImage('assets/images/mercenary_camp.png'),
           context,
         ),
-        precacheImage(
-          const AssetImage('assets/images/characters/luna_battle_sheet.png'),
-          context,
-        ),
-        precacheImage(
-          const AssetImage('assets/images/characters/kael_battle_sheet.png'),
-          context,
-        ),
+        ...gameContent.mercenaries
+            .where((mercenary) => mercenary.duty == MercenaryDuty.combat)
+            .map(
+              (mercenary) => precacheImage(
+                AssetImage(
+                  'assets/images/${mercenary.visual.battleSpriteAsset}',
+                ),
+                context,
+              ),
+            ),
       ]);
     });
     await _settleImages(tester);
