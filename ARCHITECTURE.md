@@ -24,7 +24,7 @@
 - `core/content/game_content_repository.dart`: 콘텐츠 조회 인터페이스와 알파 정적 구현
 - `core/content/game_visuals.dart`: 용병/무기의 색상, 아이콘, 이미지 경로
 - `core/persistence/save_repository.dart`: versioned 계정 저장 모델과 저장 인터페이스
-- `domain/progression.dart`: 용병 레벨·승급, 무기 영구 레벨·단계와 성장 영수증 규칙
+- `domain/progression.dart`: 용병 F–S 등급·별 한계돌파·누적 유효 레벨, 무기 영구 성장 규칙
 - `core/widgets`: 판타지 패널, 버튼, 카드, 상태 표시와 지도 painter
 - `features`: 캠프, 계약/출전, 장비, 전투 HUD, 용병, 결과 화면
 - `domain/game_data.dart`: Flutter 의존성이 없는 용병과 무기 규칙 데이터
@@ -45,6 +45,8 @@
 - `game/systems/battlefield_event_system.dart`: 사건 시계, 전투 정지, 선택 효과와 증원 생성
 
 앱/도메인/게임 런타임 경계와 기능별 화면 분리가 완료됐다. 화면 파일은 Dart library part로 묶어 현재 비공개 상태 경계를 유지하며, 기능이 커질 때 독립 public widget library로 전환한다.
+
+저장 스키마 14는 용병 등급/별, 지원·파견 선택, 파견 승리 기록과 클리어 계약을 저장한다. v13 이하 저장은 기존 영구 레벨을 가장 가까운 F–S 등급과 등급 내 레벨로 이전하며 소유·장비·재화는 유지한다. 전투용과 생활용 용병은 `MercenaryDuty`로 구분해 생활 캐릭터가 전투 스프라이트 없이 출전하는 상태를 구조적으로 차단한다.
 
 한국어 UI는 네트워크 런타임 폰트 대신 `assets/fonts`의 Noto Sans KR 400/700 서브셋을 사용한다. 영문 대형 제목은 Cinzel을 사용한다. 알파 서브셋은 현재 Dart 소스의 한글 글리프와 기본 Latin/문장부호를 포함하며 `tool/update_font_assets.sh`가 고정된 Google Fonts revision에서 재생성한다. 이 구조로 Web/iOS/Android와 Golden 테스트의 글꼴 메트릭을 일치시킨다.
 

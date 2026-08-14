@@ -2,8 +2,8 @@ part of '../../app/game_app.dart';
 
 // The first contract sits below the legend and the final branch is pushed
 // outward so an expanded selection card never covers a neighbouring node.
-const _contractXFactors = [.12, .30, .48, .66, .84, .88];
-const _contractYFactors = [.66, .53, .20, .51, .20, .72];
+const _contractXFactors = [.10, .22, .34, .46, .58, .70, .80, .88, .76, .91];
+const _contractYFactors = [.69, .47, .18, .48, .18, .66, .40, .16, .78, .61];
 
 class ContractScreen extends StatelessWidget {
   const ContractScreen({
@@ -283,6 +283,10 @@ class MercenarySelectScreen extends StatefulWidget {
     required this.selected,
     required this.equippedWeapon,
     required this.mercenaryProgress,
+    required this.selectedSupportId,
+    required this.selectedDispatchId,
+    required this.onSupportSelect,
+    required this.onDispatchSelect,
     required this.onSelect,
     required this.onBack,
     required this.onEquipment,
@@ -292,6 +296,10 @@ class MercenarySelectScreen extends StatefulWidget {
   final MercenarySpec selected;
   final WeaponSpec equippedWeapon;
   final Map<String, MercenaryProgress> mercenaryProgress;
+  final String? selectedSupportId;
+  final String? selectedDispatchId;
+  final ValueChanged<MercenarySpec?> onSupportSelect;
+  final ValueChanged<MercenarySpec?> onDispatchSelect;
   final ValueChanged<MercenarySpec> onSelect;
   final VoidCallback onBack;
   final VoidCallback onEquipment;
@@ -305,7 +313,27 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
   final ScrollController _controller = ScrollController();
 
   List<MercenarySpec> get _ownedMercenaries => gameContent.mercenaries
-      .where((mercenary) => widget.mercenaryProgress.containsKey(mercenary.id))
+      .where(
+        (mercenary) =>
+            widget.mercenaryProgress.containsKey(mercenary.id) &&
+            mercenary.canDeploy,
+      )
+      .toList(growable: false);
+
+  List<MercenarySpec> get _supportMercenaries => gameContent.mercenaries
+      .where(
+        (mercenary) =>
+            widget.mercenaryProgress.containsKey(mercenary.id) &&
+            mercenary.duty == MercenaryDuty.support,
+      )
+      .toList(growable: false);
+
+  List<MercenarySpec> get _dispatchMercenaries => gameContent.mercenaries
+      .where(
+        (mercenary) =>
+            widget.mercenaryProgress.containsKey(mercenary.id) &&
+            mercenary.duty == MercenaryDuty.dispatch,
+      )
       .toList(growable: false);
 
   @override
@@ -384,17 +412,33 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
                   onEquipment: widget.onEquipment,
                   onDeploy: widget.onDeploy,
                 );
+                final support = _SupportAssignment(
+                  supports: _supportMercenaries,
+                  selectedId: widget.selectedSupportId,
+                  onSelect: widget.onSupportSelect,
+                  dispatches: _dispatchMercenaries,
+                  selectedDispatchId: widget.selectedDispatchId,
+                  onDispatchSelect: widget.onDispatchSelect,
+                );
                 return compact
                     ? Column(
                         children: [
                           Expanded(child: cards),
+                          SizedBox(height: 48, child: support),
                           SizedBox(height: 205, child: detail),
                         ],
                       )
                     : Row(
                         children: [
                           SizedBox(width: 330, child: cards),
-                          Expanded(child: detail),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                SizedBox(height: 64, child: support),
+                                Expanded(child: detail),
+                              ],
+                            ),
+                          ),
                         ],
                       );
               },
@@ -402,6 +446,125 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
           ),
         ],
       ),
+    ),
+  );
+}
+
+class _SupportAssignment extends StatelessWidget {
+  const _SupportAssignment({
+    required this.supports,
+    required this.selectedId,
+    required this.onSelect,
+    required this.dispatches,
+    required this.selectedDispatchId,
+    required this.onDispatchSelect,
+  });
+  final List<MercenarySpec> supports;
+  final String? selectedId;
+  final ValueChanged<MercenarySpec?> onSelect;
+  final List<MercenarySpec> dispatches;
+  final String? selectedDispatchId;
+  final ValueChanged<MercenarySpec?> onDispatchSelect;
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    decoration: BoxDecoration(
+      color: const Color(0xdd11141b),
+      border: Border.all(color: const Color(0xff6c5838)),
+    ),
+    child: Row(
+      children: [
+        const Text(
+          '지원 슬롯',
+          style: TextStyle(
+            color: Color(0xffffcf70),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: supports.isEmpty
+              ? const Text(
+                  '지원 용병을 계약하면 전술 효과가 활성화됩니다.',
+                  style: TextStyle(color: Colors.white54, fontSize: 10),
+                )
+              : DropdownButtonHideUnderline(
+                  child: DropdownButton<String?>(
+                    value: supports.any((e) => e.id == selectedId)
+                        ? selectedId
+                        : null,
+                    hint: const Text('지원 용병 선택'),
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('배치 안 함'),
+                      ),
+                      ...supports.map(
+                        (m) => DropdownMenuItem<String?>(
+                          value: m.id,
+                          child: Text(
+                            '${m.name} · ${m.supportEffect}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (id) => onSelect(
+                      id == null
+                          ? null
+                          : supports.firstWhere((m) => m.id == id),
+                    ),
+                  ),
+                ),
+        ),
+        const VerticalDivider(width: 18, color: Color(0xff6c5838)),
+        const Text(
+          '파견 슬롯',
+          style: TextStyle(
+            color: Color(0xff83c8ba),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: dispatches.isEmpty
+              ? const Text(
+                  '파견 용병 계약 후 활성화',
+                  style: TextStyle(color: Colors.white54, fontSize: 10),
+                )
+              : DropdownButtonHideUnderline(
+                  child: DropdownButton<String?>(
+                    value: dispatches.any((e) => e.id == selectedDispatchId)
+                        ? selectedDispatchId
+                        : null,
+                    hint: const Text('파견 용병 선택'),
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('배치 안 함'),
+                      ),
+                      ...dispatches.map(
+                        (m) => DropdownMenuItem<String?>(
+                          value: m.id,
+                          child: Text(
+                            '${m.name} · ${m.supportEffect}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (id) => onDispatchSelect(
+                      id == null
+                          ? null
+                          : dispatches.firstWhere((m) => m.id == id),
+                    ),
+                  ),
+                ),
+        ),
+      ],
     ),
   );
 }
@@ -469,14 +632,16 @@ class DeploymentMercenaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '전투력 ${ProgressionRules.displayPower(catalogPower: mercenary.power, catalogLevel: mercenary.level, permanentLevel: progress?.level ?? 1)}',
+                      '전투력 ${progress == null ? 0 : ProgressionRules.displayPowerForProgress(catalogPower: mercenary.power, catalogLevel: mercenary.level, progress: progress!)}',
                       style: const TextStyle(
                         color: Color(0xffd7bd7d),
                         fontSize: 11,
                       ),
                     ),
                     Text(
-                      'Lv.${progress?.level ?? mercenary.level}  ★★★★★',
+                      progress == null
+                          ? '미보유'
+                          : '${progress!.grade}급 Lv.${progress!.level}  ${List.filled(progress!.stars, '★').join()}${List.filled(5 - progress!.stars, '☆').join()}',
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 10,
@@ -567,7 +732,7 @@ class DeploymentSummary extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${mercenary.race} · ${mercenary.job}   전투력 ${ProgressionRules.displayPower(catalogPower: mercenary.power, catalogLevel: mercenary.level, permanentLevel: progress.level)}',
+                          '${mercenary.race} · ${mercenary.job}   전투력 ${ProgressionRules.displayPowerForProgress(catalogPower: mercenary.power, catalogLevel: mercenary.level, progress: progress)}',
                           style: const TextStyle(
                             color: Colors.white60,
                             fontSize: 11,

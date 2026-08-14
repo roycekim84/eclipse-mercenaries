@@ -10,47 +10,83 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('beta contracts cover five battlefields and six objective types', () {
-    expect(contracts, hasLength(6));
-    expect(
-      contracts.map((contract) => contract.battlefieldName).toSet(),
-      hasLength(5),
-    );
-    expect(
-      contracts.map((contract) => contract.objective).toSet(),
-      hasLength(ContractObjective.values.length),
-    );
-    expect(
-      contracts.map((contract) => contract.balance.durationSeconds),
-      orderedEquals([60, 70, 75, 80, 90, 100]),
-    );
-    expect(
-      contracts.map((contract) => contract.balance.enemyHpMultiplier),
-      orderedEquals([1, 1.06, 1.12, 1.18, 1.25, 1.33]),
-    );
-    expect(
-      contracts.map((contract) => contract.power),
-      orderedEquals([8000, 10500, 13500, 17000, 21500, 27000]),
-    );
-    expect(
-      contracts.map((contract) => contract.reward),
-      orderedEquals([3000, 3800, 4700, 5700, 6900, 8400]),
-    );
-    for (var index = 1; index < contracts.length; index++) {
-      final previous = contracts[index - 1].balance;
-      final current = contracts[index].balance;
-      expect(current.unitCount, greaterThan(previous.unitCount));
+  test(
+    'release contracts cover level 1 through 30 and six objective types',
+    () {
+      expect(contracts, hasLength(10));
       expect(
-        current.activePopulationTarget,
-        greaterThan(previous.activePopulationTarget),
+        contracts.map((contract) => contract.battlefieldName).toSet(),
+        hasLength(9),
       );
       expect(
-        current.reinforcementInterval,
-        lessThan(previous.reinforcementInterval),
+        contracts.map((contract) => contract.objective).toSet(),
+        hasLength(ContractObjective.values.length),
       );
-      expect(current.eliteStride, lessThan(previous.eliteStride));
-    }
-  });
+      expect(
+        contracts.map((contract) => contract.balance.durationSeconds),
+        orderedEquals([60, 70, 75, 80, 90, 100, 105, 110, 120, 135]),
+      );
+      expect(
+        contracts.map((contract) => contract.balance.enemyHpMultiplier),
+        orderedEquals([
+          1,
+          1.06,
+          1.12,
+          1.18,
+          1.25,
+          1.33,
+          1.48,
+          1.62,
+          1.78,
+          1.95,
+        ]),
+      );
+      expect(
+        contracts.map((contract) => contract.power),
+        orderedEquals([
+          8000,
+          10500,
+          13500,
+          17000,
+          21500,
+          27000,
+          32000,
+          36500,
+          42000,
+          50000,
+        ]),
+      );
+      expect(
+        contracts.map((contract) => contract.reward),
+        orderedEquals([
+          3000,
+          3800,
+          4700,
+          5700,
+          6900,
+          8400,
+          9800,
+          11800,
+          14200,
+          18000,
+        ]),
+      );
+      for (var index = 1; index < contracts.length; index++) {
+        final previous = contracts[index - 1].balance;
+        final current = contracts[index].balance;
+        expect(current.unitCount, greaterThan(previous.unitCount));
+        expect(
+          current.activePopulationTarget,
+          greaterThan(previous.activePopulationTarget),
+        );
+        expect(
+          current.reinforcementInterval,
+          lessThan(previous.reinforcementInterval),
+        );
+        expect(current.eliteStride, lessThan(previous.eliteStride));
+      }
+    },
+  );
 
   testWidgets('portrait web shows a non-blocking landscape hint', (
     tester,
@@ -98,7 +134,7 @@ void main() {
     expect(find.text('600'), findsOneWidget);
     await tester.tap(find.text('용병'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('보유 용병  1 / 8'), findsOneWidget);
+    expect(find.textContaining('보유 용병  1 / 16'), findsOneWidget);
     expect(find.text('루나 벨하르트'), findsOneWidget);
     expect(find.text('카일 로젠팽'), findsNothing);
 
@@ -111,15 +147,15 @@ void main() {
     await tester.pumpAndSettle();
 
     final restored = await repository.load();
-    expect(restored.mercenaryProgress['sera']?.level, 1);
-    expect(restored.mercenaryCopies['sera'], 1);
+    expect(restored.mercenaryProgress.length, 2);
+    expect(restored.mercenaryCopies.values.fold(0, (a, b) => a + b), 2);
     expect(restored.inventory['contract_ticket'], 0);
     expect(restored.crystals, 600);
     expect(restored.inventory['sera_token'], isNull);
   });
 
   testWidgets('first launch tutorial completes and persists', (tester) async {
-    final repository = InMemorySaveRepository();
+    final repository = InMemorySaveRepository(AccountSave.initial());
     await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
     await tester.pumpAndSettle();
 
@@ -307,7 +343,7 @@ void main() {
     await tester.tap(find.text('레벨업'));
     await tester.pumpAndSettle();
     expect(find.textContaining('전술 훈련'), findsOneWidget);
-    expect(find.textContaining('승급 · 상한'), findsOneWidget);
+    expect(find.textContaining('E급 승급 · Lv.1 전환'), findsOneWidget);
   });
 
   testWidgets('mission reward persists and unlocks forge resources', (
@@ -331,14 +367,14 @@ void main() {
     expect(restored.inventory['war_scrap'], 3);
   });
 
-  testWidgets('recruitment reveals a mercenary and persists duplicate tokens', (
+  testWidgets('recruitment reveals a mercenary and persists the contract', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1024, 461);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final repository = InMemorySaveRepository();
+    final repository = InMemorySaveRepository(AccountSave.initial());
     await tester.pumpWidget(
       EclipseMercenariesApp(saveRepository: repository, enableTutorial: false),
     );
@@ -352,11 +388,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('용병 계약 완료'), findsOneWidget);
-    expect(find.textContaining('전용 증표 +10'), findsOneWidget);
     final restored = await repository.load();
-    expect(restored.crystals, 2950);
+    expect(restored.crystals, 600);
     expect(restored.recruitmentCount, 1);
-    expect(restored.inventory['sera_token'], 10);
+    expect(restored.mercenaryProgress.length, greaterThanOrEqualTo(1));
+    expect(restored.inventory['contract_ticket'], 0);
     expect(tester.takeException(), isNull);
   });
 

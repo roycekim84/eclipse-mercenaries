@@ -196,14 +196,17 @@ class _RosterCard extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'Lv.${progress.level} · ${mercenary.race} · ${mercenary.job}',
+                  '${progress.grade}급 Lv.${progress.level} · ${mercenary.race} · ${mercenary.job}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 10, color: Colors.white60),
                 ),
-                const Text(
-                  '★★★★★',
-                  style: TextStyle(color: Color(0xffffc95d), fontSize: 11),
+                Text(
+                  '${List.filled(progress.stars, '★').join()}${List.filled(5 - progress.stars, '☆').join()} · ${mercenaryDutyName(mercenary.duty)}',
+                  style: const TextStyle(
+                    color: Color(0xffffc95d),
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -235,6 +238,7 @@ class MercenaryDetailScreen extends StatelessWidget {
     required this.notice,
     required this.onTrain,
     required this.onAscend,
+    required this.onLimitBreak,
     required this.onEquipment,
     required this.onBack,
   });
@@ -247,6 +251,7 @@ class MercenaryDetailScreen extends StatelessWidget {
   final String? notice;
   final VoidCallback onTrain;
   final VoidCallback onAscend;
+  final VoidCallback onLimitBreak;
   final VoidCallback onEquipment;
   final VoidCallback onBack;
 
@@ -265,7 +270,10 @@ class MercenaryDetailScreen extends StatelessWidget {
             Expanded(
               child: LayoutBuilder(
                 builder: (_, constraints) {
-                  final portrait = MercenaryPortrait(mercenary: mercenary);
+                  final portrait = MercenaryPortrait(
+                    mercenary: mercenary,
+                    progress: progress,
+                  );
                   final details = _MercenaryTabs(
                     mercenary: mercenary,
                     progress: progress,
@@ -276,6 +284,7 @@ class MercenaryDetailScreen extends StatelessWidget {
                     notice: notice,
                     onTrain: onTrain,
                     onAscend: onAscend,
+                    onLimitBreak: onLimitBreak,
                     onEquipment: onEquipment,
                   );
                   if (constraints.maxWidth < 700) {
@@ -313,8 +322,13 @@ class MercenaryDetailScreen extends StatelessWidget {
 }
 
 class MercenaryPortrait extends StatelessWidget {
-  const MercenaryPortrait({super.key, required this.mercenary});
+  const MercenaryPortrait({
+    super.key,
+    required this.mercenary,
+    required this.progress,
+  });
   final MercenarySpec mercenary;
+  final MercenaryProgress progress;
   @override
   Widget build(BuildContext context) => GoldPanel(
     child: Stack(
@@ -361,7 +375,7 @@ class MercenaryPortrait extends StatelessWidget {
                 ),
               ),
               Text(
-                '★★★★★  ${mercenary.race} / ${mercenary.job}',
+                '${List.filled(progress.stars, '★').join()}${List.filled(5 - progress.stars, '☆').join()}  ${progress.grade}급 · ${contractRarityName(mercenary.rarity)} · ${mercenaryDutyName(mercenary.duty)}',
                 style: const TextStyle(color: Color(0xffffcf67)),
               ),
             ],
@@ -383,6 +397,7 @@ class _MercenaryTabs extends StatelessWidget {
     required this.notice,
     required this.onTrain,
     required this.onAscend,
+    required this.onLimitBreak,
     required this.onEquipment,
   });
   final MercenarySpec mercenary;
@@ -394,6 +409,7 @@ class _MercenaryTabs extends StatelessWidget {
   final String? notice;
   final VoidCallback onTrain;
   final VoidCallback onAscend;
+  final VoidCallback onLimitBreak;
   final VoidCallback onEquipment;
 
   @override
@@ -434,6 +450,7 @@ class _MercenaryTabs extends StatelessWidget {
                 gold: gold,
                 onTrain: onTrain,
                 onAscend: onAscend,
+                onLimitBreak: onLimitBreak,
               ),
               _EquipmentTab(
                 mercenary: mercenary,
@@ -457,10 +474,11 @@ class _InfoTab extends StatelessWidget {
   final MercenaryProgress progress;
   @override
   Widget build(BuildContext context) {
-    final power = ProgressionRules.displayPower(
+    final effectiveLevel = ProgressionRules.effectiveMercenaryLevel(progress);
+    final power = ProgressionRules.displayPowerForProgress(
       catalogPower: mercenary.power,
       catalogLevel: mercenary.level,
-      permanentLevel: progress.level,
+      progress: progress,
     );
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -485,13 +503,13 @@ class _InfoTab extends StatelessWidget {
         ...[
           (
             'HP',
-            '${(mercenary.maxHp * ProgressionRules.mercenaryHpMultiplier(mercenary.level, progress.level)).round()}',
+            '${(mercenary.maxHp * ProgressionRules.mercenaryHpMultiplier(mercenary.level, effectiveLevel)).round()}',
           ),
           (
             '공격력',
-            '${(mercenary.baseDamage * 715 * (.45 + .55 * progress.level / mercenary.level)).round()}',
+            '${(mercenary.baseDamage * 715 * (.45 + .55 * effectiveLevel / mercenary.level)).round()}',
           ),
-          ('방어력', '${920 + progress.level * 4}'),
+          ('방어력', '${920 + effectiveLevel * 4}'),
           ('치명타', mercenary.style == CombatStyle.blades ? '32.5%' : '18.0%'),
           ('회피', mercenary.style == CombatStyle.blades ? '24.1%' : '12.0%'),
           ('공격속도', (1 / mercenary.attackInterval).toStringAsFixed(2)),
@@ -552,6 +570,7 @@ class _GrowthTab extends StatelessWidget {
     required this.gold,
     required this.onTrain,
     required this.onAscend,
+    required this.onLimitBreak,
   });
   final MercenarySpec mercenary;
   final MercenaryProgress progress;
@@ -559,16 +578,20 @@ class _GrowthTab extends StatelessWidget {
   final int gold;
   final VoidCallback onTrain;
   final VoidCallback onAscend;
+  final VoidCallback onLimitBreak;
   @override
   Widget build(BuildContext context) {
     final capped = progress.level >= progress.levelCap;
-    final requiredXp = ProgressionRules.mercenaryXpToNext(progress.level);
+    final requiredXp = ProgressionRules.mercenaryXpToNext(
+      progress.level,
+      grade: progress.ascension,
+    );
     final sealCost = ProgressionRules.ascensionCost(progress.ascension);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          'Lv.${progress.level} / ${progress.levelCap}  ·  승급 ${progress.ascension} / 2',
+          '${progress.grade}급  Lv.${progress.level} / ${progress.levelCap}  ·  ★${progress.stars}',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
@@ -593,20 +616,36 @@ class _GrowthTab extends StatelessWidget {
           prominent: !capped,
         ),
         const SizedBox(height: 6),
-        const Text(
-          '소모: 1,000 골드 · 야전 식량 1개',
+        Text(
+          '소모: ${CampMetaRules.trainingGoldCostFor(progress)} 골드 · 야전 식량 1개',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white54, fontSize: 10),
         ),
         const SizedBox(height: 12),
         FantasyButton(
-          label: progress.ascension >= 2 ? '최종 승급 완료' : '승급 · 상한 +5',
+          label: progress.ascension >= 6
+              ? 'S급 전공 완료'
+              : '${ProgressionRules.gradeName(progress.ascension + 1)}급 승급 · Lv.1 전환',
           icon: Icons.star_outline,
           onTap: onAscend,
         ),
         const SizedBox(height: 6),
         Text(
           '조건: Lv.${progress.levelCap} · 계약 인장 $sealCost개',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white54, fontSize: 10),
+        ),
+        const SizedBox(height: 12),
+        FantasyButton(
+          label: progress.stars >= 5
+              ? '★5 한계돌파 완료'
+              : '★${progress.stars + 1} 한계돌파',
+          icon: Icons.workspace_premium_outlined,
+          onTap: onLimitBreak,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '전용 증표 ${inventory['${mercenary.id}_token'] ?? 0} · 전승 인장 ${inventory['legacy_sigil'] ?? 0} · 필요 ${ProgressionRules.limitBreakTokenCost(progress.stars)}',
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.white54, fontSize: 10),
         ),

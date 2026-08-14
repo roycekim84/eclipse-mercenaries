@@ -645,7 +645,7 @@ const releaseMissions = <MissionSpec>[
     id: 'roster_8',
     level: 24,
     title: '월식 용병단',
-    description: '용병 8명을 모두 계약한다.',
+    description: '용병 8명을 계약한다.',
     rewardLabel: '왕실 칙서 ×2 · 15,000 골드',
     category: MissionCategory.mastery,
     requirement: MissionRequirement.ownedMercenaries,
@@ -667,10 +667,27 @@ abstract final class CampMetaRules {
   static const forgeScrapCost = 2;
   static const forgeXp = 500;
 
+  static int trainingGoldCostFor(MercenaryProgress progress) =>
+      600 + progress.ascension * 350 + progress.level * 45;
+
+  static int forgeGoldCostFor(WeaponProgress progress) =>
+      500 + progress.level * 180;
+
   static bool missionUnlocked(String id, Set<String> claimedMissionIds) {
     final mission = releaseMissions.firstWhere((item) => item.id == id);
-    return mission.prerequisiteId == null ||
-        claimedMissionIds.contains(mission.prerequisiteId);
+    if (mission.category == MissionCategory.prologue) {
+      return mission.prerequisiteId == null ||
+          claimedMissionIds.contains(mission.prerequisiteId);
+    }
+    if (!claimedMissionIds.contains('tempered_edge')) return false;
+    final earlierInTrack = releaseMissions
+        .where(
+          (item) =>
+              item.category == mission.category && item.level < mission.level,
+        )
+        .toList();
+    if (earlierInTrack.isEmpty) return true;
+    return claimedMissionIds.contains(earlierInTrack.last.id);
   }
 
   static bool canTrain({
@@ -679,11 +696,16 @@ abstract final class CampMetaRules {
     required MercenaryProgress progress,
   }) =>
       progress.level < progress.levelCap &&
-      gold >= trainingGoldCost &&
+      gold >= trainingGoldCostFor(progress) &&
       rations >= trainingRationCost;
 
-  static bool canForge({required int gold, required int scrap}) =>
-      gold >= forgeGoldCost && scrap >= forgeScrapCost;
+  static bool canForge({
+    required int gold,
+    required int scrap,
+    WeaponProgress? progress,
+  }) =>
+      gold >= (progress == null ? forgeGoldCost : forgeGoldCostFor(progress)) &&
+      scrap >= forgeScrapCost;
 
   static int missionProgress(
     MissionSpec mission, {

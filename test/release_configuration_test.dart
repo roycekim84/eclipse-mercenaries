@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.11.0+20'));
+    expect(pubspec, contains('version: 0.13.0+21'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));
@@ -178,6 +178,14 @@ void main() {
       'assets/images/vesta_corven_fullbody.png',
       'assets/images/rask_draven_fullbody.png',
       'assets/images/iris_noctis_fullbody.png',
+      'assets/images/mercenaries/mira.png',
+      'assets/images/mercenaries/garr.png',
+      'assets/images/mercenaries/talia.png',
+      'assets/images/mercenaries/fenn.png',
+      'assets/images/mercenaries/elka.png',
+      'assets/images/mercenaries/soren.png',
+      'assets/images/mercenaries/corva.png',
+      'assets/images/mercenaries/silas.png',
     ];
     for (final path in portraitPaths) {
       final file = File(path);

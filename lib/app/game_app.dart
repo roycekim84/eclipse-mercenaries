@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/game.dart';
@@ -285,7 +286,7 @@ class GameShellState extends State<GameShell> {
     );
     _updateAccount(
       account.copyWith(
-        gold: gold - CampMetaRules.trainingGoldCost,
+        gold: gold - CampMetaRules.trainingGoldCostFor(progress),
         inventory: {...account.inventory, 'field_ration': rations - 1},
         mercenaryProgress: {
           ...account.mercenaryProgress,
@@ -320,18 +321,51 @@ class GameShellState extends State<GameShell> {
           ),
         },
       ),
-      '${mercenary.name} 승급 완료 · 레벨 상한 +5',
+      '${mercenary.name} ${ProgressionRules.gradeName(progress.ascension + 1)}급 승급 · Lv.1부터 새 전공을 시작합니다.',
+    );
+  }
+
+  void limitBreakMercenary(MercenarySpec mercenary) {
+    final progress = account.mercenaryProgress[mercenary.id]!;
+    final tokenId = '${mercenary.id}_token';
+    final dedicated = account.inventory[tokenId] ?? 0;
+    final legacy = account.inventory['legacy_sigil'] ?? 0;
+    final cost = ProgressionRules.limitBreakTokenCost(progress.stars);
+    if (progress.stars >= 5 || dedicated + legacy < cost) {
+      setState(
+        () => actionNotice = progress.stars >= 5
+            ? '이미 ★5 한계돌파를 완료했습니다.'
+            : '전용 증표와 전승 인장이 합계 $cost개 필요합니다.',
+      );
+      return;
+    }
+    final useDedicated = dedicated.clamp(0, cost);
+    final useLegacy = cost - useDedicated;
+    _updateAccount(
+      account.copyWith(
+        inventory: {
+          ...account.inventory,
+          tokenId: dedicated - useDedicated,
+          'legacy_sigil': legacy - useLegacy,
+        },
+        mercenaryProgress: {
+          ...account.mercenaryProgress,
+          mercenary.id: ProgressionRules.limitBreak(progress),
+        },
+      ),
+      '${mercenary.name} ★${progress.stars + 1} 한계돌파 완료',
     );
   }
 
   void forgeWeapon(WeaponSpec weapon) {
     final scrap = account.inventory['war_scrap'] ?? 0;
-    if (!CampMetaRules.canForge(gold: gold, scrap: scrap)) {
+    final progress = account.weaponProgress[weapon.id]!;
+    final forgeCost = CampMetaRules.forgeGoldCostFor(progress);
+    if (!CampMetaRules.canForge(gold: gold, scrap: scrap, progress: progress)) {
       unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
-      setState(() => actionNotice = '강화에는 700 골드와 전장 고철 2개가 필요합니다.');
+      setState(() => actionNotice = '강화에는 $forgeCost 골드와 전장 고철 2개가 필요합니다.');
       return;
     }
-    final progress = account.weaponProgress[weapon.id]!;
     if (progress.level >= 20) {
       unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(() => actionNotice = '이미 최대 강화 단계입니다.');
@@ -339,7 +373,7 @@ class GameShellState extends State<GameShell> {
     }
     _updateAccount(
       account.copyWith(
-        gold: gold - CampMetaRules.forgeGoldCost,
+        gold: gold - forgeCost,
         inventory: {...account.inventory, 'war_scrap': scrap - 2},
         weaponProgress: {
           ...account.weaponProgress,
@@ -431,7 +465,6 @@ class GameShellState extends State<GameShell> {
       tickets: tickets,
     )) {
       unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
-      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
       setState(
         () => actionNotice = count == 1
             ? '계약서 또는 크리스탈이 부족합니다.'
@@ -445,10 +478,15 @@ class GameShellState extends State<GameShell> {
         : count == 1
         ? RecruitmentRules.singleCrystalCost
         : RecruitmentRules.tenCrystalCost;
-    final results = RecruitmentRules.roll(
-      startIndex: account.recruitmentCount,
-      count: count,
-    );
+    // The first contract is a designed onboarding beat: it always opens the
+    // support slot with Mira instead of risking a duplicate of starter Luna.
+    final results = account.recruitmentCount == 0 && count == 1
+        ? <String>[RecruitmentRules.onboardingRecruitId]
+        : RecruitmentRules.roll(
+            startIndex: account.recruitmentCount,
+            count: count,
+            random: math.Random.secure(),
+          );
     final copies = Map<String, int>.of(account.mercenaryCopies);
     final mercenaryProgress = Map<String, MercenaryProgress>.of(
       account.mercenaryProgress,
@@ -470,6 +508,7 @@ class GameShellState extends State<GameShell> {
         final tokenId = '${id}_token';
         inventory[tokenId] =
             (inventory[tokenId] ?? 0) + RecruitmentRules.duplicateTokenReward;
+        inventory['legacy_sigil'] = (inventory['legacy_sigil'] ?? 0) + 2;
       } else {
         mercenaryProgress[id] = const MercenaryProgress(
           level: 1,
@@ -598,21 +637,27 @@ class GameShellState extends State<GameShell> {
     final weaponBefore =
         account.weaponProgress[equippedWeapon.id] ??
         const WeaponProgress(level: 1, xp: 0, stage: 1);
+    final supportId = account.selectedSupportMercenaryId;
+    final dispatchId = account.selectedDispatchMercenaryId;
+    final dispatchXpBonus = dispatchId == 'fenn' ? (value.xp * .08).round() : 0;
+    final earnedXp = value.xp + dispatchXpBonus;
     final mercenaryAfter = ProgressionRules.addMercenaryXp(
       mercenaryBefore,
-      value.xp,
+      earnedXp,
     );
-    final weaponXp = (value.xp / 2).round();
+    final weaponXp = (earnedXp / 2).round();
     final weaponAfter = ProgressionRules.addWeaponXp(weaponBefore, weaponXp);
     final inventoryAdded = ProgressionRules.lootQuantities(value.lootDrops);
     final commanderProgress = ProgressionRules.addCommanderXp(
       account.commanderLevel,
       account.commanderXp,
-      (value.xp / 2).round(),
+      (earnedXp / 2).round(),
     );
     final factionId = selected.factionId;
     final operation = WarOperationRules.forFaction(factionId);
-    final reputationGain = FactionRules.reputationGain(value.outcome.name);
+    final reputationGain =
+        FactionRules.reputationGain(value.outcome.name) +
+        (dispatchId == 'corva' ? 2 : 0);
     final warSealGain = switch (value.outcome) {
       BattleOutcome.victory => 12 + value.completedBonusIds.length * 2,
       BattleOutcome.retreat => 5,
@@ -630,10 +675,28 @@ class GameShellState extends State<GameShell> {
         factionId == 'aurum_league' && value.outcome == BattleOutcome.victory
         ? 300
         : 0;
+    final dispatchGoldBonus = dispatchId == 'talia'
+        ? (value.gold * .18).round()
+        : 0;
+    final medicRecoveryBonus =
+        supportId == 'mira' && value.outcome != BattleOutcome.victory
+        ? (value.gold * .10).round()
+        : 0;
+    final serviceInventory = <String, int>{
+      if (supportId == 'mira') 'field_medicine': 1,
+      if (supportId == 'elka') 'war_scrap': 1,
+      if (dispatchId == 'talia') 'field_ration': 1,
+      if (dispatchId == 'silas') 'tempered_iron': 1,
+    };
     final nextAccount = account.copyWith(
       commanderLevel: commanderProgress.level,
       commanderXp: commanderProgress.xp,
-      gold: account.gold + value.gold + patronGoldBonus,
+      gold:
+          account.gold +
+          value.gold +
+          patronGoldBonus +
+          dispatchGoldBonus +
+          medicRecoveryBonus,
       warSeals: account.warSeals + warSealGain,
       honor: account.honor + honorGain,
       factionReputation: {
@@ -647,6 +710,15 @@ class GameShellState extends State<GameShell> {
           value.outcome.name,
         ),
       },
+      clearedContractIds: value.outcome == BattleOutcome.victory
+          ? {...account.clearedContractIds, selected.id}
+          : account.clearedContractIds,
+      dispatchProgress: {
+        ...account.dispatchProgress,
+        ?dispatchId:
+            (account.dispatchProgress[dispatchId] ?? 0) +
+            (value.outcome == BattleOutcome.victory ? 1 : 0),
+      },
       mercenaryProgress: {
         ...account.mercenaryProgress,
         selectedMercenary.id: mercenaryAfter,
@@ -659,6 +731,11 @@ class GameShellState extends State<GameShell> {
         ...account.inventory,
         for (final entry in inventoryAdded.entries)
           entry.key: (account.inventory[entry.key] ?? 0) + entry.value,
+        for (final entry in serviceInventory.entries)
+          entry.key:
+              (account.inventory[entry.key] ?? 0) +
+              (inventoryAdded[entry.key] ?? 0) +
+              entry.value,
       },
       battleDiagnostics: BattleDiagnosticRules.append(
         account.battleDiagnostics,
@@ -682,22 +759,34 @@ class GameShellState extends State<GameShell> {
     setState(() {
       _account = nextAccount;
       report = value;
+      final receiptInventory = <String, int>{...inventoryAdded};
+      for (final entry in serviceInventory.entries) {
+        receiptInventory[entry.key] =
+            (receiptInventory[entry.key] ?? 0) + entry.value;
+      }
       growthReceipt = GrowthReceipt(
         mercenaryId: selectedMercenary.id,
         mercenaryBefore: mercenaryBefore,
         mercenaryAfter: mercenaryAfter,
-        mercenaryXpGained: value.xp,
+        mercenaryXpGained: earnedXp,
         weaponId: equippedWeapon.id,
         weaponBefore: weaponBefore,
         weaponAfter: weaponAfter,
         weaponXpGained: weaponXp,
-        inventoryAdded: inventoryAdded,
+        inventoryAdded: receiptInventory,
       );
       scene = AppScene.result;
     });
   }
 
   void startBattle() {
+    if (!selectedMercenary.canDeploy) {
+      setState(
+        () => actionNotice =
+            '${selectedMercenary.name}은 ${mercenaryDutyName(selectedMercenary.duty)} 전담 용병입니다. 출전 영웅을 선택하십시오.',
+      );
+      return;
+    }
     unawaited(
       GameAudioFeedback.battleAmbience(account.settings, selected.battlefield),
     );
@@ -802,6 +891,22 @@ class GameShellState extends State<GameShell> {
                   selected: selectedMercenary,
                   equippedWeapon: equippedWeapon,
                   mercenaryProgress: account.mercenaryProgress,
+                  selectedSupportId: account.selectedSupportMercenaryId,
+                  selectedDispatchId: account.selectedDispatchMercenaryId,
+                  onSupportSelect: (mercenary) => _updateAccount(
+                    account.copyWith(selectedSupportMercenaryId: mercenary?.id),
+                    mercenary == null
+                        ? '지원 용병 배치를 해제했습니다.'
+                        : '${mercenary.name}을 지원 슬롯에 배치했습니다.',
+                  ),
+                  onDispatchSelect: (mercenary) => _updateAccount(
+                    account.copyWith(
+                      selectedDispatchMercenaryId: mercenary?.id,
+                    ),
+                    mercenary == null
+                        ? '파견 용병 배치를 해제했습니다.'
+                        : '${mercenary.name}을 파견 슬롯에 배치했습니다.',
+                  ),
                   onSelect: (mercenary) {
                     setState(() {
                       selectedMercenary = mercenary;
@@ -889,6 +994,7 @@ class GameShellState extends State<GameShell> {
                   notice: actionNotice,
                   onTrain: () => trainMercenary(selectedMercenary),
                   onAscend: () => ascendMercenary(selectedMercenary),
+                  onLimitBreak: () => limitBreakMercenary(selectedMercenary),
                   onEquipment: () => openEquipment(AppScene.detail),
                   onBack: () => go(AppScene.roster),
                 ),
@@ -916,14 +1022,18 @@ class GameShellState extends State<GameShell> {
                   audioSettings: account.settings,
                   inputMode: account.settings.battleInputMode,
                   targetPriority: account.settings.autoTargetPriority,
-                  gearBonus: GearRules.combatBonus(
-                    GearSlot.values.map(
-                      (slot) =>
-                          account.equippedGearByMercenary[GearRules.key(
-                            selectedMercenary.id,
-                            slot,
-                          )]!,
+                  gearBonus: applySupportCombatBonus(
+                    base: GearRules.combatBonus(
+                      GearSlot.values.map(
+                        (slot) =>
+                            account.equippedGearByMercenary[GearRules.key(
+                              selectedMercenary.id,
+                              slot,
+                            )]!,
+                      ),
                     ),
+                    supportId: account.selectedSupportMercenaryId,
+                    contract: selected,
                   ),
                   onExit: () => go(AppScene.camp),
                   onVictory: finishBattle,
@@ -1071,6 +1181,28 @@ class BattlefieldContract {
   final Color color;
   final IconData icon;
   final StageBalanceProfile balance;
+}
+
+GearCombatBonus applySupportCombatBonus({
+  required GearCombatBonus base,
+  required String? supportId,
+  required BattlefieldContract contract,
+}) {
+  final defensive = supportId == 'garr' ? 1.12 : 1.0;
+  final hunting =
+      supportId == 'soren' &&
+          (contract.objective == ContractObjective.ambush ||
+              contract.objective == ContractObjective.assassination)
+      ? 1.10
+      : 1.0;
+  return GearCombatBonus(
+    hpMultiplier: base.hpMultiplier * defensive,
+    damageMultiplier: base.damageMultiplier * hunting,
+    speedMultiplier: base.speedMultiplier,
+    criticalChance: base.criticalChance,
+    dashCooldownMultiplier: base.dashCooldownMultiplier,
+    tacticalCooldownMultiplier: base.tacticalCooldownMultiplier,
+  );
 }
 
 const contracts = [
@@ -1234,6 +1366,122 @@ const contracts = [
       eliteStride: 52,
       firstEventAt: 12,
       eventInterval: 13,
+    ),
+  ),
+  BattlefieldContract(
+    id: 'veteran_northwall',
+    factionId: 'aurum_league',
+    battlefield: BattlefieldType.gateDefense,
+    condition: BattlefieldCondition.moonlitNight,
+    objective: ContractObjective.defense,
+    battlefieldName: '북벽 외성',
+    name: '정예 · 무너진 외성',
+    subtitle: '정예 공성대의 세 차례 돌격을 저지하라',
+    power: 32000,
+    requiredCommanderLevel: 18,
+    reward: 9800,
+    xp: 3400,
+    color: Color(0xff5f4930),
+    icon: Icons.military_tech_outlined,
+    balance: StageBalanceProfile(
+      durationSeconds: 105,
+      unitCount: 1050,
+      initialDeployment: 138,
+      activePopulationTarget: 285,
+      reinforcementInterval: 3.25,
+      enemyHpMultiplier: 1.48,
+      enemyDamageBonus: 4,
+      enemySpeedMultiplier: 1.13,
+      eliteStride: 42,
+      firstEventAt: 12,
+      eventInterval: 13,
+    ),
+  ),
+  BattlefieldContract(
+    id: 'grey_bounty_hunt',
+    factionId: 'grey_banner',
+    battlefield: BattlefieldType.assassination,
+    condition: BattlefieldCondition.blackForest,
+    objective: ContractObjective.assassination,
+    battlefieldName: '검은숲 현상금 지대',
+    name: '현상금 · 세 개의 목',
+    subtitle: '이름난 지휘관들을 차례로 추적하라',
+    power: 36500,
+    requiredCommanderLevel: 22,
+    reward: 11800,
+    xp: 3900,
+    color: Color(0xff594062),
+    icon: Icons.track_changes,
+    balance: StageBalanceProfile(
+      durationSeconds: 110,
+      unitCount: 1120,
+      initialDeployment: 142,
+      activePopulationTarget: 295,
+      reinforcementInterval: 3.05,
+      enemyHpMultiplier: 1.62,
+      enemyDamageBonus: 5,
+      enemySpeedMultiplier: 1.16,
+      eliteStride: 36,
+      firstEventAt: 11,
+      eventInterval: 12,
+    ),
+  ),
+  BattlefieldContract(
+    id: 'nightmare_ashroad',
+    factionId: 'ember_principality',
+    battlefield: BattlefieldType.evacuation,
+    condition: BattlefieldCondition.ashWind,
+    objective: ContractObjective.evacuation,
+    battlefieldName: '핏빛 잿바람길',
+    name: '악몽 · 붉은 철수령',
+    subtitle: '붉은 달 아래 마지막 부상병까지 철수시켜라',
+    power: 42000,
+    requiredCommanderLevel: 26,
+    reward: 14200,
+    xp: 4700,
+    color: Color(0xff73383a),
+    icon: Icons.nightlight_round,
+    balance: StageBalanceProfile(
+      durationSeconds: 120,
+      unitCount: 1250,
+      initialDeployment: 150,
+      activePopulationTarget: 315,
+      reinforcementInterval: 2.85,
+      enemyHpMultiplier: 1.78,
+      enemyDamageBonus: 6,
+      enemySpeedMultiplier: 1.19,
+      eliteStride: 31,
+      firstEventAt: 10,
+      eventInterval: 11,
+    ),
+  ),
+  BattlefieldContract(
+    id: 'royal_commander_finale',
+    factionId: 'grey_banner',
+    battlefield: BattlefieldType.fortressRetake,
+    condition: BattlefieldCondition.twilightSiege,
+    objective: ContractObjective.fortressRetake,
+    battlefieldName: '황혼 왕성 전면',
+    name: '지휘관전 · 왕의 친정',
+    subtitle: '왕의 친위대와 최고 지휘관을 격파하라',
+    power: 50000,
+    requiredCommanderLevel: 30,
+    reward: 18000,
+    xp: 5600,
+    color: Color(0xff8b6939),
+    icon: Icons.workspace_premium_outlined,
+    balance: StageBalanceProfile(
+      durationSeconds: 135,
+      unitCount: 1400,
+      initialDeployment: 160,
+      activePopulationTarget: 340,
+      reinforcementInterval: 2.65,
+      enemyHpMultiplier: 1.95,
+      enemyDamageBonus: 7,
+      enemySpeedMultiplier: 1.21,
+      eliteStride: 26,
+      firstEventAt: 9,
+      eventInterval: 10,
     ),
   ),
 ];

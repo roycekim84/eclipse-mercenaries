@@ -154,7 +154,7 @@ abstract final class ContentCatalogValidator {
             '${mercenary.signatureWeaponId} 무기가 없습니다.',
           ),
         );
-      } else if (signature.ownerId != mercenary.id) {
+      } else if (mercenary.canDeploy && signature.ownerId != mercenary.id) {
         issues.add(
           ContentValidationIssue(
             'signature_owner_mismatch',

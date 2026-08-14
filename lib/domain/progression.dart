@@ -5,18 +5,22 @@ class MercenaryProgress {
     required this.level,
     required this.xp,
     required this.ascension,
+    this.stars = 1,
   });
 
   final int level;
   final int xp;
   final int ascension;
+  final int stars;
 
-  int get levelCap => 50 + ascension.clamp(0, 2) * 5;
+  int get levelCap => ProgressionRules.levelCapForGrade(ascension);
+  String get grade => ProgressionRules.gradeName(ascension);
 
   Map<String, Object> toJson() => {
     'level': level,
     'xp': xp,
     'ascension': ascension,
+    'stars': stars,
   };
 
   factory MercenaryProgress.fromJson(Map<String, Object?> json) =>
@@ -24,6 +28,7 @@ class MercenaryProgress {
         level: (json['level'] as num?)?.toInt() ?? 1,
         xp: (json['xp'] as num?)?.toInt() ?? 0,
         ascension: (json['ascension'] as num?)?.toInt() ?? 0,
+        stars: ((json['stars'] as num?)?.toInt() ?? 1).clamp(1, 5),
       );
 }
 
@@ -72,6 +77,22 @@ class GrowthReceipt {
 }
 
 abstract final class ProgressionRules {
+  static const gradeNames = ['F', 'E', 'D', 'C', 'B', 'A', 'S'];
+  static const gradeLevelCaps = [10, 15, 20, 25, 30, 35, 40];
+
+  static String gradeName(int grade) => gradeNames[grade.clamp(0, 6)];
+  static int levelCapForGrade(int grade) => gradeLevelCaps[grade.clamp(0, 6)];
+
+  static int effectiveMercenaryLevel(MercenaryProgress progress) {
+    var completed = 0;
+    for (var grade = 0; grade < progress.ascension.clamp(0, 6); grade++) {
+      completed += gradeLevelCaps[grade];
+    }
+    return completed + progress.level;
+  }
+
+  static double gradePowerMultiplier(MercenaryProgress progress) =>
+      1 + progress.ascension.clamp(0, 6) * .12 + (progress.stars - 1) * .045;
   static int commanderXpToNext(int level) => 800 + level * 200;
 
   static ({int level, int xp}) addCommanderXp(int level, int xp, int gained) {
@@ -104,9 +125,32 @@ abstract final class ProgressionRules {
     return (catalogPower * (.28 + .72 * ratio)).round();
   }
 
-  static int mercenaryXpToNext(int level) => 400 + level * 80;
+  static int displayPowerForProgress({
+    required int catalogPower,
+    required int catalogLevel,
+    required MercenaryProgress progress,
+  }) =>
+      (displayPower(
+                catalogPower: catalogPower,
+                catalogLevel: catalogLevel,
+                permanentLevel: effectiveMercenaryLevel(progress),
+              ) *
+              gradePowerMultiplier(progress))
+          .round();
+
+  static int mercenaryXpToNext(int level, {int grade = 0}) =>
+      260 + level * 70 + grade * 180;
   static int weaponXpToNext(int level) => 250 + level * 100;
   static int ascensionCost(int ascension) => 2 + ascension * 2;
+  static int legacyGradeForLevel(int level) => switch (level) {
+    >= 40 => 6,
+    >= 35 => 5,
+    >= 30 => 4,
+    >= 25 => 3,
+    >= 20 => 2,
+    >= 10 => 1,
+    _ => 0,
+  };
 
   static double mercenaryHpMultiplier(int baseLevel, int permanentLevel) =>
       permanentLevel < baseLevel
@@ -133,7 +177,7 @@ abstract final class ProgressionRules {
   }
 
   static bool canAscend(MercenaryProgress current, int availableSigils) =>
-      current.ascension < 2 &&
+      current.ascension < 6 &&
       current.level >= current.levelCap &&
       availableSigils >= ascensionCost(current.ascension);
 
@@ -143,11 +187,25 @@ abstract final class ProgressionRules {
   }) {
     if (!canAscend(current, availableSigils)) return current;
     return MercenaryProgress(
-      level: current.level,
+      level: 1,
       xp: 0,
       ascension: current.ascension + 1,
+      stars: current.stars,
     );
   }
+
+  static int limitBreakTokenCost(int stars) => 20 + (stars - 1) * 15;
+
+  static bool canLimitBreak(MercenaryProgress current, int tokens) =>
+      current.stars < 5 && tokens >= limitBreakTokenCost(current.stars);
+
+  static MercenaryProgress limitBreak(MercenaryProgress current) =>
+      MercenaryProgress(
+        level: current.level,
+        xp: current.xp,
+        ascension: current.ascension,
+        stars: (current.stars + 1).clamp(1, 5),
+      );
 
   static MercenaryProgress addMercenaryXp(
     MercenaryProgress current,
@@ -156,7 +214,7 @@ abstract final class ProgressionRules {
     var level = current.level;
     var xp = current.xp + gained;
     while (level < current.levelCap) {
-      final needed = mercenaryXpToNext(level);
+      final needed = mercenaryXpToNext(level, grade: current.ascension);
       if (xp < needed) break;
       xp -= needed;
       level++;
@@ -166,6 +224,7 @@ abstract final class ProgressionRules {
       level: level,
       xp: xp,
       ascension: current.ascension,
+      stars: current.stars,
     );
   }
 

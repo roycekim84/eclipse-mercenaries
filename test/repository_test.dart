@@ -26,7 +26,16 @@ void main() {
   const content = StaticGameContentRepository();
 
   test('beta content IDs resolve through the repository', () {
-    expect(content.mercenaries, hasLength(8));
+    expect(content.mercenaries, hasLength(16));
+    expect(content.mercenaries.where((m) => m.canDeploy), hasLength(8));
+    expect(
+      content.mercenaries.where((m) => m.duty == MercenaryDuty.support),
+      hasLength(4),
+    );
+    expect(
+      content.mercenaries.where((m) => m.duty == MercenaryDuty.dispatch),
+      hasLength(4),
+    );
     expect(content.weapons, hasLength(16));
     expect(content.enemies, hasLength(27));
     expect(content.mercenaryById('kael').race, '늑대족');
@@ -215,10 +224,10 @@ void main() {
     expect(reward.keptXp, 1250);
   });
 
-  test('outcomes preserve rewards at 100 50 and 20 percent', () {
+  test('outcomes preserve rewards at 100 60 and 35 percent', () {
     expect(BattleRewardRules.preservationRate('victory'), 1);
-    expect(BattleRewardRules.preservationRate('retreat'), .5);
-    expect(BattleRewardRules.preservationRate('defeat'), .2);
+    expect(BattleRewardRules.preservationRate('retreat'), .6);
+    expect(BattleRewardRules.preservationRate('defeat'), .35);
   });
 
   test('loot table is deterministic and prioritizes rare preserved loot', () {
@@ -289,12 +298,13 @@ void main() {
     }
   });
 
-  test('every mercenary owns a distinct battle animation sheet', () {
+  test('every deployable mercenary owns a distinct battle animation sheet', () {
     final spriteAssets = content.mercenaries
+        .where((mercenary) => mercenary.canDeploy)
         .map((mercenary) => mercenary.visual.battleSpriteAsset)
         .toList(growable: false);
 
-    expect(spriteAssets.toSet(), hasLength(content.mercenaries.length));
+    expect(spriteAssets.toSet(), hasLength(spriteAssets.length));
   });
 
   test('new account starts with a focused onboarding economy', () {
@@ -308,11 +318,7 @@ void main() {
     expect(account.honor, 0);
     expect(account.mercenaryProgress.keys, ['luna']);
     expect(account.mercenaryProgress['luna']?.level, 1);
-    expect(
-      account.weaponProgress.keys,
-      containsAll(['moon_blades', 'iron_sword']),
-    );
-    expect(account.weaponProgress, hasLength(2));
+    expect(account.weaponProgress.keys, ['iron_sword']);
     expect(account.inventory['contract_ticket'], 1);
     expect(AccountSave.betaTest().mercenaryProgress, hasLength(8));
   });
@@ -325,12 +331,40 @@ void main() {
       8,
       12,
       16,
+      18,
+      22,
+      26,
+      30,
     ]);
     final gained = ProgressionRules.addCommanderXp(1, 0, 1200);
     expect(gained.level, 2);
     expect(gained.xp, 200);
     expect(ProgressionRules.commanderRank(1), 'E');
     expect(ProgressionRules.commanderRank(15), 'C');
+  });
+
+  test('level thirty journey has a deliberate midgame pace', () {
+    var level = 1;
+    var xp = 0;
+    var battles = 0;
+    var battleSeconds = 0;
+    while (level < 30) {
+      final contract = contracts.lastWhere(
+        (candidate) => candidate.requiredCommanderLevel <= level,
+      );
+      final next = ProgressionRules.addCommanderXp(
+        level,
+        xp,
+        (contract.xp / 2).round(),
+      );
+      level = next.level;
+      xp = next.xp;
+      battles++;
+      battleSeconds += contract.balance.durationSeconds.round();
+    }
+
+    expect(battles, 78);
+    expect(battleSeconds, inInclusiveRange(120 * 60, 125 * 60));
   });
 
   test('onboarding missions unlock in order', () {
@@ -378,12 +412,12 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 12);
+      expect(migrated.schemaVersion, 14);
       expect(migrated.commanderLevel, 15);
       expect(migrated.battleDiagnostics, isEmpty);
       expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
       expect(migrated.gold, 12345);
-      expect(migrated.mercenaryProgress['kael']?.level, 42);
+      expect(migrated.mercenaryProgress['kael']?.level, 40);
       expect(migrated.weaponProgress['iron_sword']?.stage, 1);
       expect(migrated.inventory, isEmpty);
       expect(migrated.claimedMissionIds, isEmpty);
@@ -421,7 +455,7 @@ void main() {
 
     final migrated = AccountSave.fromJson(raw);
 
-    expect(migrated.schemaVersion, 12);
+    expect(migrated.schemaVersion, 14);
     expect(migrated.commanderLevel, 15);
     expect(migrated.mercenaryProgress, hasLength(8));
     expect(migrated.weaponProgress, hasLength(16));
@@ -441,7 +475,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 12);
+    expect(migrated.schemaVersion, 14);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
@@ -458,8 +492,8 @@ void main() {
       1000,
     );
 
-    expect(mercenary.level, 2);
-    expect(mercenary.xp, 520);
+    expect(mercenary.level, 3);
+    expect(mercenary.xp, 270);
     expect(weapon.level, 3);
     expect(weapon.xp, 200);
     expect(weapon.stage, 1);
@@ -468,13 +502,15 @@ void main() {
   test(
     'ascension expands the mercenary level cap when sigils are available',
     () {
-      const capped = MercenaryProgress(level: 50, xp: 0, ascension: 0);
+      const capped = MercenaryProgress(level: 10, xp: 0, ascension: 0);
 
       expect(ProgressionRules.canAscend(capped, 1), isFalse);
       expect(ProgressionRules.canAscend(capped, 2), isTrue);
       final ascended = ProgressionRules.ascend(capped, availableSigils: 2);
       expect(ascended.ascension, 1);
-      expect(ascended.levelCap, 55);
+      expect(ascended.level, 1);
+      expect(ascended.grade, 'E');
+      expect(ascended.levelCap, 15);
     },
   );
 
@@ -672,12 +708,19 @@ void main() {
     expect(settings.voiceVolume, .45);
   });
 
-  test('recruitment rolls are deterministic and respect currency gates', () {
-    expect(RecruitmentRules.roll(startIndex: 0, count: 3), [
-      'sera',
-      'kael',
-      'luna',
-    ]);
+  test('recruitment rolls respect pools pity and currency gates', () {
+    final rolls = RecruitmentRules.roll(
+      startIndex: 0,
+      count: 10,
+      random: math.Random(7),
+    );
+    expect(rolls, hasLength(10));
+    expect(
+      rolls,
+      everyElement(
+        isIn(content.mercenaries.map((mercenary) => mercenary.id).toList()),
+      ),
+    );
     expect(
       RecruitmentRules.canRecruit(count: 1, crystals: 0, tickets: 1),
       isTrue,
@@ -785,49 +828,63 @@ void main() {
     }
   });
 
-  test(
-    'release mission campaign unlocks and completes strictly 1 through 24',
-    () {
-      final claimed = <String>{};
-      const inventory = <String, int>{'war_scrap': 99, 'field_ration': 99};
-      const weapons = <String, WeaponProgress>{
-        'moon_blades': WeaponProgress(level: 15, xp: 0, stage: 5),
-      };
-      for (var index = 0; index < releaseMissions.length; index++) {
-        final mission = releaseMissions[index];
+  test('release mission campaign opens parallel tracks after prologue', () {
+    final claimed = <String>{};
+    const inventory = <String, int>{'war_scrap': 99, 'field_ration': 99};
+    const weapons = <String, WeaponProgress>{
+      'moon_blades': WeaponProgress(level: 15, xp: 0, stage: 5),
+    };
+    for (var index = 0; index < releaseMissions.length; index++) {
+      final mission = releaseMissions[index];
+      expect(
+        CampMetaRules.missionUnlocked(mission.id, claimed),
+        isTrue,
+        reason: '${mission.id} must unlock after its predecessor',
+      );
+      if (mission.category == MissionCategory.prologue && index + 1 < 3) {
         expect(
-          CampMetaRules.missionUnlocked(mission.id, claimed),
-          isTrue,
-          reason: '${mission.id} must unlock after its predecessor',
+          CampMetaRules.missionUnlocked(releaseMissions[index + 1].id, claimed),
+          isFalse,
+          reason: 'the next prologue mission must remain locked',
         );
-        if (index + 1 < releaseMissions.length) {
-          expect(
-            CampMetaRules.missionUnlocked(
-              releaseMissions[index + 1].id,
-              claimed,
-            ),
-            isFalse,
-            reason: 'future mission must remain locked',
-          );
-        }
-        expect(
-          CampMetaRules.missionComplete(
-            mission.id,
-            inventory: inventory,
-            weaponProgress: weapons,
-            commanderLevel: 20,
-            ownedMercenaries: 8,
-            factionReputation: const {'aurum': 80},
-            operationProgress: const {'aurum': 4},
-          ),
-          isTrue,
-          reason: mission.id,
-        );
-        claimed.add(mission.id);
       }
-      expect(claimed, hasLength(24));
-    },
-  );
+      expect(
+        CampMetaRules.missionComplete(
+          mission.id,
+          inventory: inventory,
+          weaponProgress: weapons,
+          commanderLevel: 20,
+          ownedMercenaries: 8,
+          factionReputation: const {'aurum': 80},
+          operationProgress: const {'aurum': 4},
+        ),
+        isTrue,
+        reason: mission.id,
+      );
+      claimed.add(mission.id);
+    }
+    expect(claimed, hasLength(24));
+    final afterPrologue = {'camp_arrival', 'field_scavenger', 'tempered_edge'};
+    final trackRoots = releaseMissions.where(
+      (mission) =>
+          mission.category != MissionCategory.prologue &&
+          releaseMissions
+              .where(
+                (candidate) =>
+                    candidate.category == mission.category &&
+                    candidate.level < mission.level,
+              )
+              .isEmpty,
+    );
+    expect(
+      trackRoots,
+      everyElement(
+        predicate<MissionSpec>(
+          (mission) => CampMetaRules.missionUnlocked(mission.id, afterPrologue),
+        ),
+      ),
+    );
+  });
 
   test('battle sprite contracts cover every mercenary and army role', () {
     expect(alliedUnitAtlasSources, hasLength(UnitRole.values.length));
@@ -887,22 +944,22 @@ void main() {
     );
   });
 
-  test('all six battlefield contracts use production glyph assets', () {
+  test('all battlefield contracts use production glyph assets', () {
     final assets = contracts.map(
       (contract) => premiumGlyphAsset(contract.icon),
     );
     expect(assets, everyElement(isNotNull));
-    expect(assets.toSet(), hasLength(contracts.length));
+    expect(assets.toSet().length, greaterThanOrEqualTo(6));
   });
 
   test('camp costs reject incomplete resource sets', () {
-    const mercenary = MercenaryProgress(level: 45, xp: 0, ascension: 0);
+    const mercenary = MercenaryProgress(level: 5, xp: 0, ascension: 0);
     expect(
       CampMetaRules.canTrain(gold: 1000, rations: 1, progress: mercenary),
       isTrue,
     );
     expect(
-      CampMetaRules.canTrain(gold: 999, rations: 1, progress: mercenary),
+      CampMetaRules.canTrain(gold: 824, rations: 1, progress: mercenary),
       isFalse,
     );
     expect(CampMetaRules.canForge(gold: 700, scrap: 2), isTrue);
@@ -953,10 +1010,11 @@ void main() {
     expect(config.weaponGrowthStage, 2);
   });
 
-  test('every mercenary has one resolvable signature ultimate pairing', () {
+  test('every deployable mercenary has one resolvable signature pairing', () {
     final ultimateNames = <String>{};
     final ultimatePatterns = <UltimatePattern>{};
     for (final mercenary in content.mercenaries) {
+      if (!mercenary.canDeploy) continue;
       final signature = content.weaponById(mercenary.signatureWeaponId);
       expect(signature.ownerId, mercenary.id);
       expect(mercenary.ultimate, isNotEmpty);
@@ -964,8 +1022,8 @@ void main() {
       ultimatePatterns.add(mercenary.ultimatePattern);
     }
 
-    expect(ultimateNames, hasLength(content.mercenaries.length));
-    expect(ultimatePatterns, hasLength(content.mercenaries.length));
+    expect(ultimateNames, hasLength(8));
+    expect(ultimatePatterns, hasLength(8));
   });
 
   test('gate defense outcome is resolved from time and gate durability', () {

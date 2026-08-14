@@ -32,6 +32,10 @@ class AccountSave {
     required this.shopRefreshCount,
     required this.battleDiagnostics,
     required this.settings,
+    required this.selectedSupportMercenaryId,
+    required this.selectedDispatchMercenaryId,
+    required this.dispatchProgress,
+    required this.clearedContractIds,
   });
 
   factory AccountSave.initial() => const AccountSave(
@@ -41,7 +45,7 @@ class AccountSave {
     gold: 5000,
     crystals: 600,
     selectedMercenaryId: 'luna',
-    equippedWeaponByMercenary: {'luna': 'moon_blades'},
+    equippedWeaponByMercenary: {'luna': 'iron_sword'},
     equippedGearByMercenary: {
       'luna:armor': 'moonweave_guard',
       'luna:accessory': 'nightfang_charm',
@@ -60,10 +64,7 @@ class AccountSave {
     mercenaryProgress: {
       'luna': MercenaryProgress(level: 1, xp: 0, ascension: 0),
     },
-    weaponProgress: {
-      'moon_blades': WeaponProgress(level: 1, xp: 0, stage: 1),
-      'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1),
-    },
+    weaponProgress: {'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1)},
     inventory: {'contract_ticket': 1},
     claimedMissionIds: {},
     warSeals: 0,
@@ -74,6 +75,10 @@ class AccountSave {
     shopRefreshCount: 0,
     battleDiagnostics: [],
     settings: GameSettings.defaults(),
+    selectedSupportMercenaryId: null,
+    selectedDispatchMercenaryId: null,
+    dispatchProgress: {},
+    clearedContractIds: {},
   );
 
   factory AccountSave.betaTest() => AccountSave.initial().copyWith(
@@ -167,7 +172,7 @@ class AccountSave {
     },
   );
 
-  static const currentSchemaVersion = 12;
+  static const currentSchemaVersion = 14;
 
   final int schemaVersion;
   final int commanderLevel;
@@ -191,6 +196,10 @@ class AccountSave {
   final int shopRefreshCount;
   final List<BattleDiagnosticRecord> battleDiagnostics;
   final GameSettings settings;
+  final String? selectedSupportMercenaryId;
+  final String? selectedDispatchMercenaryId;
+  final Map<String, int> dispatchProgress;
+  final Set<String> clearedContractIds;
 
   AccountSave copyWith({
     int? commanderLevel,
@@ -214,6 +223,10 @@ class AccountSave {
     int? shopRefreshCount,
     List<BattleDiagnosticRecord>? battleDiagnostics,
     GameSettings? settings,
+    Object? selectedSupportMercenaryId = _unset,
+    Object? selectedDispatchMercenaryId = _unset,
+    Map<String, int>? dispatchProgress,
+    Set<String>? clearedContractIds,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
     commanderLevel: commanderLevel ?? this.commanderLevel,
@@ -239,9 +252,17 @@ class AccountSave {
     shopRefreshCount: shopRefreshCount ?? this.shopRefreshCount,
     battleDiagnostics: battleDiagnostics ?? this.battleDiagnostics,
     settings: settings ?? this.settings,
+    selectedSupportMercenaryId: identical(selectedSupportMercenaryId, _unset)
+        ? this.selectedSupportMercenaryId
+        : selectedSupportMercenaryId as String?,
+    selectedDispatchMercenaryId: identical(selectedDispatchMercenaryId, _unset)
+        ? this.selectedDispatchMercenaryId
+        : selectedDispatchMercenaryId as String?,
+    dispatchProgress: dispatchProgress ?? this.dispatchProgress,
+    clearedContractIds: clearedContractIds ?? this.clearedContractIds,
   );
 
-  Map<String, Object> toJson() => {
+  Map<String, Object?> toJson() => {
     'schemaVersion': currentSchemaVersion,
     'commanderLevel': commanderLevel,
     'commanderXp': commanderXp,
@@ -272,6 +293,10 @@ class AccountSave {
         .map((record) => record.toJson())
         .toList(),
     'settings': settings.toJson(),
+    'selectedSupportMercenaryId': selectedSupportMercenaryId,
+    'selectedDispatchMercenaryId': selectedDispatchMercenaryId,
+    'dispatchProgress': dispatchProgress,
+    'clearedContractIds': clearedContractIds.toList(),
   };
 
   factory AccountSave.fromJson(Map<String, Object?> raw) {
@@ -328,6 +353,12 @@ class AccountSave {
       shopRefreshCount: (migrated['shopRefreshCount'] as num?)?.toInt() ?? 0,
       battleDiagnostics: _diagnostics(migrated['battleDiagnostics']),
       settings: GameSettings.fromJson(migrated['settings']),
+      selectedSupportMercenaryId:
+          migrated['selectedSupportMercenaryId'] as String?,
+      selectedDispatchMercenaryId:
+          migrated['selectedDispatchMercenaryId'] as String?,
+      dispatchProgress: _intMap(migrated['dispatchProgress']),
+      clearedContractIds: _stringSet(migrated['clearedContractIds']),
     );
   }
 
@@ -511,12 +542,52 @@ abstract final class SaveMigration {
       };
       version = 12;
     }
+    if (version < 13) {
+      final progress = current['mercenaryProgress'];
+      final migratedProgress = <String, Object?>{};
+      if (progress is Map) {
+        for (final entry in progress.entries) {
+          if (entry.key is! String || entry.value is! Map) continue;
+          final value = Map<String, Object?>.from(entry.value as Map);
+          final legacyLevel = (value['level'] as num?)?.toInt() ?? 1;
+          final grade = ProgressionRules.legacyGradeForLevel(legacyLevel);
+          migratedProgress[entry.key as String] = {
+            ...value,
+            'level': legacyLevel.clamp(
+              1,
+              ProgressionRules.levelCapForGrade(grade),
+            ),
+            'ascension': grade,
+            'stars': 1,
+          };
+        }
+      }
+      current = {
+        ...current,
+        'schemaVersion': 13,
+        'mercenaryProgress': migratedProgress,
+        'selectedSupportMercenaryId': null,
+        'dispatchProgress': <String, int>{},
+        'clearedContractIds': <String>[],
+      };
+      version = 13;
+    }
+    if (version < 14) {
+      current = {
+        ...current,
+        'schemaVersion': 14,
+        'selectedDispatchMercenaryId': null,
+      };
+      version = 14;
+    }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');
     }
     return current;
   }
 }
+
+const _unset = Object();
 
 abstract interface class KeyValueStore {
   Future<String?> getString(String key);

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 enum ShopCategory { general, war, honor }
 
 enum ShopCurrency { gold, warSeal, honor }
@@ -185,24 +187,45 @@ abstract final class RecruitmentRules {
   static const tenCrystalCost = 2700;
   static const duplicateTokenReward = 10;
   static const featuredGuarantee = 40;
-  static const _pool = [
-    'luna',
-    'kael',
-    'sera',
-    'nyra',
-    'aurel',
-    'vesta',
-    'rask',
-    'iris',
-  ];
+  static const onboardingRecruitId = 'mira';
+  static const _commonPool = ['mira', 'talia', 'fenn'];
+  static const _elitePool = ['garr', 'elka', 'soren', 'corva', 'silas'];
+  static const _heroicPool = ['nyra', 'vesta', 'rask', 'iris'];
+  static const _legendaryPool = ['luna', 'kael', 'sera', 'aurel'];
 
-  static List<String> roll({required int startIndex, required int count}) => [
-    for (var i = 0; i < count; i++)
-      if ((startIndex + i + 1) % featuredGuarantee == 0)
-        'luna'
-      else
-        _pool[((startIndex + i) * 7 + 2) % _pool.length],
-  ];
+  /// 공개 확률: 일반 48%, 정예 32%, 영웅 15%, 전설 5%.
+  static List<String> roll({
+    required int startIndex,
+    required int count,
+    math.Random? random,
+  }) {
+    final rng = random ?? math.Random(startIndex * 7919 + count * 104729);
+    final result = <String>[];
+    var hasEliteOrBetter = false;
+    for (var index = 0; index < count; index++) {
+      if ((startIndex + index + 1) % featuredGuarantee == 0) {
+        result.add('luna');
+        hasEliteOrBetter = true;
+        continue;
+      }
+      final value = rng.nextInt(100);
+      final pool = value < 48
+          ? _commonPool
+          : value < 80
+          ? _elitePool
+          : value < 95
+          ? _heroicPool
+          : _legendaryPool;
+      if (pool != _commonPool) hasEliteOrBetter = true;
+      result.add(pool[rng.nextInt(pool.length)]);
+    }
+    if (count == 10 && !hasEliteOrBetter) {
+      result[9] = _elitePool[rng.nextInt(_elitePool.length)];
+    }
+    return result;
+  }
+
+  static const publicRates = '일반 48% · 정예 32% · 영웅 15% · 전설 5%';
 
   static int guaranteeRemaining(int recruitmentCount) {
     final progress = recruitmentCount % featuredGuarantee;

@@ -61,7 +61,9 @@ class _BattleScreenState extends State<BattleScreen>
         contractName: widget.contract.name,
         contractGold: widget.contract.reward,
         contractXp: widget.contract.xp,
-        mercenaryPermanentLevel: widget.mercenaryProgress.level,
+        mercenaryPermanentLevel: ProgressionRules.effectiveMercenaryLevel(
+          widget.mercenaryProgress,
+        ),
         weaponPermanentLevel: widget.weaponProgress.level,
         weaponGrowthStage: widget.weaponProgress.stage,
         gearBonus: widget.gearBonus,

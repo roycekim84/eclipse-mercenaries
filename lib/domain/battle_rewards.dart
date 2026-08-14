@@ -85,8 +85,8 @@ class BattleAward {
 abstract final class BattleRewardRules {
   static double preservationRate(String outcome) => switch (outcome) {
     'victory' => 1,
-    'retreat' => .5,
-    _ => .2,
+    'retreat' => .6,
+    _ => .35,
   };
 
   static RewardBreakdown calculate({

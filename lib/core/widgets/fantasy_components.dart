@@ -57,6 +57,12 @@ String? premiumGlyphAsset(IconData icon) {
       icon == Icons.trending_up) {
     return 'assets/images/ui/glyphs/reputation.png';
   }
+  if (icon == Icons.track_changes) {
+    return 'assets/images/ui/glyphs/assassination.png';
+  }
+  if (icon == Icons.nightlight_round) {
+    return 'assets/images/ui/glyphs/omen.png';
+  }
   if (icon == Icons.medical_services_outlined ||
       icon == Icons.monitor_heart_outlined ||
       icon == Icons.health_and_safety) {
