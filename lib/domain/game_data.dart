@@ -283,7 +283,7 @@ const alphaMercenaries = <MercenarySpec>[
     ultimatePattern: UltimatePattern.foxfireIllusion,
     rarity: ContractRarity.common,
     duty: MercenaryDuty.support,
-    supportEffect: '패배 보상 보존 +10% · 회복품 획득 +1',
+    supportEffect: '철수·패배 골드 회수 +10% · 회복품 +1',
   ),
   MercenarySpec(
     id: 'garr',
@@ -349,7 +349,7 @@ const alphaMercenaries = <MercenarySpec>[
     ultimatePattern: UltimatePattern.earthPiercer,
     rarity: ContractRarity.common,
     duty: MercenaryDuty.dispatch,
-    supportEffect: '파견 완료 요구 전투 -1 · 사건 경험치 +8%',
+    supportEffect: '계약 경험치 +8% · 파견 기록 +1',
   ),
   MercenarySpec(
     id: 'elka',
@@ -371,7 +371,7 @@ const alphaMercenaries = <MercenarySpec>[
     ultimatePattern: UltimatePattern.skyTactics,
     rarity: ContractRarity.elite,
     duty: MercenaryDuty.support,
-    supportEffect: '공성 적 피해 +10% · 고철 획득 +1',
+    supportEffect: '방어·탈환 계약 공격력 +10% · 고철 +1',
   ),
   MercenarySpec(
     id: 'soren',
@@ -415,7 +415,7 @@ const alphaMercenaries = <MercenarySpec>[
     ultimatePattern: UltimatePattern.skyTactics,
     rarity: ContractRarity.elite,
     duty: MercenaryDuty.dispatch,
-    supportEffect: '세력 평판 +2 · 파견 작전 경험 +20%',
+    supportEffect: '세력 평판 +2 · 파견 기록 +1',
   ),
   MercenarySpec(
     id: 'silas',
@@ -437,7 +437,7 @@ const alphaMercenaries = <MercenarySpec>[
     ultimatePattern: UltimatePattern.foxfireIllusion,
     rarity: ContractRarity.elite,
     duty: MercenaryDuty.dispatch,
-    supportEffect: '훈련 골드 -10% · 파견 강화 재료 +1',
+    supportEffect: '파견 강화 재료 +1 · 파견 기록 +1',
   ),
 ];
 

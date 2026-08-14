@@ -221,6 +221,56 @@ void main() {
     );
   });
 
+  testWidgets(
+    'settings complete reset requires consent and restores onboarding',
+    (tester) async {
+      final progressed = AccountSave.betaTest().copyWith(
+        commanderLevel: 30,
+        gold: 999999,
+        settings: const GameSettings.defaults().copyWith(
+          tutorialCompleted: true,
+          soundEnabled: false,
+        ),
+        selectedSupportMercenaryId: 'mira',
+        selectedDispatchMercenaryId: 'talia',
+        clearedContractIds: const {'north_gate_defense'},
+      );
+      final repository = InMemorySaveRepository(progressed);
+      await tester.pumpWidget(
+        EclipseMercenariesApp(
+          saveRepository: repository,
+          enableTutorial: false,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 4 && find.text('완전 초기화').evaluate().isEmpty; i++) {
+        await tester.drag(find.byType(GridView), const Offset(0, -350));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('완전 초기화'), findsOneWidget);
+      await tester.tap(find.text('완전 초기화'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('용병단 기록 완전 초기화'), findsOneWidget);
+      final resetButton = find.widgetWithText(FilledButton, '모든 기록 초기화');
+      expect(tester.widget<FilledButton>(resetButton).onPressed, isNull);
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pumpAndSettle();
+      expect(tester.widget<FilledButton>(resetButton).onPressed, isNotNull);
+      await tester.tap(resetButton);
+      await tester.pumpAndSettle();
+
+      final restored = await repository.load();
+      expect(restored.toJson(), AccountSave.initial().toJson());
+      final shell = tester.state<GameShellState>(find.byType(GameShell));
+      expect(shell.scene, AppScene.camp);
+      expect(shell.account.toJson(), AccountSave.initial().toJson());
+    },
+  );
+
   testWidgets('contract flows into mercenary selection', (tester) async {
     await tester.pumpWidget(
       EclipseMercenariesApp(

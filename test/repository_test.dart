@@ -397,6 +397,68 @@ void main() {
   });
 
   test(
+    'complete reset removes primary and backup and restores new account',
+    () async {
+      final store = MemoryKeyValueStore();
+      final repository = JsonSaveRepository(store);
+      final progressed = AccountSave.betaTest().copyWith(
+        commanderLevel: 30,
+        commanderXp: 777,
+        settings: const GameSettings.defaults().copyWith(
+          tutorialCompleted: true,
+          soundEnabled: false,
+        ),
+        selectedSupportMercenaryId: 'mira',
+        selectedDispatchMercenaryId: 'talia',
+        clearedContractIds: const {'north_gate_defense'},
+      );
+      await repository.save(progressed);
+      await repository.save(progressed.copyWith(gold: 999999));
+
+      final reset = await repository.reset();
+
+      expect(reset.toJson(), AccountSave.initial().toJson());
+      expect(store.values.containsKey(JsonSaveRepository.backupKey), isFalse);
+      expect(reset.commanderLevel, 1);
+      expect(reset.mercenaryProgress.keys, {'luna'});
+      expect(reset.settings.tutorialCompleted, isFalse);
+      expect(reset.settings.soundEnabled, isTrue);
+      expect(reset.selectedSupportMercenaryId, isNull);
+      expect(reset.selectedDispatchMercenaryId, isNull);
+      expect(reset.clearedContractIds, isEmpty);
+    },
+  );
+
+  test('support copy promises match implemented deployment rules', () {
+    final elka = content.mercenaryById('elka');
+    final defense = contracts.firstWhere(
+      (contract) => contract.objective == ContractObjective.defense,
+    );
+    final ambush = contracts.firstWhere(
+      (contract) => contract.objective == ContractObjective.ambush,
+    );
+    const base = GearCombatBonus.none();
+
+    expect(elka.supportEffect, contains('방어·탈환 계약'));
+    expect(
+      applySupportCombatBonus(
+        base: base,
+        supportId: 'elka',
+        contract: defense,
+      ).damageMultiplier,
+      closeTo(1.10, .001),
+    );
+    expect(
+      applySupportCombatBonus(
+        base: base,
+        supportId: 'elka',
+        contract: ambush,
+      ).damageMultiplier,
+      1,
+    );
+  });
+
+  test(
     'version one save migrates progression, inventory, and missions',
     () async {
       final store = MemoryKeyValueStore({

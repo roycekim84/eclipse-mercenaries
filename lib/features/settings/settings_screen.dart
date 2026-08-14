@@ -8,6 +8,7 @@ class SettingsScreen extends StatelessWidget {
     required this.notice,
     required this.onChanged,
     required this.onReplayTutorial,
+    required this.onResetAccount,
     required this.onBack,
   });
   final GameSettings settings;
@@ -15,6 +16,7 @@ class SettingsScreen extends StatelessWidget {
   final String? notice;
   final ValueChanged<GameSettings> onChanged;
   final VoidCallback onReplayTutorial;
+  final Future<void> Function() onResetAccount;
   final VoidCallback onBack;
 
   @override
@@ -158,8 +160,145 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  _AccountResetTile(onResetAccount: onResetAccount),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _AccountResetTile extends StatelessWidget {
+  const _AccountResetTile({required this.onResetAccount});
+
+  final Future<void> Function() onResetAccount;
+
+  Future<void> _confirmReset(BuildContext context) async {
+    var understood = false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          icon: const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xffe26b5f),
+            size: 36,
+          ),
+          title: const Text('용병단 기록 완전 초기화'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 430,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.56,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '아래 기록을 이 기기에서 영구 삭제합니다.',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    '• 보유 용병과 등급·레벨·전용 증표\n'
+                    '• 장비, 재화, 모집 보정과 상점 기록\n'
+                    '• 전쟁 계약, 임무, 평판과 작전 진행\n'
+                    '• 전투 기록과 모든 환경 설정',
+                    style: TextStyle(color: Colors.white70, height: 1.55),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0x553f1717),
+                      border: Border.all(color: const Color(0xff8e413b)),
+                    ),
+                    child: const Text(
+                      '초기화 후 루나 F급 Lv.1, 골드 5,000, 크리스탈 600, 계약서 1장의 신규 계정으로 돌아갑니다. 복구할 수 없습니다.',
+                      style: TextStyle(color: Color(0xffffb5a9), fontSize: 11),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    value: understood,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    activeColor: const Color(0xff9d4a42),
+                    title: const Text(
+                      '모든 진행이 삭제되며 복구할 수 없음을 확인했습니다.',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    onChanged: (value) =>
+                        setDialogState(() => understood = value ?? false),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('취소'),
+            ),
+            FilledButton.icon(
+              onPressed: understood
+                  ? () => Navigator.of(dialogContext).pop(true)
+                  : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xff8e413b),
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.delete_forever_outlined),
+              label: const Text('모든 기록 초기화'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await onResetAccount();
+  }
+
+  @override
+  Widget build(BuildContext context) => GoldPanel(
+    child: Padding(
+      padding: const EdgeInsets.all(13),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.delete_forever_outlined,
+            color: Color(0xffe26b5f),
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '게임 데이터 초기화',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  '진행·재화·설정을 모두 삭제하고 첫 계약부터 다시 시작합니다.',
+                  style: TextStyle(color: Colors.white60, fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 138,
+            child: FantasyButton(
+              label: '완전 초기화',
+              icon: Icons.restart_alt,
+              onTap: () => _confirmReset(context),
             ),
           ),
         ],

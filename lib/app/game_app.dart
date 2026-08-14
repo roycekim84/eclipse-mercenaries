@@ -115,6 +115,7 @@ class GameShellState extends State<GameShell> {
   String? actionNotice;
   int tutorialStep = 0;
   Future<void> _saveQueue = Future<void>.value();
+  bool _resettingAccount = false;
 
   AccountSave get account => _account!;
   int get gold => account.gold;
@@ -229,6 +230,48 @@ class GameShellState extends State<GameShell> {
       setState(() {
         saveNotice = '저장 재시도에 실패했습니다. 연결 상태와 저장 공간을 확인해 주세요.';
       });
+    }
+  }
+
+  Future<void> resetAccount() async {
+    if (_resettingAccount) return;
+    _resettingAccount = true;
+    try {
+      // Finish any write that captured the old account before removing both
+      // primary and backup saves. This prevents a queued autosave from
+      // restoring deleted progress after the reset completes.
+      await _saveQueue.catchError((_) {});
+      final initial = await _saveRepository.reset();
+      if (!mounted) return;
+      selected = contracts.first;
+      selectedMercenary = gameContent.mercenaryById(
+        initial.selectedMercenaryId,
+      );
+      equippedWeapon = gameContent.weaponById(
+        initial.equippedWeaponByMercenary[initial.selectedMercenaryId] ??
+            'iron_sword',
+      );
+      report = null;
+      growthReceipt = null;
+      _rewardApplied = false;
+      tutorialStep = 0;
+      saveNotice = null;
+      equipmentReturn = AppScene.camp;
+      unawaited(GameAudioFeedback.stopMusic());
+      setState(() {
+        _account = initial;
+        scene = AppScene.camp;
+        actionNotice = '모든 진행을 삭제하고 신규 용병단으로 시작했습니다.';
+      });
+      unawaited(GameAudioFeedback.applySettings(initial.settings));
+      unawaited(GameAudioFeedback.campAmbience(initial.settings));
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        saveNotice = '초기화하지 못했습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.';
+      });
+    } finally {
+      _resettingAccount = false;
     }
   }
 
@@ -1124,6 +1167,7 @@ class GameShellState extends State<GameShell> {
                       unawaited(_persistAccount());
                     });
                   },
+                  onResetAccount: resetAccount,
                   onBack: () => go(AppScene.camp),
                 ),
               },
@@ -1195,9 +1239,15 @@ GearCombatBonus applySupportCombatBonus({
               contract.objective == ContractObjective.assassination)
       ? 1.10
       : 1.0;
+  final siegeEngineering =
+      supportId == 'elka' &&
+          (contract.objective == ContractObjective.defense ||
+              contract.objective == ContractObjective.fortressRetake)
+      ? 1.10
+      : 1.0;
   return GearCombatBonus(
     hpMultiplier: base.hpMultiplier * defensive,
-    damageMultiplier: base.damageMultiplier * hunting,
+    damageMultiplier: base.damageMultiplier * hunting * siegeEngineering,
     speedMultiplier: base.speedMultiplier,
     criticalChance: base.criticalChance,
     dashCooldownMultiplier: base.dashCooldownMultiplier,
