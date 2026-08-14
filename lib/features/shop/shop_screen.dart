@@ -438,7 +438,7 @@ class _ShopProductCard extends StatelessWidget {
                       ? '품절'
                       : '${shopCurrencyName(product.currency)} ${product.price}',
                   icon: soldOut ? Icons.block : Icons.shopping_cart_outlined,
-                  onTap: soldOut ? () {} : onTap,
+                  onTap: soldOut ? null : onTap,
                   prominent: !soldOut,
                 ),
               ),

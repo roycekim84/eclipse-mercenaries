@@ -38,12 +38,19 @@
 
 ### 전투 스프라이트 런타임 규격
 
-- 모든 용병은 `1792×1120` RGBA 시트 하나를 사용하며 구성은 8열×5행, 셀은 `224×224`이다.
+- 출전 영웅은 `288×256` 셀의 7열 또는 8열×5행 RGBA 시트를 사용한다. 최종 파일은 7열 `2016×1280`, 8열 `2304×1280`이다.
 - 행 순서는 Idle, Walk, Attack, Hit, Dead로 고정한다.
 - 발이 닿는 공통 지면 기준선은 각 셀의 y=208이며 런타임 앵커는 `(0.5, 208/224)`이다.
 - Idle/Walk/Hit/Dead는 불투명 몸체의 수평 중심을 맞춘다. Attack은 큰 무기 궤적이 아니라 Idle/Walk 몸통 중심을 기준으로 배치한다.
 - 귀·뿔·꼬리·대표 무기와 이펙트는 셀 안전 영역 안에 유지하되 발 위치를 보정하기 위해 인물 자체를 늘이거나 자르지 않는다.
 - 신규 시트는 `tool/align_battle_sheets.swift`로 정규화한 뒤 프레임 간 발 위치와 몸통 흔들림을 검사한다.
+
+### 지원·파견 용병 월드 스프라이트 규격
+
+- 비출전 생활 용병은 대표 영웅의 전투 시트를 재사용하지 않고 `assets/images/characters/<id>_service_sprite.png` 고유 파일을 사용한다.
+- 규격은 256×256 RGBA, 전신·대표 장비·귀/뿔/꼬리를 포함한 투명 정사각 캔버스이며 검은 배경·크로마 잔여·UI 장식을 금지한다.
+- 캠프에서는 코드 기반 미세 대기 움직임을 적용하고 지원 호출에서는 같은 스프라이트를 역할별 전술 효과와 함께 표시한다.
+- 생성 원본 두 묶음은 `assets/source/generated/service_*_sprite_atlas_source.png`에 보관하며 런타임에서는 분리·투명화된 파일만 사용한다.
 
 ## 생성 자산
 
@@ -63,6 +70,7 @@
 - `assets/images/characters/vesta_battle_sheet.png`: 베스타의 마도서·룬 전투 애니메이션 시트
 - `assets/images/characters/rask_battle_sheet.png`: 라스크의 비늘 꼬리·장창 전투 애니메이션 시트
 - `assets/images/characters/iris_battle_sheet.png`: 아이리스의 수정 뿔·월광 마검 전투 애니메이션 시트
+- `assets/images/characters/*_service_sprite.png`: 지원·파견 용병 8명의 고유 투명 월드 스프라이트
 - `assets/images/battlefield/unit_role_atlas.png`: 아군/적군 7병과 전투 아틀라스
 - `assets/images/battlefield/unit_role_batch.png`: 원본 비율을 보존한 런타임 배칭 전용 아틀라스
 

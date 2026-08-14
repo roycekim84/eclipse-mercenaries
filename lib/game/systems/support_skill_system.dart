@@ -116,10 +116,13 @@ extension SupportSkillSystem on SurvivorGame {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
-    final columns = support.visual.battleColumns;
+    final standalone = support.visual.hasStandaloneWorldSprite;
+    final columns = standalone ? 1 : support.visual.battleColumns;
     final cellWidth = image.width / columns;
-    final cellHeight = image.height / 5;
-    final frame = support.visual.battleFrameIndices.first.first;
+    final cellHeight = standalone ? image.height.toDouble() : image.height / 5;
+    final frame = standalone
+        ? 0
+        : support.visual.battleFrameIndices.first.first;
     canvas.drawImageRect(
       image,
       Rect.fromLTWH(frame * cellWidth, 0, cellWidth, cellHeight),

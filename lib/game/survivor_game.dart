@@ -244,7 +244,9 @@ class SurvivorGame extends FlameGame {
     _nextEventAt = config.balance.firstEventAt;
     final support = config.supportMercenary;
     if (support != null) {
-      _supportSpriteImage = await images.load(support.visual.battleSpriteAsset);
+      _supportSpriteImage = await images.load(
+        support.visual.worldSpriteAsset ?? support.visual.battleSpriteAsset!,
+      );
     }
     _enemyDamageBonus = config.balance.enemyDamageBonus;
     _enemySpeedMultiplier = config.balance.enemySpeedMultiplier;
@@ -273,7 +275,7 @@ class SurvivorGame extends FlameGame {
       BattlefieldCondition.twilightSiege =>
         'battlefield/twilight_siege_plain.png',
     });
-    final playerImage = await images.load(mercenary.visual.battleSpriteAsset);
+    final playerImage = await images.load(mercenary.visual.battleSpriteAsset!);
     _playerSprite = PlayerSpriteComponent.fromImage(
       playerImage,
       displaySize: mercenary.visual.battleDisplaySize,

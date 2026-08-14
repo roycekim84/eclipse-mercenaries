@@ -15,7 +15,7 @@ void main() {
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.14.0+24'));
+    expect(pubspec, contains('version: 0.14.1+25'));
     expect(gradle, contains('com.roycekim.eclipsemercenaries'));
     expect(xcode, contains('com.roycekim.eclipsemercenaries'));
     expect(manifest, contains('android:label="월식 용병단"'));
@@ -166,6 +166,43 @@ void main() {
       isTrue,
     );
     expect(File('tool/normalize_battle_sheet.swift').existsSync(), isTrue);
+  });
+
+  test('service mercenaries own distinct transparent world sprites', () {
+    const serviceIds = <String>[
+      'mira',
+      'garr',
+      'elka',
+      'soren',
+      'talia',
+      'fenn',
+      'corva',
+      'silas',
+    ];
+    final signatures = <String>{};
+    for (final id in serviceIds) {
+      final file = File('assets/images/characters/${id}_service_sprite.png');
+      expect(file.existsSync(), isTrue, reason: id);
+      final bytes = file.readAsBytesSync();
+      final header = ByteData.sublistView(bytes);
+      expect(header.getUint32(16), 256, reason: '$id width');
+      expect(header.getUint32(20), 256, reason: '$id height');
+      expect(bytes[25], 6, reason: '$id must retain transparency');
+      signatures.add(bytes.take(96).join(','));
+    }
+    expect(signatures, hasLength(serviceIds.length));
+    expect(
+      File(
+        'assets/source/generated/service_support_sprite_atlas_source.png',
+      ).existsSync(),
+      isTrue,
+    );
+    expect(
+      File(
+        'assets/source/generated/service_dispatch_sprite_atlas_source.png',
+      ).existsSync(),
+      isTrue,
+    );
   });
 
   test('all mercenary portraits use a consistent full-body 3 by 4 canvas', () {

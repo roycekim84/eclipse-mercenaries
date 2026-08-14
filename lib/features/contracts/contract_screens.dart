@@ -102,7 +102,7 @@ class ContractScreen extends StatelessWidget {
                             faction: FactionRules.byId(item.factionId),
                             selected: selected == item,
                             locked: locked,
-                            onTap: locked ? () {} : () => onSelect(item),
+                            onTap: locked ? null : () => onSelect(item),
                           ),
                         );
                       }),
@@ -142,7 +142,7 @@ class ContractScreen extends StatelessWidget {
                                 onTap:
                                     commanderLevel <
                                         selected.requiredCommanderLevel
-                                    ? () {}
+                                    ? null
                                     : onDeploy,
                               ),
                             ),

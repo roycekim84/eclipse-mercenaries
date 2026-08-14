@@ -313,6 +313,34 @@ class _CampActor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final visual = mercenary.visual;
+    if (visual.hasStandaloneWorldSprite) {
+      final bob = math.sin(framePhase * math.pi * 2) * 1.5;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            color: const Color(0xbb080a0e),
+            child: Text(
+              '${mercenary.name.split(' ').first} · ${_campActivityById[mercenary.id] ?? '계약 준비'}',
+              style: const TextStyle(fontSize: 7, color: Color(0xffe1c889)),
+            ),
+          ),
+          Transform.translate(
+            offset: Offset(0, bob),
+            child: SizedBox(
+              height: height,
+              width: height,
+              child: Image.asset(
+                'assets/images/${visual.worldSpriteAsset}',
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.none,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     final idleFrames = visual.battleFrameIndices.first;
     final frame =
         idleFrames[(framePhase * idleFrames.length).floor().clamp(
@@ -345,7 +373,7 @@ class _CampActor extends StatelessWidget {
                   width: frameWidth * visual.battleColumns,
                   height: height * 5,
                   child: Image.asset(
-                    'assets/images/${visual.battleSpriteAsset}',
+                    'assets/images/${visual.battleSpriteAsset!}',
                     fit: BoxFit.fill,
                     filterQuality: FilterQuality.none,
                   ),

@@ -271,7 +271,7 @@ class _MissionCard extends StatelessWidget {
                       icon: complete
                           ? Icons.card_giftcard
                           : Icons.hourglass_bottom,
-                      onTap: complete ? () => onClaim(mission) : () {},
+                      onTap: complete ? () => onClaim(mission) : null,
                     ),
             ),
           ],

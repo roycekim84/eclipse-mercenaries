@@ -281,7 +281,21 @@ void main() {
   test('every alpha content entry has presentation metadata', () {
     for (final mercenary in content.mercenaries) {
       expect(mercenary.visual.portraitAsset, startsWith('assets/images/'));
-      expect(mercenary.visual.battleSpriteAsset, endsWith('_battle_sheet.png'));
+      if (mercenary.canDeploy) {
+        expect(
+          mercenary.visual.battleSpriteAsset,
+          endsWith('_battle_sheet.png'),
+          reason: '${mercenary.id} must own a deployable animation sheet',
+        );
+        expect(mercenary.visual.worldSpriteAsset, isNull);
+      } else {
+        expect(mercenary.visual.battleSpriteAsset, isNull);
+        expect(
+          mercenary.visual.worldSpriteAsset,
+          endsWith('_service_sprite.png'),
+          reason: '${mercenary.id} must own a standalone support sprite',
+        );
+      }
       expect(mercenary.visual.battleFrameIndices, hasLength(5));
       for (final stateFrames in mercenary.visual.battleFrameIndices) {
         expect(stateFrames, isNotEmpty, reason: mercenary.id);
@@ -306,6 +320,23 @@ void main() {
         .toList(growable: false);
 
     expect(spriteAssets.toSet(), hasLength(spriteAssets.length));
+  });
+
+  test('service mercenaries never borrow deployable battle sheets', () {
+    final services = content.mercenaries
+        .where((mercenary) => !mercenary.canDeploy)
+        .toList(growable: false);
+    final worldAssets = services
+        .map((mercenary) => mercenary.visual.worldSpriteAsset)
+        .toList(growable: false);
+
+    expect(services, hasLength(8));
+    expect(
+      services.every((mercenary) => mercenary.visual.battleSpriteAsset == null),
+      isTrue,
+    );
+    expect(worldAssets.every((asset) => asset != null), isTrue);
+    expect(worldAssets.toSet(), hasLength(services.length));
   });
 
   test('new account starts with a focused onboarding economy', () {

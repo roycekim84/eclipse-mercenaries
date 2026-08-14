@@ -41,12 +41,16 @@ String? premiumGlyphAsset(IconData icon) {
   }
   if (icon == Icons.map_outlined ||
       icon == Icons.public ||
-      icon == Icons.explore_outlined) {
+      icon == Icons.explore_outlined ||
+      icon == Icons.travel_explore ||
+      icon == Icons.route_outlined) {
     return 'assets/images/ui/glyphs/map.png';
   }
   if (icon == Icons.handyman ||
       icon == Icons.handyman_outlined ||
-      icon == Icons.build_outlined) {
+      icon == Icons.build_outlined ||
+      icon == Icons.engineering_outlined ||
+      icon == Icons.settings_suggest_outlined) {
     return 'assets/images/ui/glyphs/forge.png';
   }
   if (icon == Icons.workspace_premium ||
@@ -94,7 +98,10 @@ String? premiumGlyphAsset(IconData icon) {
   }
   if (icon == Icons.flag ||
       icon == Icons.flag_outlined ||
-      icon == Icons.local_shipping_outlined) {
+      icon == Icons.local_shipping_outlined ||
+      icon == Icons.outbound_outlined ||
+      icon == Icons.forward_to_inbox_outlined ||
+      icon == Icons.mark_email_unread_outlined) {
     return 'assets/images/ui/glyphs/rally.png';
   }
   if (icon == Icons.auto_awesome ||
@@ -544,83 +551,90 @@ class FantasyButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
-    required this.onTap,
+    this.onTap,
     this.prominent = false,
   });
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool prominent;
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: label,
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: prominent
-                  ? const [
-                      Color(0xff345579),
-                      Color(0xff203955),
-                      Color(0xff101d2c),
-                    ]
-                  : const [
-                      Color(0xff4a3827),
-                      Color(0xff2a2119),
-                      Color(0xff15110e),
-                    ],
-            ),
-            border: Border.all(
-              color: prominent
-                  ? const Color(0xff7691ad)
-                  : const Color(0xff8b7045),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black87,
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-              BoxShadow(
-                color: Color(0x337f6035),
-                blurRadius: 2,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                PremiumGameIcon(icon, size: 22),
-                const SizedBox(width: 9),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Opacity(
+            opacity: enabled ? 1 : .48,
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: prominent
+                      ? const [
+                          Color(0xff345579),
+                          Color(0xff203955),
+                          Color(0xff101d2c),
+                        ]
+                      : const [
+                          Color(0xff4a3827),
+                          Color(0xff2a2119),
+                          Color(0xff15110e),
+                        ],
                 ),
-              ],
+                border: Border.all(
+                  color: prominent
+                      ? const Color(0xff7691ad)
+                      : const Color(0xff8b7045),
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black87,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Color(0x337f6035),
+                    blurRadius: 2,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    PremiumGameIcon(icon, size: 22),
+                    const SizedBox(width: 9),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class NavButton extends StatelessWidget {

@@ -11,10 +11,11 @@ class MercenaryVisual {
     required this.accent,
     required this.icon,
     required this.portraitAsset,
-    required this.battleSpriteAsset,
+    this.battleSpriteAsset,
     required this.battleDisplaySize,
     required this.battleColumns,
     required this.battleFrameIndices,
+    this.worldSpriteAsset,
     this.battleGroundAnchorY = .93,
     this.battleCombatOrigin = const Offset(.14, -.44),
     this.portraitAlignment = Alignment.topCenter,
@@ -28,10 +29,17 @@ class MercenaryVisual {
   final Color accent;
   final IconData icon;
   final String portraitAsset;
-  final String battleSpriteAsset;
+
+  /// Animated battle sheet. Null for non-deployable service mercenaries.
+  final String? battleSpriteAsset;
   final double battleDisplaySize;
   final int battleColumns;
   final List<List<int>> battleFrameIndices;
+
+  /// A standalone transparent sprite used by non-deployable service
+  /// mercenaries in the camp and during support calls. Deployable heroes keep
+  /// using their authored animation sheet.
+  final String? worldSpriteAsset;
   final double battleGroundAnchorY;
   final Offset battleCombatOrigin;
   final Alignment portraitAlignment;
@@ -39,6 +47,8 @@ class MercenaryVisual {
   final Alignment rosterAlignment;
   final double rosterScale;
   final Alignment recruitAlignment;
+
+  bool get hasStandaloneWorldSprite => worldSpriteAsset != null;
 }
 
 class WeaponVisual {
@@ -222,7 +232,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xff9bc394),
     icon: Icons.medical_services_outlined,
     portraitAsset: 'assets/images/mercenaries/mira.png',
-    battleSpriteAsset: 'characters/sera_battle_sheet.png',
+    worldSpriteAsset: 'characters/mira_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 8,
     battleFrameIndices: [
@@ -241,7 +251,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xff90a9c7),
     icon: Icons.shield_outlined,
     portraitAsset: 'assets/images/mercenaries/garr.png',
-    battleSpriteAsset: 'characters/aurel_battle_sheet.png',
+    worldSpriteAsset: 'characters/garr_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 7,
     battleFrameIndices: [
@@ -260,7 +270,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xffd28b72),
     icon: Icons.inventory_2_outlined,
     portraitAsset: 'assets/images/mercenaries/talia.png',
-    battleSpriteAsset: 'characters/nyra_battle_sheet.png',
+    worldSpriteAsset: 'characters/talia_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 7,
     battleFrameIndices: [
@@ -279,7 +289,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xffd9bd7c),
     icon: Icons.forward_to_inbox_outlined,
     portraitAsset: 'assets/images/mercenaries/fenn.png',
-    battleSpriteAsset: 'characters/rask_battle_sheet.png',
+    worldSpriteAsset: 'characters/fenn_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 7,
     battleFrameIndices: [
@@ -298,7 +308,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xffc49667),
     icon: Icons.engineering_outlined,
     portraitAsset: 'assets/images/mercenaries/elka.png',
-    battleSpriteAsset: 'characters/aurel_battle_sheet.png',
+    worldSpriteAsset: 'characters/elka_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 7,
     battleFrameIndices: [
@@ -317,7 +327,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xff84aa72),
     icon: Icons.travel_explore,
     portraitAsset: 'assets/images/mercenaries/soren.png',
-    battleSpriteAsset: 'characters/rask_battle_sheet.png',
+    worldSpriteAsset: 'characters/soren_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 7,
     battleFrameIndices: [
@@ -336,7 +346,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xff9899ca),
     icon: Icons.mark_email_unread_outlined,
     portraitAsset: 'assets/images/mercenaries/corva.png',
-    battleSpriteAsset: 'characters/vesta_battle_sheet.png',
+    worldSpriteAsset: 'characters/corva_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 7,
     battleFrameIndices: [
@@ -355,7 +365,7 @@ const _mercenaryVisuals = <String, MercenaryVisual>{
     accent: Color(0xff76b5ad),
     icon: Icons.local_shipping_outlined,
     portraitAsset: 'assets/images/mercenaries/silas.png',
-    battleSpriteAsset: 'characters/sera_battle_sheet.png',
+    worldSpriteAsset: 'characters/silas_service_sprite.png',
     battleDisplaySize: 78,
     battleColumns: 8,
     battleFrameIndices: [

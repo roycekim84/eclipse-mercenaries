@@ -412,7 +412,7 @@ class _ServiceOperationsScreenState extends State<ServiceOperationsScreen> {
                   icon: Icons.outbound_outlined,
                   prominent: true,
                   onTap: selectedMercenary == null || selectedMission == null
-                      ? () {}
+                      ? null
                       : () => widget.onStartDispatch(
                           selectedMission!,
                           selectedMercenary!,
@@ -499,7 +499,7 @@ class _ServiceOperationsScreenState extends State<ServiceOperationsScreen> {
                             ? Icons.inventory_2_outlined
                             : Icons.hourglass_bottom,
                         prominent: complete,
-                        onTap: complete ? widget.onClaimDispatch : () {},
+                        onTap: complete ? widget.onClaimDispatch : null,
                       ),
                     ],
                   ),

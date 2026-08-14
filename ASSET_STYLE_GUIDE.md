@@ -1,5 +1,14 @@
 # 이미지 에셋 스타일 기획서
 
+## 지원·파견 용병 픽셀 월드 에셋 — 2026-08-14
+
+- 생성 방식: built-in image generation, 기존 3:4 용병 전신 원화를 캐릭터 정체성 레퍼런스로 사용
+- 지원 묶음: 미라·가르·엘카·소렌, 파견 묶음: 탈리아·펜·코르바·실라스
+- 프롬프트 핵심: 2×2 균등 아틀라스, 동일 지면선과 비율, 3/4 탑다운 JRPG 픽셀 아트, 종족·의상·도구 보존, 텍스트·프레임·원형 UI 금지, `#FF00FF` 단색 배경
+- 원본: `assets/source/generated/service_support_sprite_atlas_source.png`, `assets/source/generated/service_dispatch_sprite_atlas_source.png`
+- 런타임: `assets/images/characters/<id>_service_sprite.png`, 256×256 RGBA, 크로마키 제거와 가장자리 디스필 완료
+- 사용 경계: 전투 출전 애니메이션 시트가 아닌 캠프 생활 및 지원 호출 전용이며 다른 용병 파일을 대체 사용하지 않는다.
+
 ## B6 앱 아이콘 생성 기록
 
 - 중심 소재: 검은 묘족 암살자 루나, 교차 쌍검, 은빛 초승달

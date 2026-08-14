@@ -52,13 +52,13 @@ class ContractMarker extends StatelessWidget {
     required this.faction,
     required this.selected,
     required this.locked,
-    required this.onTap,
+    this.onTap,
   });
   final BattlefieldContract contract;
   final FactionSpec faction;
   final bool selected;
   final bool locked;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
