@@ -281,10 +281,12 @@ class MercenarySelectScreen extends StatefulWidget {
   const MercenarySelectScreen({
     super.key,
     required this.selected,
+    required this.contract,
     required this.equippedWeapon,
     required this.mercenaryProgress,
     required this.selectedSupportId,
     required this.selectedDispatchId,
+    required this.unavailableServiceIds,
     required this.onSupportSelect,
     required this.onDispatchSelect,
     required this.onSelect,
@@ -294,10 +296,12 @@ class MercenarySelectScreen extends StatefulWidget {
   });
 
   final MercenarySpec selected;
+  final BattlefieldContract contract;
   final WeaponSpec equippedWeapon;
   final Map<String, MercenaryProgress> mercenaryProgress;
   final String? selectedSupportId;
   final String? selectedDispatchId;
+  final Set<String> unavailableServiceIds;
   final ValueChanged<MercenarySpec?> onSupportSelect;
   final ValueChanged<MercenarySpec?> onDispatchSelect;
   final ValueChanged<MercenarySpec> onSelect;
@@ -324,7 +328,8 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
       .where(
         (mercenary) =>
             widget.mercenaryProgress.containsKey(mercenary.id) &&
-            mercenary.duty == MercenaryDuty.support,
+            mercenary.duty == MercenaryDuty.support &&
+            !widget.unavailableServiceIds.contains(mercenary.id),
       )
       .toList(growable: false);
 
@@ -332,7 +337,8 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
       .where(
         (mercenary) =>
             widget.mercenaryProgress.containsKey(mercenary.id) &&
-            mercenary.duty == MercenaryDuty.dispatch,
+            mercenary.duty == MercenaryDuty.dispatch &&
+            !widget.unavailableServiceIds.contains(mercenary.id),
       )
       .toList(growable: false);
 
@@ -419,6 +425,9 @@ class _MercenarySelectScreenState extends State<MercenarySelectScreen> {
                   dispatches: _dispatchMercenaries,
                   selectedDispatchId: widget.selectedDispatchId,
                   onDispatchSelect: widget.onDispatchSelect,
+                  recommendation: ServiceOperationRules.recommendationFor(
+                    widget.contract.objective,
+                  ),
                 );
                 return compact
                     ? Column(
@@ -458,6 +467,7 @@ class _SupportAssignment extends StatelessWidget {
     required this.dispatches,
     required this.selectedDispatchId,
     required this.onDispatchSelect,
+    required this.recommendation,
   });
   final List<MercenarySpec> supports;
   final String? selectedId;
@@ -465,6 +475,7 @@ class _SupportAssignment extends StatelessWidget {
   final List<MercenarySpec> dispatches;
   final String? selectedDispatchId;
   final ValueChanged<MercenarySpec?> onDispatchSelect;
+  final ({String supportId, String dispatchId}) recommendation;
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -505,7 +516,7 @@ class _SupportAssignment extends StatelessWidget {
                         (m) => DropdownMenuItem<String?>(
                           value: m.id,
                           child: Text(
-                            '${m.name} · ${m.supportEffect}',
+                            '${m.id == recommendation.supportId ? '★ ' : ''}${m.name} · ${m.supportEffect}',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -550,7 +561,7 @@ class _SupportAssignment extends StatelessWidget {
                         (m) => DropdownMenuItem<String?>(
                           value: m.id,
                           child: Text(
-                            '${m.name} · ${m.supportEffect}',
+                            '${m.id == recommendation.dispatchId ? '★ ' : ''}${m.name} · ${m.supportEffect}',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

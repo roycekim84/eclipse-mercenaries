@@ -21,6 +21,7 @@ import '../domain/game_data.dart';
 import '../domain/game_settings.dart';
 import '../domain/progression.dart';
 import '../domain/run_growth.dart';
+import '../domain/service_operations.dart';
 import '../game/survivor_game.dart';
 
 part '../core/widgets/collection_components.dart';
@@ -33,6 +34,7 @@ part '../features/battle/ultimate_overlay.dart';
 part '../features/camp/camp_screen.dart';
 part '../features/camp/forge_screen.dart';
 part '../features/camp/mission_screen.dart';
+part '../features/camp/service_operations_screen.dart';
 part '../features/contracts/contract_screens.dart';
 part '../features/equipment/equipment_screen.dart';
 part '../features/codex/enemy_codex_screen.dart';
@@ -81,6 +83,7 @@ enum AppScene {
   enemyCodex,
   forge,
   missions,
+  services,
   recruitment,
   shop,
   settings,
@@ -305,6 +308,107 @@ class GameShellState extends State<GameShell> {
       actionNotice = notice;
     });
     unawaited(_persistAccount());
+  }
+
+  void upgradeServiceSkill(MercenarySpec mercenary) {
+    final current = ServiceOperationRules.supportSkillLevel(
+      account.serviceSkillLevels,
+      mercenary.id,
+    );
+    if (mercenary.duty != MercenaryDuty.support ||
+        !account.mercenaryProgress.containsKey(mercenary.id) ||
+        current >= ServiceOperationRules.maxSupportSkillLevel) {
+      return;
+    }
+    final tokenId = '${mercenary.id}_token';
+    final cost = ServiceOperationRules.supportUpgradeTokenCost(current);
+    final tokens = account.inventory[tokenId] ?? 0;
+    if (tokens < cost) {
+      setState(
+        () =>
+            actionNotice = '${mercenary.name} 전용 증표가 ${cost - tokens}개 부족합니다.',
+      );
+      unawaited(GameAudioFeedback.cue(AudioCue.error, account.settings));
+      return;
+    }
+    _updateAccount(
+      account.copyWith(
+        inventory: {...account.inventory, tokenId: tokens - cost},
+        serviceSkillLevels: {
+          ...account.serviceSkillLevels,
+          mercenary.id: current + 1,
+        },
+      ),
+      '${mercenary.name} · ${ServiceOperationRules.serviceSkillName(mercenary)} Lv.${current + 1}',
+    );
+  }
+
+  void startDispatch(DispatchMissionSpec mission, MercenarySpec mercenary) {
+    if (account.activeDispatch != null ||
+        mercenary.duty != MercenaryDuty.dispatch ||
+        !account.mercenaryProgress.containsKey(mercenary.id)) {
+      return;
+    }
+    final now = DateTime.now();
+    if ((account.serviceInjuryUntil[mercenary.id] ?? 0) >
+        now.millisecondsSinceEpoch) {
+      setState(() => actionNotice = '${mercenary.name}은 아직 부상 회복 중입니다.');
+      return;
+    }
+    final seed = now.microsecondsSinceEpoch ^ mercenary.id.hashCode;
+    _updateAccount(
+      account.copyWith(
+        selectedDispatchMercenaryId: null,
+        activeDispatch: ActiveDispatch(
+          missionId: mission.id,
+          mercenaryId: mercenary.id,
+          startedAtEpochMs: now.millisecondsSinceEpoch,
+          durationSeconds: mission.durationSeconds,
+          seed: seed,
+        ),
+      ),
+      '${mercenary.name}이 ${mission.region}으로 출발했습니다.',
+    );
+  }
+
+  void claimDispatch() {
+    final active = account.activeDispatch;
+    if (active == null || !active.isCompleteAt(DateTime.now())) return;
+    final mission = ServiceOperationRules.missions.firstWhere(
+      (candidate) => candidate.id == active.missionId,
+    );
+    final completed = account.dispatchProgress[active.mercenaryId] ?? 0;
+    final result = ServiceOperationRules.resolve(
+      active: active,
+      mission: mission,
+      completed: completed,
+    );
+    final inventory = Map<String, int>.of(account.inventory);
+    if (result.itemAmount > 0) {
+      inventory[result.itemId] =
+          (inventory[result.itemId] ?? 0) + result.itemAmount;
+    }
+    final injuries = Map<String, int>.of(account.serviceInjuryUntil);
+    if (result.injurySeconds > 0) {
+      injuries[active.mercenaryId] = DateTime.now()
+          .add(Duration(seconds: result.injurySeconds))
+          .millisecondsSinceEpoch;
+    } else {
+      injuries.remove(active.mercenaryId);
+    }
+    _updateAccount(
+      account.copyWith(
+        gold: gold + result.gold,
+        inventory: inventory,
+        activeDispatch: null,
+        serviceInjuryUntil: injuries,
+        dispatchProgress: {
+          ...account.dispatchProgress,
+          active.mercenaryId: completed + (result.success ? 1 : 0),
+        },
+      ),
+      '${result.summary} · ${result.gold} G${result.itemAmount > 0 ? ' · 전리품 ${result.itemAmount}개' : ''}',
+    );
   }
 
   void trainMercenary(MercenarySpec mercenary) {
@@ -558,10 +662,12 @@ class GameShellState extends State<GameShell> {
           xp: 0,
           ascension: 0,
         );
-        equippedWeapons[id] = 'iron_sword';
-        equippedGear['$id:armor'] = 'moonweave_guard';
-        equippedGear['$id:accessory'] = 'nightfang_charm';
-        equippedGear['$id:tactical'] = 'moonstep_hook';
+        if (gameContent.mercenaryById(id).canDeploy) {
+          equippedWeapons[id] = 'iron_sword';
+          equippedGear['$id:armor'] = 'moonweave_guard';
+          equippedGear['$id:accessory'] = 'nightfang_charm';
+          equippedGear['$id:tactical'] = 'moonstep_hook';
+        }
       }
     }
     if (ticketSpent > 0) inventory['contract_ticket'] = tickets - ticketSpent;
@@ -580,6 +686,11 @@ class GameShellState extends State<GameShell> {
         equippedWeaponByMercenary: equippedWeapons,
         equippedGearByMercenary: equippedGear,
         inventory: inventory,
+        selectedSupportMercenaryId:
+            account.selectedSupportMercenaryId ??
+            (results.contains(RecruitmentRules.onboardingRecruitId)
+                ? RecruitmentRules.onboardingRecruitId
+                : null),
       ),
       '$count명과 용병 계약을 체결했습니다.',
     );
@@ -909,6 +1020,14 @@ class GameShellState extends State<GameShell> {
                             account.mercenaryProgress.containsKey(mercenary.id),
                       )
                       .toList(growable: false),
+                  ownedServiceMercenaries: gameContent.mercenaries
+                      .where(
+                        (mercenary) =>
+                            mercenary.duty != MercenaryDuty.combat &&
+                            account.mercenaryProgress.containsKey(mercenary.id),
+                      )
+                      .toList(growable: false),
+                  activeDispatch: account.activeDispatch,
                   lastReport: report,
                   campaignCycle:
                       account.recruitmentCount +
@@ -919,6 +1038,7 @@ class GameShellState extends State<GameShell> {
                   onCodex: () => go(AppScene.enemyCodex),
                   onForge: () => go(AppScene.forge),
                   onMissions: () => go(AppScene.missions),
+                  onServices: () => go(AppScene.services),
                   missionBadge: claimableMissionCount,
                   onRecruitment: () => go(AppScene.recruitment),
                   onShop: () => go(AppScene.shop),
@@ -939,10 +1059,18 @@ class GameShellState extends State<GameShell> {
                 AppScene.mercenarySelect => MercenarySelectScreen(
                   key: const ValueKey('mercenary-select'),
                   selected: selectedMercenary,
+                  contract: selected,
                   equippedWeapon: equippedWeapon,
                   mercenaryProgress: account.mercenaryProgress,
                   selectedSupportId: account.selectedSupportMercenaryId,
                   selectedDispatchId: account.selectedDispatchMercenaryId,
+                  unavailableServiceIds: {
+                    if (account.activeDispatch != null)
+                      account.activeDispatch!.mercenaryId,
+                    for (final entry in account.serviceInjuryUntil.entries)
+                      if (entry.value > DateTime.now().millisecondsSinceEpoch)
+                        entry.key,
+                  },
                   onSupportSelect: (mercenary) => _updateAccount(
                     account.copyWith(selectedSupportMercenaryId: mercenary?.id),
                     mercenary == null
@@ -973,6 +1101,26 @@ class GameShellState extends State<GameShell> {
                   onBack: () => go(AppScene.contracts),
                   onEquipment: () => openEquipment(AppScene.mercenarySelect),
                   onDeploy: startBattle,
+                ),
+                AppScene.services => ServiceOperationsScreen(
+                  key: const ValueKey('services'),
+                  ownedMercenaries: gameContent.mercenaries
+                      .where(
+                        (mercenary) =>
+                            mercenary.duty != MercenaryDuty.combat &&
+                            account.mercenaryProgress.containsKey(mercenary.id),
+                      )
+                      .toList(growable: false),
+                  inventory: account.inventory,
+                  skillLevels: account.serviceSkillLevels,
+                  dispatchProgress: account.dispatchProgress,
+                  injuryUntil: account.serviceInjuryUntil,
+                  activeDispatch: account.activeDispatch,
+                  notice: actionNotice,
+                  onUpgrade: upgradeServiceSkill,
+                  onStartDispatch: startDispatch,
+                  onClaimDispatch: claimDispatch,
+                  onBack: () => go(AppScene.camp),
                 ),
                 AppScene.equipment => EquipmentScreen(
                   key: const ValueKey('equipment'),
@@ -1072,6 +1220,17 @@ class GameShellState extends State<GameShell> {
                   audioSettings: account.settings,
                   inputMode: account.settings.battleInputMode,
                   targetPriority: account.settings.autoTargetPriority,
+                  supportMercenary: account.selectedSupportMercenaryId == null
+                      ? null
+                      : gameContent.mercenaryById(
+                          account.selectedSupportMercenaryId!,
+                        ),
+                  supportSkillLevel: account.selectedSupportMercenaryId == null
+                      ? 1
+                      : ServiceOperationRules.supportSkillLevel(
+                          account.serviceSkillLevels,
+                          account.selectedSupportMercenaryId!,
+                        ),
                   gearBonus: applySupportCombatBonus(
                     base: GearRules.combatBonus(
                       GearSlot.values.map(

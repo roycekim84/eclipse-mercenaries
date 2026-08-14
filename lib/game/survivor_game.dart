@@ -31,6 +31,7 @@ part 'systems/damage_system.dart';
 part 'systems/weapon_system.dart';
 part 'systems/pooled_effects_system.dart';
 part 'systems/run_growth_system.dart';
+part 'systems/support_skill_system.dart';
 
 double _permanentPlayerMaxHp(BattleConfig config) {
   final level = config.mercenaryPermanentLevel ?? config.mercenary.level;
@@ -161,6 +162,7 @@ class SurvivorGame extends FlameGame {
   late final Image _vfxAtlas;
   late final Image _ultimateVfxAtlas;
   Image? _battlefieldBackground;
+  Image? _supportSpriteImage;
   BattleUnit? _allyCommander;
   BattleUnit? _enemyCommander;
   late Vector2 _gatePosition;
@@ -186,6 +188,8 @@ class SurvivorGame extends FlameGame {
   late double _playerHp;
   double _tacticalCooldown = 0;
   double _tacticalClock = 0;
+  double _supportSkillClock = 7;
+  double _supportVisualClock = 0;
   bool _pausedForUltimate = false;
   int _ultimateActivation = 0;
   double _gateHp = GateDefenseRules.maxGateHp;
@@ -238,6 +242,10 @@ class SurvivorGame extends FlameGame {
   Future<void> onLoad() async {
     _reinforcementClock = config.balance.reinforcementInterval;
     _nextEventAt = config.balance.firstEventAt;
+    final support = config.supportMercenary;
+    if (support != null) {
+      _supportSpriteImage = await images.load(support.visual.battleSpriteAsset);
+    }
     _enemyDamageBonus = config.balance.enemyDamageBonus;
     _enemySpeedMultiplier = config.balance.enemySpeedMultiplier;
     _player = switch (config.battlefield) {
@@ -516,6 +524,7 @@ class SurvivorGame extends FlameGame {
     }
     _elapsed += worldDt;
     _eventClock += worldDt;
+    _updateSupportSkill(worldDt);
     var isMoving = false;
     if (_moveDirection != null) {
       _player += _moveDirection! * _speed * worldDt;
@@ -781,6 +790,7 @@ class SurvivorGame extends FlameGame {
     _drawCombatPools(canvas);
     _drawBossTelegraph(canvas);
     _drawUltimateEffect(canvas);
+    _drawSupportSkillEffect(canvas);
     _drawPlayerMarker(canvas);
     super.render(canvas);
     canvas.restore();

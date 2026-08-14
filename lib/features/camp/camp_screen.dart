@@ -7,6 +7,8 @@ class CampScreen extends StatelessWidget {
     required this.crystals,
     required this.commanderLevel,
     required this.ownedCombatMercenaries,
+    required this.ownedServiceMercenaries,
+    required this.activeDispatch,
     required this.lastReport,
     required this.campaignCycle,
     required this.onDeploy,
@@ -15,6 +17,7 @@ class CampScreen extends StatelessWidget {
     required this.onCodex,
     required this.onForge,
     required this.onMissions,
+    required this.onServices,
     required this.missionBadge,
     required this.onRecruitment,
     required this.onShop,
@@ -26,6 +29,8 @@ class CampScreen extends StatelessWidget {
   final int crystals;
   final int commanderLevel;
   final List<MercenarySpec> ownedCombatMercenaries;
+  final List<MercenarySpec> ownedServiceMercenaries;
+  final ActiveDispatch? activeDispatch;
   final BattleReport? lastReport;
   final int campaignCycle;
   final VoidCallback onDeploy;
@@ -34,6 +39,7 @@ class CampScreen extends StatelessWidget {
   final VoidCallback onCodex;
   final VoidCallback onForge;
   final VoidCallback onMissions;
+  final VoidCallback onServices;
   final int missionBadge;
   final VoidCallback onRecruitment;
   final VoidCallback onShop;
@@ -83,6 +89,13 @@ class CampScreen extends StatelessWidget {
                             compact: compactHeight,
                             woundedCount: worldState.woundedCount,
                             mercenaries: ownedCombatMercenaries,
+                            serviceMercenaries: ownedServiceMercenaries
+                                .where(
+                                  (mercenary) =>
+                                      activeDispatch?.mercenaryId !=
+                                      mercenary.id,
+                                )
+                                .toList(growable: false),
                           ),
                         ),
                       ),
@@ -159,7 +172,15 @@ class CampScreen extends StatelessWidget {
                                     icon: Icons.group_add_outlined,
                                     onTap: onRecruitment,
                                   ),
-                                  const SizedBox(height: 9),
+                                  const SizedBox(height: 7),
+                                  FantasyButton(
+                                    label: activeDispatch == null
+                                        ? '용병단 작전실'
+                                        : '파견 작전 진행 중',
+                                    icon: Icons.route_outlined,
+                                    onTap: onServices,
+                                  ),
+                                  const SizedBox(height: 7),
                                   FantasyButton(
                                     label: '대장간',
                                     icon: Icons.handyman_outlined,
@@ -202,11 +223,13 @@ class _CampLifeLayer extends StatefulWidget {
     required this.compact,
     required this.woundedCount,
     required this.mercenaries,
+    required this.serviceMercenaries,
   });
 
   final bool compact;
   final int woundedCount;
   final List<MercenarySpec> mercenaries;
+  final List<MercenarySpec> serviceMercenaries;
 
   @override
   State<_CampLifeLayer> createState() => _CampLifeLayerState();
@@ -242,6 +265,22 @@ class _CampLifeLayerState extends State<_CampLifeLayer>
                 height: widget.compact ? 58 : 82,
               ),
             ),
+          for (
+            var index = 0;
+            index < math.min(widget.serviceMercenaries.length, 4);
+            index++
+          )
+            Align(
+              alignment: _campServiceAlignments[index],
+              child: _CampActor(
+                key: ValueKey(
+                  'camp-service-${widget.serviceMercenaries[index].id}',
+                ),
+                mercenary: widget.serviceMercenaries[index],
+                framePhase: (phase + index * .31) % 1,
+                height: widget.compact ? 48 : 66,
+              ),
+            ),
           Positioned(
             left: 0,
             top: 4,
@@ -249,6 +288,7 @@ class _CampLifeLayerState extends State<_CampLifeLayer>
               icon: Icons.forum_outlined,
               label:
                   '상주 영웅 ${widget.mercenaries.length}/8 '
+                  '· 생활 용병 ${widget.serviceMercenaries.length} '
                   '${widget.woundedCount > 0 ? '· 부상자 보고' : '· 다음 계약 준비'}',
             ),
           ),
@@ -330,6 +370,13 @@ const _campActorAlignments = <Alignment>[
   Alignment(.25, -.08),
 ];
 
+const _campServiceAlignments = <Alignment>[
+  Alignment(-.95, -.46),
+  Alignment(.95, -.46),
+  Alignment(-.62, -.34),
+  Alignment(.62, -.34),
+];
+
 const _campActivityById = <String, String>{
   'luna': '야간 경계',
   'kael': '장비 점검',
@@ -339,6 +386,14 @@ const _campActivityById = <String, String>{
   'vesta': '계약 검토',
   'rask': '창날 정비',
   'iris': '월광 명상',
+  'mira': '의무소 순찰',
+  'garr': '신병 훈련',
+  'elka': '공성 장비 해체',
+  'soren': '전선 관측',
+  'talia': '전리품 감정',
+  'fenn': '전령로 확인',
+  'corva': '정보 보고',
+  'silas': '보급 장부 정리',
 };
 
 class _CampActivityChip extends StatelessWidget {

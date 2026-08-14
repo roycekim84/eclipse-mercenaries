@@ -796,6 +796,47 @@ class _SkillTab extends StatelessWidget {
   final WeaponSpec weapon;
   @override
   Widget build(BuildContext context) {
+    if (!mercenary.canDeploy) {
+      final support = mercenary.duty == MercenaryDuty.support;
+      return ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          _SkillSectionLabel(
+            title: support ? '전투 지원 전문 용병' : '후방 파견 전문 용병',
+            detail: support
+                ? '출전 용병과 함께 전장에 진입하지 않고 자동 지원 전술을 수행합니다.'
+                : '캠프 작전실에서 지역·위험도별 후방 임무를 수행합니다.',
+          ),
+          _SkillRow(
+            title:
+                '${support ? '지원 전술' : '파견 특기'} · ${ServiceOperationRules.serviceSkillName(mercenary)}',
+            detail: mercenary.supportEffect,
+            icon: support
+                ? Icons.health_and_safety_outlined
+                : Icons.route_outlined,
+          ),
+          _SkillRow(
+            title: '개인 특성 · ${mercenary.trait}',
+            detail: mercenary.traitDescription,
+            icon: Icons.person_outline,
+          ),
+          const SizedBox(height: 5),
+          _SkillSectionLabel(
+            title: support ? '지원 전술 성장' : '파견 숙련 성장',
+            detail: support
+                ? '중복 계약으로 얻은 전용 증표를 사용해 Lv.5까지 성장합니다.'
+                : '파견 성공 횟수에 따라 보상량과 성공률이 단계적으로 상승합니다.',
+          ),
+          const SizedBox(height: 6),
+          Text(
+            support
+                ? '궁극기와 고유무기는 전투 출전 용병 전용 체계입니다. 지원 용병은 독립된 지원 전술로 운용됩니다.'
+                : '파견 용병은 임무 친화도, 지역 위험도, 돌발 사건에 따라 결과가 달라집니다.',
+            style: const TextStyle(color: Colors.white54, fontSize: 10),
+          ),
+        ],
+      );
+    }
     final signature = gameContent.weapons.firstWhere(
       (candidate) => candidate.id == mercenary.signatureWeaponId,
     );

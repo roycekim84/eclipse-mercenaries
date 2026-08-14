@@ -18,6 +18,7 @@ import 'package:eclipse_mercenaries/domain/game_data.dart';
 import 'package:eclipse_mercenaries/domain/game_settings.dart';
 import 'package:eclipse_mercenaries/domain/progression.dart';
 import 'package:eclipse_mercenaries/domain/run_growth.dart';
+import 'package:eclipse_mercenaries/domain/service_operations.dart';
 import 'package:eclipse_mercenaries/game/survivor_game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -474,7 +475,7 @@ void main() {
 
       final migrated = await repository.load();
 
-      expect(migrated.schemaVersion, 14);
+      expect(migrated.schemaVersion, 15);
       expect(migrated.commanderLevel, 15);
       expect(migrated.battleDiagnostics, isEmpty);
       expect(migrated.equippedGearByMercenary['luna:armor'], isNotNull);
@@ -517,7 +518,7 @@ void main() {
 
     final migrated = AccountSave.fromJson(raw);
 
-    expect(migrated.schemaVersion, 14);
+    expect(migrated.schemaVersion, 15);
     expect(migrated.commanderLevel, 15);
     expect(migrated.mercenaryProgress, hasLength(8));
     expect(migrated.weaponProgress, hasLength(16));
@@ -537,7 +538,7 @@ void main() {
 
     final migrated = await repository.load();
 
-    expect(migrated.schemaVersion, 14);
+    expect(migrated.schemaVersion, 15);
     expect(migrated.settings.reducedFlash, isTrue);
     expect(migrated.settings.performanceMode, isFalse);
     expect(migrated.settings.battleInputMode, BattleInputMode.hybrid);
@@ -646,6 +647,30 @@ void main() {
     expect(restored.settings.reducedFlash, isTrue);
     expect(restored.settings.performanceMode, isTrue);
     expect(restored.settings.largeText, isTrue);
+  });
+
+  test('service operation state survives json persistence', () {
+    final updated = AccountSave.initial().copyWith(
+      serviceSkillLevels: const {'mira': 4},
+      dispatchProgress: const {'talia': 9},
+      serviceInjuryUntil: const {'corva': 999999},
+      activeDispatch: const ActiveDispatch(
+        missionId: 'blackforest_salvage',
+        mercenaryId: 'talia',
+        startedAtEpochMs: 1000,
+        durationSeconds: 1800,
+        seed: 77,
+      ),
+    );
+
+    final restored = AccountSave.fromJson(updated.toJson());
+
+    expect(restored.schemaVersion, 15);
+    expect(restored.serviceSkillLevels['mira'], 4);
+    expect(restored.dispatchProgress['talia'], 9);
+    expect(restored.serviceInjuryUntil['corva'], 999999);
+    expect(restored.activeDispatch?.missionId, 'blackforest_salvage');
+    expect(restored.activeDispatch?.seed, 77);
   });
 
   test('battle diagnostics round trip and retain only the latest twenty', () {

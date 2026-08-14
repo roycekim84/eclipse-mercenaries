@@ -210,6 +210,8 @@ class BattleConfig {
     this.weaponPermanentLevel = 1,
     this.weaponGrowthStage = 1,
     this.gearBonus = const GearCombatBonus.none(),
+    this.supportMercenary,
+    this.supportSkillLevel = 1,
   });
 
   final MercenarySpec mercenary;
@@ -230,6 +232,8 @@ class BattleConfig {
   final int weaponPermanentLevel;
   final int weaponGrowthStage;
   final GearCombatBonus gearBonus;
+  final MercenarySpec? supportMercenary;
+  final int supportSkillLevel;
 }
 
 class BattleStats {

@@ -26,6 +26,8 @@ void main() {
             ownedCombatMercenaries: gameContent.mercenaries
                 .where((mercenary) => mercenary.duty == MercenaryDuty.combat)
                 .toList(growable: false),
+            ownedServiceMercenaries: const [],
+            activeDispatch: null,
             lastReport: null,
             campaignCycle: 30,
             onDeploy: _noop,
@@ -34,6 +36,7 @@ void main() {
             onCodex: _noop,
             onForge: _noop,
             onMissions: _noop,
+            onServices: _noop,
             missionBadge: 2,
             onRecruitment: _noop,
             onShop: _noop,
@@ -117,6 +120,52 @@ void main() {
     await expectLater(
       find.byType(ContractScreen),
       matchesGoldenFile('goldens/contracts_1280x720.png'),
+    );
+  });
+
+  testWidgets('service operations visual baseline at 1280x720', (tester) async {
+    await _setGoldenSurface(tester);
+    final services = gameContent.mercenaries
+        .where((mercenary) => mercenary.duty != MercenaryDuty.combat)
+        .toList(growable: false);
+    await tester.pumpWidget(
+      _GoldenShell(
+        child: ServiceOperationsScreen(
+          ownedMercenaries: services,
+          inventory: const {'mira_token': 40, 'garr_token': 20},
+          skillLevels: const {'mira': 2},
+          dispatchProgress: const {'talia': 8, 'fenn': 3},
+          injuryUntil: const {},
+          activeDispatch: null,
+          notice: null,
+          onUpgrade: (_) {},
+          onStartDispatch: (_, _) {},
+          onClaimDispatch: _noop,
+          onBack: _noop,
+        ),
+      ),
+    );
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(ServiceOperationsScreen));
+      await Future.wait(
+        services.map(
+          (mercenary) => precacheImage(
+            AssetImage(mercenary.visual.portraitAsset),
+            context,
+          ),
+        ),
+      );
+    });
+    await _settleImages(tester);
+    await expectLater(
+      find.byType(ServiceOperationsScreen),
+      matchesGoldenFile('goldens/service_operations_1280x720.png'),
+    );
+    await tester.tap(find.text('후방 파견'));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(ServiceOperationsScreen),
+      matchesGoldenFile('goldens/service_dispatch_1280x720.png'),
     );
   });
 

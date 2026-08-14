@@ -779,6 +779,47 @@ void main() {
     expect(find.text('회수한 전리품 없음'), findsOneWidget);
     expect(find.textContaining('계약 골드와 경험치는 정상 반영'), findsOneWidget);
   });
+
+  testWidgets(
+    'service operations expose support growth and dispatch planning',
+    (tester) async {
+      tester.view.physicalSize = const Size(1280, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final serviceMercenaries = gameContent.mercenaries
+          .where((mercenary) => mercenary.duty != MercenaryDuty.combat)
+          .toList(growable: false);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ServiceOperationsScreen(
+              ownedMercenaries: serviceMercenaries,
+              inventory: const {'mira_token': 40},
+              skillLevels: const {'mira': 2},
+              dispatchProgress: const {'talia': 8},
+              injuryUntil: const {},
+              activeDispatch: null,
+              notice: null,
+              onUpgrade: (_) {},
+              onStartDispatch: (_, _) {},
+              onClaimDispatch: () {},
+              onBack: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('용병단 작전실'), findsOneWidget);
+      expect(find.textContaining('응급 전선'), findsOneWidget);
+      await tester.tap(find.text('후방 파견'));
+      await tester.pumpAndSettle();
+      expect(find.text('북문 보급품 회수'), findsOneWidget);
+      expect(find.textContaining('파견 숙련 Lv.3'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 class _FlakySaveRepository implements SaveRepository {

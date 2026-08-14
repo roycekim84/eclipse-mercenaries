@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/battle_diagnostics.dart';
 import '../../domain/game_settings.dart';
 import '../../domain/progression.dart';
+import '../../domain/service_operations.dart';
 
 enum SaveLoadSource { primary, backup, initial }
 
@@ -35,6 +36,9 @@ class AccountSave {
     required this.selectedSupportMercenaryId,
     required this.selectedDispatchMercenaryId,
     required this.dispatchProgress,
+    required this.serviceSkillLevels,
+    required this.activeDispatch,
+    required this.serviceInjuryUntil,
     required this.clearedContractIds,
   });
 
@@ -78,6 +82,9 @@ class AccountSave {
     selectedSupportMercenaryId: null,
     selectedDispatchMercenaryId: null,
     dispatchProgress: {},
+    serviceSkillLevels: {},
+    activeDispatch: null,
+    serviceInjuryUntil: {},
     clearedContractIds: {},
   );
 
@@ -172,7 +179,7 @@ class AccountSave {
     },
   );
 
-  static const currentSchemaVersion = 14;
+  static const currentSchemaVersion = 15;
 
   final int schemaVersion;
   final int commanderLevel;
@@ -199,6 +206,9 @@ class AccountSave {
   final String? selectedSupportMercenaryId;
   final String? selectedDispatchMercenaryId;
   final Map<String, int> dispatchProgress;
+  final Map<String, int> serviceSkillLevels;
+  final ActiveDispatch? activeDispatch;
+  final Map<String, int> serviceInjuryUntil;
   final Set<String> clearedContractIds;
 
   AccountSave copyWith({
@@ -226,6 +236,9 @@ class AccountSave {
     Object? selectedSupportMercenaryId = _unset,
     Object? selectedDispatchMercenaryId = _unset,
     Map<String, int>? dispatchProgress,
+    Map<String, int>? serviceSkillLevels,
+    Object? activeDispatch = _unset,
+    Map<String, int>? serviceInjuryUntil,
     Set<String>? clearedContractIds,
   }) => AccountSave(
     schemaVersion: currentSchemaVersion,
@@ -259,6 +272,11 @@ class AccountSave {
         ? this.selectedDispatchMercenaryId
         : selectedDispatchMercenaryId as String?,
     dispatchProgress: dispatchProgress ?? this.dispatchProgress,
+    serviceSkillLevels: serviceSkillLevels ?? this.serviceSkillLevels,
+    activeDispatch: identical(activeDispatch, _unset)
+        ? this.activeDispatch
+        : activeDispatch as ActiveDispatch?,
+    serviceInjuryUntil: serviceInjuryUntil ?? this.serviceInjuryUntil,
     clearedContractIds: clearedContractIds ?? this.clearedContractIds,
   );
 
@@ -296,6 +314,9 @@ class AccountSave {
     'selectedSupportMercenaryId': selectedSupportMercenaryId,
     'selectedDispatchMercenaryId': selectedDispatchMercenaryId,
     'dispatchProgress': dispatchProgress,
+    'serviceSkillLevels': serviceSkillLevels,
+    'activeDispatch': activeDispatch?.toJson(),
+    'serviceInjuryUntil': serviceInjuryUntil,
     'clearedContractIds': clearedContractIds.toList(),
   };
 
@@ -358,6 +379,13 @@ class AccountSave {
       selectedDispatchMercenaryId:
           migrated['selectedDispatchMercenaryId'] as String?,
       dispatchProgress: _intMap(migrated['dispatchProgress']),
+      serviceSkillLevels: _intMap(migrated['serviceSkillLevels']),
+      activeDispatch: migrated['activeDispatch'] is Map
+          ? ActiveDispatch.fromJson(
+              Map<String, Object?>.from(migrated['activeDispatch'] as Map),
+            )
+          : null,
+      serviceInjuryUntil: _intMap(migrated['serviceInjuryUntil']),
       clearedContractIds: _stringSet(migrated['clearedContractIds']),
     );
   }
@@ -579,6 +607,16 @@ abstract final class SaveMigration {
         'selectedDispatchMercenaryId': null,
       };
       version = 14;
+    }
+    if (version < 15) {
+      current = {
+        ...current,
+        'schemaVersion': 15,
+        'serviceSkillLevels': <String, int>{},
+        'activeDispatch': null,
+        'serviceInjuryUntil': <String, int>{},
+      };
+      version = 15;
     }
     if (version != AccountSave.currentSchemaVersion) {
       throw const FormatException('Unsupported save schema');
