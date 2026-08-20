@@ -17,6 +17,7 @@
 - [x] 모바일 비서명 Android/iOS 빌드 CI
 - [x] 2026-08-20 문서 감사 커밋에서 analyze·126 tests·content audit·Web release 재실행
 - [ ] 제출 버전/빌드 번호와 Git tag 동결
+- [ ] Node 20 폐기 경고가 발생한 Pages 액션 revision 갱신
 
 ## B. 화면·에셋
 
