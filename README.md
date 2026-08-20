@@ -6,15 +6,15 @@
 
 F–S 성장·16명 수집·지원/파견·Lv.30 계약 최종 규칙은 [RELEASE_GROWTH_FINALIZATION_1_12.md](RELEASE_GROWTH_FINALIZATION_1_12.md)에서 확인할 수 있습니다.
 
-Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. Web을 우선 개발·검증 환경으로 사용하고 iOS와 Android를 최종 타깃으로 합니다.
+Flutter + Flame 기반 수인 용병단 로그라이트 서바이버입니다. Web을 상시 검증 환경으로 사용하고 iOS와 Android 스토어 출시를 최종 타깃으로 합니다. 현재 코드 기준은 `0.14.1+25`이며, 기능 완성형 출시 후보 상태입니다. 제출 전 차단 항목은 [RELEASE_READINESS_AUDIT.md](RELEASE_READINESS_AUDIT.md)에서 관리합니다.
 
-## 베타 Web 플레이
+## 출시 후보 Web 플레이
 
 - 게임 실행: [GitHub Pages에서 플레이](https://roycekim84.github.io/eclipse-mercenaries/)
 - 테스트 의견: [플레이테스트 피드백 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=playtest_feedback.yml)
 - 버그 제보: [버그 리포트 등록](https://github.com/roycekim84/eclipse-mercenaries/issues/new?template=bug_report.yml)
 
-iOS/Android 출시 빌드는 양쪽 가로 방향으로 고정됩니다. Web은 방향을 강제하지 않고 반응형 테스트 환경으로 유지합니다. 알파 저장 데이터는 현재 브라우저의 local storage에 보관되므로 브라우저 데이터 삭제 또는 시크릿 모드 종료 시 초기화될 수 있습니다.
+iOS/Android 출시 빌드는 양쪽 가로 방향으로 고정됩니다. Web은 방향을 강제하지 않고 반응형 테스트 환경으로 유지합니다. 저장 데이터는 현재 브라우저의 local storage에 보관되므로 브라우저 데이터 삭제 또는 시크릿 모드 종료 시 초기화될 수 있습니다.
 
 ## 실행
 
@@ -42,6 +42,7 @@ flutter run -d chrome
 ## 프로젝트 문서
 
 - 전체 문서 안내: [DOCS_INDEX.md](DOCS_INDEX.md)
+- 출시 준비도와 부족한 점: [RELEASE_READINESS_AUDIT.md](RELEASE_READINESS_AUDIT.md)
 - 제품/게임 전체 기획: [PROJECT_PLAN.md](PROJECT_PLAN.md)
 - 게임 규칙과 알파 밸런스: [GAME_DESIGN.md](GAME_DESIGN.md)
 - 신규 플레이어 시작·초기 경제: [NEW_PLAYER_ONBOARDING.md](NEW_PLAYER_ONBOARDING.md)

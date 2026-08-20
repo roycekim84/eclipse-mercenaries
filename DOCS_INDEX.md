@@ -1,6 +1,6 @@
 # 월식 용병단 문서 인덱스
 
-이 문서는 프로젝트 기획과 개발 의사결정의 진입점이다. 기능 추가나 변경 전에 관련 문서를 먼저 확인하고, 구현 완료 시 `PROGRESS.md`와 `CHANGELOG.md`를 함께 갱신한다.
+이 문서는 프로젝트 기획과 개발 의사결정의 진입점이다. 기능 추가나 변경 전에 관련 문서를 먼저 확인하고, 구현 완료 시 `PROGRESS.md`와 `CHANGELOG.md`를 함께 갱신한다. 출시 여부 판단은 `RELEASE_READINESS_AUDIT.md`를 최우선으로 사용한다.
 
 ## 기준 문서
 
@@ -20,13 +20,20 @@
 | `BALANCE_BASELINE.md` | 콘텐츠 수량, 전투 지수, 성장·보상 기준선과 CI 차단 규칙 | 콘텐츠 버전 또는 핵심 밸런스 변경 시 |
 | `RELEASE_GROWTH_FINALIZATION_1_12.md` | F–S 성장, 모집, 16명 직무, Lv.30 계약과 예상 페이스 | 성장·수집·중반 밸런스 변경 시 |
 | `TESTING.md` | 자동·수동·성능 테스트 기준 | 기능별 검증 범위가 바뀔 때 |
-| `PLAYTEST.md` | 공개 Web 알파 주소, 테스트 흐름과 피드백 접수 | 배포 주소나 테스트 범위가 바뀔 때 |
+| `PLAYTEST.md` | 공개 Web 출시 후보 주소, 테스트 흐름과 피드백 접수 | 배포 주소나 테스트 범위가 바뀔 때 |
 | `STORE_LISTING.md` | 앱 식별자, 스토어 소개·키워드·자산·데이터 선언 초안 | 버전·콘텐츠·스토어 정책 변경 시 |
 | `PRIVACY.md` | 베타 로컬 데이터와 개인정보 처리 공개 방침 | 데이터·SDK·계정·결제 범위 변경 전 |
 | `TERMS.md` | 무료 베타 이용·재화·권리·저장 한계 약관 초안 | 배포 주체·과금·서비스 범위 변경 시 |
 | `RELEASE_CHECKLIST.md` | B6 자동 검증, 비서명 산출물, 서명 비밀과 제출 전 확인 | 네이티브 빌드·배포 절차 변경 시 |
+| `RELEASE_READINESS_AUDIT.md` | 현재 코드 기준 출시 차단(P0), 권장(P1), 출시 후(P2) 항목 | 출시 후보 빌드 또는 제출 조건 변경 시 |
 | `PROGRESS.md` | 구현 완료·진행·다음 작업 현황 | 모든 기능 작업 완료 시 |
 | `CHANGELOG.md` | 버전별 사용자 관점 변경 사항 | 커밋 또는 릴리스 단위 |
+
+## 문서 상태
+
+- **현재 기준**: README, DOCS_INDEX, PROJECT_PLAN, GAME_DESIGN, NEW_PLAYER_ONBOARDING, ARCHITECTURE, BALANCE_BASELINE, UI_UX_SPEC, ROADMAP, TESTING, STORE_LISTING, PRIVACY, TERMS, RELEASE_CHECKLIST, RELEASE_READINESS_AUDIT.
+- **구현 이력/참고**: BETA_IMPLEMENTATION_ROADMAP, ALPHA_PLAYTEST_AUDIT 및 번호가 붙은 과거 polish/finalization 문서. 당시 결정 근거를 보존하지만 현재 수량·버전·출시 판정에는 사용하지 않는다.
+- 충돌 시 `코드/자동 감사 → RELEASE_READINESS_AUDIT → 현재 기준 문서 → 이력 문서` 순으로 판단한다.
 
 ## 의사결정 우선순위
 

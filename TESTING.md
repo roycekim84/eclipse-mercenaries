@@ -1,5 +1,14 @@
 # 테스트
 
+## 2026-08-20 출시 문서·제출 준비 감사
+
+- 코드 기준은 `0.14.1+25`, 저장 schema 15, 용병 16명, 계약 10개, 임무 24개다.
+- 제출 후보 커밋은 `flutter analyze`, `flutter test`, `dart run tool/content_audit.dart`, Pages base-href Web release를 모두 통과해야 한다.
+- Golden 기준은 캠프·계약·결과·지원 파견·작전실 5화면이며, 스토어 캡처는 Golden과 별개로 현재 release 빌드에서 다시 만든다.
+- 기존 테스트 절의 6계약·8용병·구버전 schema 표기는 해당 버전 회귀 이력이며 현재 수량 기준이 아니다.
+- 실제 기기와 외부 10명 검사는 사용자 지시에 따라 실행하지 않으며 출시 위험으로 `RELEASE_READINESS_AUDIT.md`에 기록한다.
+- 2026-08-20 결과: analyze 이슈 0건, 전체 126개 테스트·Golden 5개 통과, 콘텐츠 참조 정상, Pages base-href Web release 성공. Web 산출물 약 173MB.
+
 ## 0.14.1 임시 에셋·무반응 기능 제거 회귀
 
 - 지원·파견 용병 8명은 서로 다른 256×256 RGBA 월드 스프라이트를 가져야 하며 대표 영웅 전투 시트를 화면에 대신 노출하지 않는다.

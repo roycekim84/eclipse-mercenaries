@@ -21,7 +21,7 @@
 - `main.dart`: 앱 부팅만 담당하는 9줄 진입점
 - `app/game_app.dart`: 앱 구성, 화면 상태와 기능 화면 조합
 - `core/theme/game_theme.dart`: 공통 팔레트와 Flutter 테마
-- `core/content/game_content_repository.dart`: 콘텐츠 조회 인터페이스와 알파 정적 구현
+- `core/content/game_content_repository.dart`: 콘텐츠 조회 인터페이스와 출시 후보 정적 구현
 - `core/content/game_visuals.dart`: 용병/무기의 색상, 아이콘, 이미지 경로
 - `core/persistence/save_repository.dart`: versioned 계정 저장 모델과 저장 인터페이스
 - `domain/progression.dart`: 용병 F–S 등급·별 한계돌파·누적 유효 레벨, 무기 영구 성장 규칙
@@ -48,7 +48,7 @@
 
 저장 스키마 15는 용병 등급/별, 지원 전술 레벨, 진행 중 파견의 종료 시각·결과 시드, 파견 숙련과 부상 복귀 시각을 저장한다. v14 이하 저장은 서비스 작전 필드를 안전한 초기값으로 보충하며 기존 소유·장비·재화는 유지한다. 전투용과 생활용 용병은 `MercenaryDuty`로 구분해 생활 캐릭터가 직접 출전하는 상태를 구조적으로 차단한다. `ServiceOperationRules`는 UI와 무관한 성공률·숙련·사건·보상 규칙을 담당하고 `SupportSkillSystem`은 Flame 전투의 자동 지원 호출만 담당한다.
 
-한국어 UI는 네트워크 런타임 폰트 대신 `assets/fonts`의 Noto Sans KR 400/700 서브셋을 사용한다. 영문 대형 제목은 Cinzel을 사용한다. 알파 서브셋은 현재 Dart 소스의 한글 글리프와 기본 Latin/문장부호를 포함하며 `tool/update_font_assets.sh`가 고정된 Google Fonts revision에서 재생성한다. 이 구조로 Web/iOS/Android와 Golden 테스트의 글꼴 메트릭을 일치시킨다.
+한국어 UI는 네트워크 런타임 폰트 대신 `assets/fonts`의 Noto Sans KR 400/700 서브셋을 사용한다. 영문 대형 제목은 Cinzel을 사용한다. 서브셋은 현재 Dart 소스와 콘텐츠 문자열의 한글 글리프, 기본 Latin/문장부호를 포함해야 하며 `tool/update_font_assets.sh`가 고정된 Google Fonts revision에서 재생성한다. 이 구조로 Web/iOS/Android와 Golden 테스트의 글꼴 메트릭을 일치시킨다. 과거 스토어 초안에서 tofu가 확인됐으므로 콘텐츠 데이터까지 포함하는 글리프 감사는 출시 P1이다.
 
 ## 3. 목표 레이어
 
@@ -265,7 +265,7 @@ SaveGame
 └── settings
 ```
 
-현재 schema v10의 실제 저장 필드는 `gold`, `crystals`, `warSeals`, `honor`, `selectedMercenaryId`, 용병별 장착 무기·방어구·장신구·전술 도구, 세력별 `factionReputation`, `operationProgress`, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`, `recruitmentCount`, `mercenaryCopies`, `shopPurchaseCounts`, `shopRefreshCount`, `settings`다. `JsonSaveRepository`는 JSON encode/decode와 순차 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
+현재 schema v15의 실제 저장 필드는 `gold`, `crystals`, `warSeals`, `honor`, `selectedMercenaryId`, 용병별 장착 무기·방어구·장신구·전술 도구, 세력별 `factionReputation`, `operationProgress`, `mercenaryProgress`, `weaponProgress`, `inventory`, `claimedMissionIds`, `recruitmentCount`, `mercenaryCopies`, `shopPurchaseCounts`, `shopRefreshCount`, `battleDiagnostics`, `settings`, 선택 지원/파견 용병, 파견 진행·지원 스킬 레벨·진행 중 파견·부상 복귀 시각·완료 계약 ID다. `JsonSaveRepository`는 JSON encode/decode와 v1→v15 순차 migration을 담당하고 `SharedPreferencesKeyValueStore`가 Web local storage 및 iOS/Android 플랫폼 저장소를 제공한다.
 
 원칙:
 
@@ -280,9 +280,9 @@ SaveGame
 
 캠프 메타 동작은 `CampMetaRules`의 순수 조건/비용 계산을 거친 뒤 앱 셸에서 계정 스냅샷을 한 번 교체하고 자동 저장한다. 훈련은 골드·야전 식량을 용병 XP로, 담금질은 골드·전장 고철을 무기 XP로 변환한다. 제작/분해는 재료 수량을 원자적으로 교체하며 임무 수령 ID는 `claimedMissionIds`로 중복 지급을 막는다.
 
-모집 순서와 상점 가격/한도는 `RecruitmentRules`, `ShopRules`에서 결정한다. 모집 결과 적용은 크리스탈/계약서 차감, 보유 사본 증가, 중복 증표 지급을 하나의 계정 스냅샷으로 저장한다. 상점 구매도 재화 차감, inventory 지급, 갱신별 구매 횟수 증가를 동시에 반영한다. 알파 로컬 빌드에는 결제 SDK와 실제 화폐 상품을 포함하지 않는다.
+모집 순서와 상점 가격/한도는 `RecruitmentRules`, `ShopRules`에서 결정한다. 모집 결과 적용은 크리스탈/계약서 차감, 보유 사본 증가, 중복 증표 지급을 하나의 계정 스냅샷으로 저장한다. 상점 구매도 재화 차감, inventory 지급, 갱신별 구매 횟수 증가를 동시에 반영한다. 현재 출시 후보에는 결제 SDK와 실제 화폐 상품을 포함하지 않는다.
 
-`GameSettings`는 첫 계약 안내 완료, 효과음, 진동, 화면 흔들림, 섬광 감소, 저사양 전투 모드, 큰 글자, 이동 입력 모드와 자동 표적 우선순위를 타입으로 보관한다. 앱 셸은 시스템 글자 배율과 앱 큰 글자 배율을 조합해 1.0~1.3 범위에서 렌더하고, 전투 설정은 세션 시작 시 Flutter 입력 계층과 Flame 표적 탐색에 각각 주입한다. schema v7은 기존 저장에 혼합 입력과 거리 우선 기본값을 추가하고 schema v8은 용병별 방어구·장신구·전술 도구 장착 ID, schema v9는 세력별 평판, schema v10은 작전 진행도를 추가한다. 앱 셸은 장착 ID를 `GearCombatBonus` 불변 스냅샷으로 계산해 `BattleConfig`에 전달하며 전투 결과에 따라 계약 세력 평판과 작전 진행도를 결정론적으로 갱신한다. 튜토리얼은 앱 셸 오버레이로 표시하며 완료 즉시 저장한다.
+`GameSettings`는 첫 계약 안내 완료, 5개 오디오 버스, 진동, 화면 흔들림, 섬광 감소, 저사양 전투 모드, 큰 글자, 이동 입력 모드와 자동 표적 우선순위를 타입으로 보관한다. 앱 셸은 시스템 글자 배율과 앱 큰 글자 배율을 조합해 1.0~1.3 범위에서 렌더하고, 전투 설정은 세션 시작 시 Flutter 입력 계층과 Flame 표적 탐색에 각각 주입한다. schema v7–v10은 조작·장비·평판·작전을, v11–v15는 진단·초기 경제·등급/별·서비스 직무·지원/파견 상태를 추가했다. 앱 셸은 장착 ID를 `GearCombatBonus` 불변 스냅샷으로 계산해 `BattleConfig`에 전달하며 전투 결과에 따라 계약 세력 평판과 작전 진행도를 결정론적으로 갱신한다. 튜토리얼은 앱 셸 오버레이로 표시하며 완료 즉시 저장한다.
 
 공통 `GameStatePanel`은 로딩·빈 목록·복구 가능한 오류의 제목, 설명, 행동 구조를 통일한다. 저장 실패는 메모리의 최신 계정 스냅샷을 유지하고 캠프/결과의 `StatusBanner`에서 같은 repository 저장을 다시 시도한다. 재시도 성공 시 오류를 제거하며 실패 시 사용자 행동이 가능한 안내를 유지한다.
 
