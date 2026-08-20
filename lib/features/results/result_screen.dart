@@ -18,6 +18,14 @@ class ResultScreen extends StatelessWidget {
   final VoidCallback onReplay;
   @override
   Widget build(BuildContext context) {
+    if (report.isIntroBattle) {
+      return _IntroBattleResult(
+        report: report,
+        receipt: growthReceipt,
+        onNext: onCamp,
+        onReplay: onReplay,
+      );
+    }
     final title = switch (report.outcome) {
       BattleOutcome.victory => 'VICTORY',
       BattleOutcome.retreat => 'RETREAT',
@@ -292,6 +300,111 @@ class ResultScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _IntroBattleResult extends StatelessWidget {
+  const _IntroBattleResult({
+    required this.report,
+    required this.receipt,
+    required this.onNext,
+    required this.onReplay,
+  });
+
+  final BattleReport report;
+  final GrowthReceipt receipt;
+  final VoidCallback onNext;
+  final VoidCallback onReplay;
+
+  @override
+  Widget build(BuildContext context) => SceneFrame(
+    background: 'assets/images/battlefield/north_gate_battlefield.png',
+    child: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: GoldPanel(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 280,
+                    child: Image.asset(
+                      gameContent.mercenaryById('luna').visual.portraitAsset,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 28),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          report.outcome == BattleOutcome.victory
+                              ? 'VICTORY'
+                              : '다시 전열을 정비하라',
+                          style: const TextStyle(
+                            color: Color(0xffffd27c),
+                            fontSize: 38,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          report.outcome == BattleOutcome.victory
+                              ? '북문을 지켰습니다. 월식 용병단의 첫 계약이 시작됩니다.'
+                              : '전투 감각은 익혔습니다. 즉시 다시 도전할 수 있습니다.',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            ResultStat('처치', '${report.kills}'),
+                            ResultStat('골드', '+${report.gold}'),
+                            ResultStat(
+                              '루나 성장',
+                              '+${receipt.mercenaryXpGained} XP',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        StatusBanner(
+                          message: report.outcome == BattleOutcome.victory
+                              ? '해금: 용병단 캠프 · 용병 모집'
+                              : '이동하며 적과 거리를 벌리면 자동 공격이 이어집니다.',
+                        ),
+                        const SizedBox(height: 18),
+                        FantasyButton(
+                          label: report.outcome == BattleOutcome.victory
+                              ? '캠프로 귀환'
+                              : '즉시 재도전',
+                          icon: Icons.gavel,
+                          prominent: true,
+                          onTap: report.outcome == BattleOutcome.victory
+                              ? onNext
+                              : onReplay,
+                        ),
+                        const SizedBox(height: 8),
+                        if (report.outcome == BattleOutcome.victory)
+                          TextButton(
+                            onPressed: onReplay,
+                            child: const Text('같은 전투 다시 하기'),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _LandscapeResultScreen extends StatelessWidget {

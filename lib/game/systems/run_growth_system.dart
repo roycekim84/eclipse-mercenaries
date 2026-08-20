@@ -7,28 +7,67 @@ extension RunGrowthSystem on SurvivorGame {
 
   int _passiveLevel(String id) => _passiveLevels[id] ?? 0;
 
-  List<RunUpgradeDefinition> get _upgradeDefinitions => [
-    for (final availableWeapon in alphaWeapons)
-      if (RunGrowthRules.canOfferWeapon(
-        ownerId: availableWeapon.ownerId,
-        mercenaryId: mercenary.id,
-        equippedWeaponId: weapon.id,
-        weaponId: availableWeapon.id,
-      ))
-        RunUpgradeDefinition(
-          id: availableWeapon.id,
-          kind: RunUpgradeKind.weapon,
-          maxLevel: _maxWeaponLevel,
-          baseWeight: availableWeapon.id == weapon.id ? 92 : 54,
-        ),
-    ...alphaPassiveDefinitions,
-    const RunUpgradeDefinition(
-      id: 'mercenary_trait',
-      kind: RunUpgradeKind.trait,
-      maxLevel: _maxTraitLevel,
-      baseWeight: 58,
-    ),
-  ];
+  List<RunUpgradeDefinition> get _upgradeDefinitions => config.isIntroBattle
+      ? const [
+          RunUpgradeDefinition(
+            id: 'moon_blades',
+            kind: RunUpgradeKind.weapon,
+            maxLevel: _maxWeaponLevel,
+            baseWeight: 120,
+          ),
+          RunUpgradeDefinition(
+            id: 'shadow_knife',
+            kind: RunUpgradeKind.weapon,
+            maxLevel: _maxWeaponLevel,
+            baseWeight: 92,
+          ),
+          RunUpgradeDefinition(
+            id: 'ember_orb',
+            kind: RunUpgradeKind.weapon,
+            maxLevel: _maxWeaponLevel,
+            baseWeight: 86,
+          ),
+          RunUpgradeDefinition(
+            id: 'war_bow',
+            kind: RunUpgradeKind.weapon,
+            maxLevel: _maxWeaponLevel,
+            baseWeight: 78,
+          ),
+          RunUpgradeDefinition(
+            id: 'rapid_drill',
+            kind: RunUpgradeKind.passive,
+            maxLevel: 5,
+            baseWeight: 76,
+          ),
+          RunUpgradeDefinition(
+            id: 'mercenary_trait',
+            kind: RunUpgradeKind.trait,
+            maxLevel: _maxTraitLevel,
+            baseWeight: 82,
+          ),
+        ]
+      : [
+          for (final availableWeapon in alphaWeapons)
+            if (RunGrowthRules.canOfferWeapon(
+              ownerId: availableWeapon.ownerId,
+              mercenaryId: mercenary.id,
+              equippedWeaponId: weapon.id,
+              weaponId: availableWeapon.id,
+            ))
+              RunUpgradeDefinition(
+                id: availableWeapon.id,
+                kind: RunUpgradeKind.weapon,
+                maxLevel: _maxWeaponLevel,
+                baseWeight: availableWeapon.id == weapon.id ? 92 : 54,
+              ),
+          ...alphaPassiveDefinitions,
+          const RunUpgradeDefinition(
+            id: 'mercenary_trait',
+            kind: RunUpgradeKind.trait,
+            maxLevel: _maxTraitLevel,
+            baseWeight: 58,
+          ),
+        ];
 
   RunGrowthState get _runGrowthState => RunGrowthState(
     weaponLevels: {
@@ -78,7 +117,7 @@ extension RunGrowthSystem on SurvivorGame {
   void _updateRunWeapons(double dt) {
     final speedMultiplier = math.max(
       .58,
-      1 - _passiveLevel('rapid_drill') * .07,
+      1 - _passiveLevel('rapid_drill') * (config.isIntroBattle ? .14 : .07),
     );
     for (final state in _runWeapons) {
       state.attackClock += dt;
@@ -102,6 +141,11 @@ extension RunGrowthSystem on SurvivorGame {
 
   void _requestLevelUp() {
     if (_xp < _nextXp || _pausedForChoice) return;
+    final introProfile = config.introProfile;
+    if (introProfile != null && _elapsed < introProfile.firstLevelUpAt) {
+      _levelUpPending = true;
+      return;
+    }
     if (_pausedForEvent ||
         eventPrompt.value != null ||
         _bossPhaseBannerClock > 0 ||
@@ -117,6 +161,7 @@ extension RunGrowthSystem on SurvivorGame {
     _xp -= _nextXp;
     _nextXp = (_nextXp * 1.32).roundToDouble();
     _level++;
+    _firstLevelUpAt ??= _elapsed;
     unawaited(GameAudioFeedback.cue(AudioCue.levelUp, audioSettings));
     final definitions = RunGrowthRules.generateChoices(
       definitions: _upgradeDefinitions,
@@ -137,13 +182,22 @@ extension RunGrowthSystem on SurvivorGame {
       final selectedWeapon = alphaWeapons.firstWhere(
         (candidate) => candidate.id == definition.id,
       );
+      final introDescription = switch (selectedWeapon.pattern) {
+        WeaponPattern.twinSlash => '검격이 넓어지고 주변 적까지 연속으로 베어냅니다.',
+        WeaponPattern.shadowPierce => '관통 투검이 전열을 가로질러 다수의 적을 벱니다.',
+        WeaponPattern.emberBurst => '적 무리에서 폭발해 주변을 불태웁니다.',
+        WeaponPattern.longBow => '먼 적을 빠르게 꿰뚫는 화살을 발사합니다.',
+        _ => selectedWeapon.description,
+      };
       return UpgradeOption(
         id: definition.id,
         kind: definition.kind,
         title: currentLevel == 0
             ? '${selectedWeapon.name} 획득'
             : '${selectedWeapon.name} 강화',
-        description: currentLevel == 0
+        description: config.isIntroBattle
+            ? introDescription
+            : currentLevel == 0
             ? selectedWeapon.description
             : '공격 피해와 공격 주기가 강화됩니다.',
         iconId: selectedWeapon.id,
@@ -168,7 +222,13 @@ extension RunGrowthSystem on SurvivorGame {
         '모든 무기의 피해가 10% 증가합니다.',
         'battle_instinct',
       ),
-      'rapid_drill' => ('속전 훈련', '모든 무기의 공격 주기가 7% 감소합니다.', 'rapid_drill'),
+      'rapid_drill' => (
+        config.isIntroBattle ? '쏟아지는 검격' : '속전 훈련',
+        config.isIntroBattle
+            ? '공격 간격이 크게 짧아져 화면에 공격이 끊이지 않습니다.'
+            : '모든 무기의 공격 주기가 7% 감소합니다.',
+        'rapid_drill',
+      ),
       'swift_step' => ('신속한 발걸음', '이동속도가 8% 증가합니다.', 'swift_step'),
       _ => ('예리한 시선', '치명타 확률이 5% 증가합니다.', 'keen_eye'),
     };
@@ -198,6 +258,7 @@ extension RunGrowthSystem on SurvivorGame {
       return;
     }
     final selected = activeChoice.options[index];
+    if (config.isIntroBattle) _funGrowthChoices.add(selected.id);
     unawaited(GameAudioFeedback.cue(AudioCue.choice, audioSettings));
     switch (selected.kind) {
       case RunUpgradeKind.weapon:

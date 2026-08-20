@@ -11,6 +11,7 @@ class CampScreen extends StatelessWidget {
     required this.activeDispatch,
     required this.lastReport,
     required this.campaignCycle,
+    this.contentStage = 4,
     required this.onDeploy,
     required this.onRoster,
     required this.onEquipment,
@@ -33,6 +34,7 @@ class CampScreen extends StatelessWidget {
   final ActiveDispatch? activeDispatch;
   final BattleReport? lastReport;
   final int campaignCycle;
+  final int contentStage;
   final VoidCallback onDeploy;
   final VoidCallback onRoster;
   final VoidCallback onEquipment;
@@ -116,33 +118,38 @@ class CampScreen extends StatelessWidget {
                                     const Crest(),
                                     const SizedBox(height: 14),
                                   ],
-                                  NavButton(
-                                    icon: Icons.groups_2_outlined,
-                                    label: '용병',
-                                    onTap: onRoster,
-                                    badge: true,
-                                  ),
-                                  NavButton(
-                                    icon: Icons.auto_awesome_mosaic_outlined,
-                                    label: '장비',
-                                    onTap: onEquipment,
-                                  ),
-                                  NavButton(
-                                    icon: Icons.storefront_outlined,
-                                    label: '상점',
-                                    onTap: onShop,
-                                  ),
-                                  NavButton(
-                                    icon: Icons.menu_book_outlined,
-                                    label: '임무',
-                                    onTap: onMissions,
-                                    badge: missionBadge > 0,
-                                  ),
-                                  NavButton(
-                                    icon: Icons.auto_stories_outlined,
-                                    label: '도감',
-                                    onTap: onCodex,
-                                  ),
+                                  if (contentStage >= 2) ...[
+                                    NavButton(
+                                      icon: Icons.groups_2_outlined,
+                                      label: '용병',
+                                      onTap: onRoster,
+                                      badge: true,
+                                    ),
+                                    NavButton(
+                                      icon: Icons.auto_awesome_mosaic_outlined,
+                                      label: '장비',
+                                      onTap: onEquipment,
+                                    ),
+                                  ],
+                                  if (contentStage >= 4)
+                                    NavButton(
+                                      icon: Icons.storefront_outlined,
+                                      label: '상점',
+                                      onTap: onShop,
+                                    ),
+                                  if (contentStage >= 3)
+                                    NavButton(
+                                      icon: Icons.menu_book_outlined,
+                                      label: '임무',
+                                      onTap: onMissions,
+                                      badge: missionBadge > 0,
+                                    ),
+                                  if (contentStage >= 4)
+                                    NavButton(
+                                      icon: Icons.auto_stories_outlined,
+                                      label: '도감',
+                                      onTap: onCodex,
+                                    ),
                                 ],
                               ),
                             ),
@@ -173,19 +180,22 @@ class CampScreen extends StatelessWidget {
                                     onTap: onRecruitment,
                                   ),
                                   const SizedBox(height: 7),
-                                  FantasyButton(
-                                    label: activeDispatch == null
-                                        ? '용병단 작전실'
-                                        : '파견 작전 진행 중',
-                                    icon: Icons.route_outlined,
-                                    onTap: onServices,
-                                  ),
-                                  const SizedBox(height: 7),
-                                  FantasyButton(
-                                    label: '대장간',
-                                    icon: Icons.handyman_outlined,
-                                    onTap: onForge,
-                                  ),
+                                  if (contentStage >= 3) ...[
+                                    FantasyButton(
+                                      label: activeDispatch == null
+                                          ? '용병단 작전실'
+                                          : '파견 작전 진행 중',
+                                      icon: Icons.route_outlined,
+                                      onTap: onServices,
+                                    ),
+                                    const SizedBox(height: 7),
+                                  ],
+                                  if (contentStage >= 2)
+                                    FantasyButton(
+                                      label: '대장간',
+                                      icon: Icons.handyman_outlined,
+                                      onTap: onForge,
+                                    ),
                                   const SizedBox(height: 8),
                                   const Text(
                                     '오늘의 전쟁 보상  0 / 3',

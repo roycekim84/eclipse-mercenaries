@@ -69,6 +69,30 @@ class BattlefieldEventRecord {
   final BattlefieldEventRarity rarity;
 }
 
+const introSupportEvent = BattlefieldEventSpec(
+  id: 'intro_support_choice',
+  title: '지원 신호',
+  rarity: BattlefieldEventRarity.special,
+  effect: BattlefieldEventEffect.mercenaryIntervention,
+  description: '전선을 뒤집을 지원 부대를 선택하십시오.',
+  weight: 0,
+  minProgress: 0,
+  choices: [
+    BattlefieldEventChoiceSpec(
+      id: 'intro_shield_support',
+      label: '방패병 증원',
+      description: '전선을 버틴다',
+      resultText: '방패병이 루나 앞에 방어선을 세웠습니다.',
+    ),
+    BattlefieldEventChoiceSpec(
+      id: 'intro_archer_support',
+      label: '궁수 증원',
+      description: '뒤에서 적을 쓸어낸다',
+      resultText: '궁수대가 후방에서 일제 사격을 시작했습니다.',
+    ),
+  ],
+);
+
 const alphaBattlefieldEvents = <BattlefieldEventSpec>[
   BattlefieldEventSpec(
     id: 'enemy_reinforcements',

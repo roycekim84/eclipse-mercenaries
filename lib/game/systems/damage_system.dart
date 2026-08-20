@@ -7,7 +7,13 @@ extension DamageSystem on SurvivorGame {
     CombatStyle style = CombatStyle.greatsword,
   }) {
     if (_playerInvulnerability > 0 || _finished) return;
-    _playerHp = math.max(0, _playerHp - damage);
+    final appliedDamage = config.introProfile == null
+        ? damage
+        : math.max(
+            1,
+            (damage * config.introProfile!.enemyDamageMultiplier).round(),
+          );
+    _playerHp = math.max(0, _playerHp - appliedDamage);
     _playerHitFlash = .16;
     _playerInvulnerability = invulnerabilitySeconds;
     _emitSlash(_player, .2, style);
@@ -109,11 +115,12 @@ extension DamageSystem on SurvivorGame {
     target.dead = true;
     _kills++;
     final rank = target.archetype?.rank ?? EnemyRank.common;
-    _xp += switch (rank) {
+    final gainedXp = switch (rank) {
       EnemyRank.common => 5,
       EnemyRank.elite => 20,
       EnemyRank.boss => 45,
     };
+    _xp += gainedXp * (config.introProfile?.xpMultiplier ?? 1);
     _collectRareDrop(target);
     if (rank != EnemyRank.common) {
       unawaited(
@@ -128,11 +135,16 @@ extension DamageSystem on SurvivorGame {
         1,
         _ultimateCharge +
             switch (rank) {
-              EnemyRank.common => .07,
-              EnemyRank.elite => .22,
-              EnemyRank.boss => .35,
-            },
+                  EnemyRank.common => .07,
+                  EnemyRank.elite => .22,
+                  EnemyRank.boss => .35,
+                } *
+                (config.introProfile?.ultimateChargeMultiplier ?? 1),
       );
+      if (_ultimateCharge >= 1) _firstUltimateReadyAt ??= _elapsed;
+    }
+    if (target == _enemyCommander && rank == EnemyRank.boss) {
+      _bossDefeatedAt ??= _elapsed;
     }
   }
 

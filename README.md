@@ -25,7 +25,7 @@ flutter run -d chrome
 
 진행 상태는 `shared_preferences`를 통해 Web local storage와 iOS/Android 플랫폼 저장소에 자동 저장됩니다.
 
-첫 실행에서는 4단계 첫 계약 안내가 표시됩니다. 캠프 우상단 설정에서 큰 글자, 섬광 감소, 저사양 전투 모드, 효과음, 진동, 화면 흔들림과 튜토리얼 다시 보기를 변경할 수 있습니다. 설정 하단의 `완전 초기화`는 이중 확인 후 진행·재화·편성·전투 기록·환경 설정과 백업 저장을 모두 삭제하고 신규 계정 상태로 복원합니다.
+첫 실행에서는 루나 소개 후 `첫 출전` 한 번으로 약 3분의 인트로 전투를 시작합니다. 성장·아군 증원·궁극기·지원 선택·보스를 먼저 경험한 뒤 캠프 기능이 단계적으로 열립니다. 설정 하단의 `완전 초기화`는 이중 확인 후 모든 기록을 삭제하고 이 첫 출전 상태로 복원합니다.
 
 현재 플레이 루프는 `캠프 → 전쟁 계약 → 출전/지원 편성 → Flame 전투 → 레벨업 → 전장 사건 선택 → 승리/후퇴/패배 → 보상 → 작전실 지원 성장/후방 파견 → F–S 승급/별 한계돌파/무기 강화 → 모집/상점 → 다음 출전`입니다. 신규 계정은 루나 한 명으로 시작하며 첫 1회 모집에서 지원 용병 미라를 확정 영입합니다. 총 16명의 용병은 전투 8명·지원 4명·파견 4명으로 역할이 나뉩니다.
 
@@ -46,6 +46,7 @@ flutter run -d chrome
 - 제품/게임 전체 기획: [PROJECT_PLAN.md](PROJECT_PLAN.md)
 - 게임 규칙과 알파 밸런스: [GAME_DESIGN.md](GAME_DESIGN.md)
 - 신규 플레이어 시작·초기 경제: [NEW_PLAYER_ONBOARDING.md](NEW_PLAYER_ONBOARDING.md)
+- 첫 3분 재미 리디자인 감사: [FUN_PROTOTYPE_AUDIT.md](FUN_PROTOTYPE_AUDIT.md)
 - 구현 작업 기획: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 - 기술 구조: [ARCHITECTURE.md](ARCHITECTURE.md)
 - 이미지 에셋 스타일: [ASSET_STYLE_GUIDE.md](ASSET_STYLE_GUIDE.md)

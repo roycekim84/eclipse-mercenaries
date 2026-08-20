@@ -63,6 +63,26 @@ extension WeaponSystem on SurvivorGame {
             multiplier: .72,
           );
         }
+        if (state.level >= 2) {
+          var extra = 0;
+          final radius = 72.0 + state.level * 18;
+          for (final unit in _enemiesNear(target.position, radius)) {
+            if (identical(unit, target)) continue;
+            _damageEnemy(
+              unit,
+              baseDamage,
+              criticalChance: criticalChance,
+              multiplier: .55 + state.level * .05,
+              showFx: extra == 0,
+            );
+            if (++extra >= state.level + 1) break;
+          }
+          _emitSlash(
+            target.position,
+            .28 + state.level * .04,
+            CombatStyle.blades,
+          );
+        }
       case WeaponPattern.bloodCleave:
         final impact = target.position.clone();
         for (final unit in _enemiesNear(impact, 76).take(7)) {

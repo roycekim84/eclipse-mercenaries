@@ -18,6 +18,7 @@ class BattleScreen extends StatefulWidget {
     required this.gearBonus,
     this.supportMercenary,
     this.supportSkillLevel = 1,
+    this.introBattle = false,
     required this.onVictory,
     required this.onExit,
   });
@@ -36,6 +37,7 @@ class BattleScreen extends StatefulWidget {
   final GearCombatBonus gearBonus;
   final MercenarySpec? supportMercenary;
   final int supportSkillLevel;
+  final bool introBattle;
   final ValueChanged<BattleReport> onVictory;
   final VoidCallback onExit;
 
@@ -57,9 +59,25 @@ class _BattleScreenState extends State<BattleScreen>
         battlefield: widget.contract.battlefield,
         condition: widget.contract.condition,
         objective: widget.contract.objective,
-        balance: widget.contract.balance,
-        durationSeconds: widget.contract.balance.durationSeconds,
-        unitCount: widget.contract.balance.unitCount,
+        balance: widget.introBattle
+            ? const StageBalanceProfile(
+                durationSeconds: 180,
+                unitCount: 520,
+                initialDeployment: 14,
+                activePopulationTarget: 160,
+                reinforcementInterval: 6.5,
+                enemyHpMultiplier: .48,
+                enemyDamageBonus: 0,
+                enemySpeedMultiplier: .82,
+                eliteStride: 120,
+                firstEventAt: 999,
+                eventInterval: 999,
+              )
+            : widget.contract.balance,
+        durationSeconds: widget.introBattle
+            ? 180
+            : widget.contract.balance.durationSeconds,
+        unitCount: widget.introBattle ? 520 : widget.contract.balance.unitCount,
         recommendedPower: widget.contract.power,
         contractId: widget.contract.id,
         contractName: widget.contract.name,
@@ -73,6 +91,7 @@ class _BattleScreenState extends State<BattleScreen>
         gearBonus: widget.gearBonus,
         supportMercenary: widget.supportMercenary,
         supportSkillLevel: widget.supportSkillLevel,
+        introProfile: widget.introBattle ? const IntroBattleProfile() : null,
       ),
       onVictory: widget.onVictory,
       targetPriority: widget.targetPriority,
@@ -107,6 +126,7 @@ class _BattleScreenState extends State<BattleScreen>
     return Stack(
       children: [
         Positioned.fill(child: GameWidget(game: game)),
+        if (widget.introBattle) const _IntroMovementHint(),
         if (widget.inputMode != BattleInputMode.virtualStick)
           Positioned.fill(
             child: GestureDetector(
@@ -227,6 +247,51 @@ class _BattleScreenState extends State<BattleScreen>
       ],
     );
   }
+}
+
+class _IntroMovementHint extends StatefulWidget {
+  const _IntroMovementHint();
+
+  @override
+  State<_IntroMovementHint> createState() => _IntroMovementHintState();
+}
+
+class _IntroMovementHintState extends State<_IntroMovementHint> {
+  bool visible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(seconds: 7), () {
+      if (mounted) setState(() => visible = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: AnimatedOpacity(
+      opacity: visible ? 1 : 0,
+      duration: const Duration(milliseconds: 500),
+      child: Align(
+        alignment: const Alignment(0, .32),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xdd0a0d14),
+            border: Border.all(color: const Color(0xffd6bd81)),
+          ),
+          child: const Text(
+            '드래그해서 이동',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class BossWarningBanner extends StatelessWidget {

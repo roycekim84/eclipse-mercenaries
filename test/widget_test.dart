@@ -165,21 +165,32 @@ void main() {
     expect(restored.inventory['sera_token'], isNull);
   });
 
-  testWidgets('first launch tutorial completes and persists', (tester) async {
+  testWidgets('first launch presents only one primary input before battle', (
+    tester,
+  ) async {
     final repository = InMemorySaveRepository(AccountSave.initial());
     await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('독립 용병단의 단장'), findsOneWidget);
-    await tester.tap(find.text('다음'));
-    await tester.pumpAndSettle();
-    expect(find.text('첫 전쟁 계약'), findsOneWidget);
-    await tester.tap(find.text('건너뛰기'));
+    expect(find.byType(FirstDeploymentScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('first-deploy-button')), findsOneWidget);
+    expect(find.text('계약 비교'), findsNothing);
+    expect(find.text('장비 변경'), findsNothing);
+    final restored = await repository.load();
+    expect(restored.settings.tutorialCompleted, isFalse);
+  });
+
+  testWidgets('completed onboarding restores directly to camp', (tester) async {
+    final repository = InMemorySaveRepository(
+      AccountSave.initial().copyWith(
+        settings: GameSettings.defaults().copyWith(tutorialCompleted: true),
+      ),
+    );
+    await tester.pumpWidget(EclipseMercenariesApp(saveRepository: repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('독립 용병단의 단장'), findsNothing);
-    final restored = await repository.load();
-    expect(restored.settings.tutorialCompleted, isTrue);
+    expect(find.byType(CampScreen), findsOneWidget);
+    expect(find.byType(FirstDeploymentScreen), findsNothing);
   });
 
   testWidgets('accessibility, controls, and performance settings persist', (

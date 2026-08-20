@@ -87,6 +87,54 @@ class StageBalanceProfile {
   final double eventInterval;
 }
 
+/// 기존 계약 밸런스와 분리된 첫 3분 체험 규칙이다.
+/// 전투 엔진은 동일하게 사용하고, 연출 시점과 체감 배율만 주입한다.
+class IntroBattleProfile {
+  const IntroBattleProfile({
+    this.firstLevelUpAt = 18,
+    this.allyReinforcementAt = 55,
+    this.ultimateReadyAt = 78,
+    this.supportChoiceAt = 118,
+    this.bossArrivalAt = 148,
+    this.enemyHpMultiplier = .48,
+    this.enemyDamageMultiplier = .28,
+    this.xpMultiplier = 1.75,
+    this.ultimateChargeMultiplier = 2.6,
+  });
+
+  final double firstLevelUpAt;
+  final double allyReinforcementAt;
+  final double ultimateReadyAt;
+  final double supportChoiceAt;
+  final double bossArrivalAt;
+  final double enemyHpMultiplier;
+  final double enemyDamageMultiplier;
+  final double xpMultiplier;
+  final double ultimateChargeMultiplier;
+}
+
+/// 첫 15분 동안 기존 콘텐츠를 언제 노출할지 결정하는 단일 규칙이다.
+/// 콘텐츠 자체는 삭제하지 않고 캠프 진입점만 단계적으로 연다.
+abstract final class FirstRunExperienceRules {
+  static bool shouldStartIntro({
+    required bool tutorialCompleted,
+    required int clearedContractCount,
+  }) => !tutorialCompleted && clearedContractCount == 0;
+
+  /// 0: 인트로, 1: 캠프/모집, 2: 명부/장비, 3: 임무/작전실,
+  /// 4: 전체 캠프 기능.
+  static int contentStage({
+    required int clearedContractCount,
+    required int commanderLevel,
+  }) {
+    if (clearedContractCount <= 0) return 0;
+    if (clearedContractCount == 1) return 1;
+    if (clearedContractCount == 2) return 2;
+    if (commanderLevel < 8) return 3;
+    return 4;
+  }
+}
+
 class BattleControlState {
   const BattleControlState({
     required this.dashCooldown,
@@ -212,6 +260,7 @@ class BattleConfig {
     this.gearBonus = const GearCombatBonus.none(),
     this.supportMercenary,
     this.supportSkillLevel = 1,
+    this.introProfile,
   });
 
   final MercenarySpec mercenary;
@@ -234,6 +283,28 @@ class BattleConfig {
   final GearCombatBonus gearBonus;
   final MercenarySpec? supportMercenary;
   final int supportSkillLevel;
+  final IntroBattleProfile? introProfile;
+  bool get isIntroBattle => introProfile != null;
+}
+
+class FunPrototypeMetrics {
+  const FunPrototypeMetrics({
+    this.firstLevelUpSeconds,
+    this.firstUltimateReadySeconds,
+    this.firstUltimateUsedSeconds,
+    this.deathSeconds,
+    this.bossDefeatedSeconds,
+    this.completionSeconds,
+    this.selectedGrowthIds = const [],
+  });
+
+  final double? firstLevelUpSeconds;
+  final double? firstUltimateReadySeconds;
+  final double? firstUltimateUsedSeconds;
+  final double? deathSeconds;
+  final double? bossDefeatedSeconds;
+  final double? completionSeconds;
+  final List<String> selectedGrowthIds;
 }
 
 class BattleStats {
@@ -316,6 +387,8 @@ class BattleReport {
     required this.lootDrops,
     required this.award,
     this.ultimateActivations = 0,
+    this.isIntroBattle = false,
+    this.funMetrics,
   });
 
   final String time;
@@ -342,6 +415,8 @@ class BattleReport {
   final List<LootDrop> lootDrops;
   final BattleAward award;
   final int ultimateActivations;
+  final bool isIntroBattle;
+  final FunPrototypeMetrics? funMetrics;
 }
 
 class BattlePerformanceMetrics {

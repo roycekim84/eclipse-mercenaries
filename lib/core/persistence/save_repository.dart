@@ -49,7 +49,7 @@ class AccountSave {
     gold: 5000,
     crystals: 600,
     selectedMercenaryId: 'luna',
-    equippedWeaponByMercenary: {'luna': 'iron_sword'},
+    equippedWeaponByMercenary: {'luna': 'moon_blades'},
     equippedGearByMercenary: {
       'luna:armor': 'moonweave_guard',
       'luna:accessory': 'nightfang_charm',
@@ -68,7 +68,10 @@ class AccountSave {
     mercenaryProgress: {
       'luna': MercenaryProgress(level: 1, xp: 0, ascension: 0),
     },
-    weaponProgress: {'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1)},
+    weaponProgress: {
+      'moon_blades': WeaponProgress(level: 1, xp: 0, stage: 1),
+      'iron_sword': WeaponProgress(level: 1, xp: 0, stage: 1),
+    },
     inventory: {'contract_ticket': 1},
     claimedMissionIds: {},
     warSeals: 0,

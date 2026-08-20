@@ -140,6 +140,7 @@ class SurvivorGame extends FlameGame {
   final _rareDrops = <String>[];
   final _triggeredEventIds = <String>{};
   final _eventRecords = <BattlefieldEventRecord>[];
+  final _funGrowthChoices = <String>[];
   final _escorts = <EscortUnit>[];
   final _frameSamples = List<double>.filled(512, 0);
   final _spatialGrid = ReusableSpatialGrid();
@@ -219,6 +220,14 @@ class SurvivorGame extends FlameGame {
   double _bossUiClock = 0;
   Vector2? _bossPatternTarget;
   BossPatternSpec? _activeBossPattern;
+  int _introGrowthMilestone = 0;
+  bool _introAlliesArrived = false;
+  bool _introSupportOffered = false;
+  bool _introBossArrived = false;
+  double? _firstLevelUpAt;
+  double? _firstUltimateReadyAt;
+  double? _firstUltimateUsedAt;
+  double? _bossDefeatedAt;
 
   static const _standardRenderPolicy = BattleRenderPolicy(
     performanceMode: false,
@@ -297,6 +306,7 @@ class SurvivorGame extends FlameGame {
         config.gearBonus.speedMultiplier *
         (config.condition == BattlefieldCondition.ashWind ? .94 : 1);
     _playerHp = _playerMaxHp;
+    if (config.isIntroBattle) _playerHp *= 1.65;
     _runWeapons.add(RunWeaponState(weapon));
     stats.value = BattleStats(
       hp: _playerMaxHp,
@@ -460,6 +470,7 @@ class SurvivorGame extends FlameGame {
     _ultimateClock = 1.2;
     _pausedForUltimate = true;
     _ultimateActivation++;
+    _firstUltimateUsedAt ??= _elapsed;
     ultimate.value = UltimateSequence(
       mercenaryId: mercenary.id,
       title: mercenary.ultimate,
@@ -526,6 +537,11 @@ class SurvivorGame extends FlameGame {
     }
     _elapsed += worldDt;
     _eventClock += worldDt;
+    _updateIntroExperience();
+    if (_pausedForChoice || _pausedForEvent || _pausedForUltimate) {
+      _updateClock.stop();
+      return;
+    }
     _updateSupportSkill(worldDt);
     var isMoving = false;
     if (_moveDirection != null) {
@@ -613,6 +629,63 @@ class SurvivorGame extends FlameGame {
     }
     _publishStats();
     _publishControls();
+  }
+
+  void _updateIntroExperience() {
+    final profile = config.introProfile;
+    if (profile == null || _finished) return;
+    const growthTimes = <double>[18, 44, 72, 101, 130, 157];
+    if (_introGrowthMilestone < growthTimes.length &&
+        _elapsed >= growthTimes[_introGrowthMilestone]) {
+      _introGrowthMilestone++;
+      if (_xp < _nextXp) _xp = _nextXp;
+      _requestLevelUp();
+      if (_pausedForChoice) return;
+    }
+    if (!_introAlliesArrived && _elapsed >= profile.allyReinforcementAt) {
+      _introAlliesArrived = true;
+      _spawnEventWave(count: 24, ally: true);
+      event.value = const BattleEvent(
+        '전황 변화',
+        '아군 증원 도착',
+        '혼자가 아닙니다. 용병단과 함께 전선을 밀어내십시오.',
+        id: 'intro_allies_arrive',
+      );
+    }
+    if (_elapsed >= profile.ultimateReadyAt && _ultimateActivation == 0) {
+      _ultimateCharge = 1;
+      _firstUltimateReadyAt ??= _elapsed;
+      if (_elapsed >= profile.ultimateReadyAt + 14 && !_pausedForUltimate) {
+        triggerUltimate();
+        return;
+      }
+    }
+    if (!_introSupportOffered &&
+        _elapsed >= profile.supportChoiceAt &&
+        !_pausedForChoice &&
+        !_pausedForUltimate) {
+      _introSupportOffered = true;
+      _pausedForEvent = true;
+      pauseEngine();
+      eventPrompt.value = introSupportEvent;
+      return;
+    }
+    if (!_introBossArrived &&
+        _elapsed >= profile.bossArrivalAt &&
+        !_pausedForChoice &&
+        !_pausedForEvent &&
+        !_pausedForUltimate) {
+      _introBossArrived = true;
+      _spawnEventWave(count: 1, archetypeId: 'siege_marshal');
+      _spawnEventWave(count: 14, archetypeId: 'iron_guard');
+      event.value = const BattleEvent(
+        '최종 국면',
+        '공성군감 드라벤 등장',
+        '지휘관을 쓰러뜨리고 북문을 지키십시오.',
+        id: 'intro_boss_arrival',
+      );
+      unawaited(GameAudioFeedback.cue(AudioCue.bossPhase, audioSettings));
+    }
   }
 
   void _rebuildGrid() {

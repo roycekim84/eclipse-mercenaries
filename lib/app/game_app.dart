@@ -44,6 +44,7 @@ part '../features/recruitment/recruitment_screen.dart';
 part '../features/shop/shop_screen.dart';
 part '../features/settings/settings_screen.dart';
 part '../features/tutorial/tutorial_overlay.dart';
+part '../features/tutorial/first_deployment_screen.dart';
 
 const gameContent = StaticGameContentRepository();
 
@@ -72,6 +73,7 @@ class EclipseMercenariesApp extends StatelessWidget {
 }
 
 enum AppScene {
+  firstDeployment,
   camp,
   contracts,
   mercenarySelect,
@@ -119,6 +121,7 @@ class GameShellState extends State<GameShell> {
   int tutorialStep = 0;
   Future<void> _saveQueue = Future<void>.value();
   bool _resettingAccount = false;
+  bool _introBattleActive = false;
 
   AccountSave get account => _account!;
   int get gold => account.gold;
@@ -199,8 +202,17 @@ class GameShellState extends State<GameShell> {
       }
     }
     if (!mounted) return;
-    setState(() => _account = loaded);
-    unawaited(GameAudioFeedback.campAmbience(loaded.settings));
+    final firstRun =
+        widget.enableTutorial &&
+        FirstRunExperienceRules.shouldStartIntro(
+          tutorialCompleted: loaded.settings.tutorialCompleted,
+          clearedContractCount: loaded.clearedContractIds.length,
+        );
+    setState(() {
+      _account = loaded;
+      scene = firstRun ? AppScene.firstDeployment : AppScene.camp;
+    });
+    if (!firstRun) unawaited(GameAudioFeedback.campAmbience(loaded.settings));
   }
 
   Future<void> _persistAccount() async {
@@ -263,11 +275,16 @@ class GameShellState extends State<GameShell> {
       unawaited(GameAudioFeedback.stopMusic());
       setState(() {
         _account = initial;
-        scene = AppScene.camp;
+        _introBattleActive = false;
+        scene = widget.enableTutorial
+            ? AppScene.firstDeployment
+            : AppScene.camp;
         actionNotice = '모든 진행을 삭제하고 신규 용병단으로 시작했습니다.';
       });
       unawaited(GameAudioFeedback.applySettings(initial.settings));
-      unawaited(GameAudioFeedback.campAmbience(initial.settings));
+      if (!widget.enableTutorial) {
+        unawaited(GameAudioFeedback.campAmbience(initial.settings));
+      }
     } on Object {
       if (!mounted) return;
       setState(() {
@@ -843,6 +860,9 @@ class GameShellState extends State<GameShell> {
       if (dispatchId == 'silas') 'tempered_iron': 1,
     };
     final nextAccount = account.copyWith(
+      settings: value.isIntroBattle && value.outcome == BattleOutcome.victory
+          ? account.settings.copyWith(tutorialCompleted: true)
+          : account.settings,
       commanderLevel: commanderProgress.level,
       commanderXp: commanderProgress.xp,
       gold:
@@ -909,6 +929,17 @@ class GameShellState extends State<GameShell> {
       saveNotice = '자동 저장에 실패했습니다. 현재 실행의 진행 상태는 유지됩니다.';
     }
     if (!mounted) return;
+    if (value.isIntroBattle) {
+      final metrics = value.funMetrics;
+      debugPrint(
+        '[FUN PROTOTYPE] levelUp=${metrics?.firstLevelUpSeconds?.toStringAsFixed(1)}s '
+        'ultimateReady=${metrics?.firstUltimateReadySeconds?.toStringAsFixed(1)}s '
+        'ultimateUsed=${metrics?.firstUltimateUsedSeconds?.toStringAsFixed(1)}s '
+        'boss=${metrics?.bossDefeatedSeconds?.toStringAsFixed(1)}s '
+        'complete=${metrics?.completionSeconds?.toStringAsFixed(1)}s '
+        'growth=${metrics?.selectedGrowthIds.join(',')}',
+      );
+    }
     unawaited(GameAudioFeedback.result(value.outcome, account.settings));
     setState(() {
       _account = nextAccount;
@@ -943,6 +974,25 @@ class GameShellState extends State<GameShell> {
     }
     unawaited(
       GameAudioFeedback.battleAmbience(account.settings, selected.battlefield),
+    );
+    setState(() {
+      _rewardApplied = false;
+      report = null;
+      growthReceipt = null;
+      scene = AppScene.battle;
+    });
+  }
+
+  void startFirstBattle() {
+    selected = contracts.first;
+    selectedMercenary = gameContent.mercenaryById('luna');
+    equippedWeapon = gameContent.weaponById('moon_blades');
+    _introBattleActive = true;
+    unawaited(
+      GameAudioFeedback.battleAmbience(
+        account.settings,
+        BattlefieldType.gateDefense,
+      ),
     );
     setState(() {
       _rewardApplied = false;
@@ -1008,6 +1058,10 @@ class GameShellState extends State<GameShell> {
                 ),
               ),
               child: switch (scene) {
+                AppScene.firstDeployment => FirstDeploymentScreen(
+                  key: const ValueKey('first-deployment'),
+                  onDeploy: startFirstBattle,
+                ),
                 AppScene.camp => CampScreen(
                   key: const ValueKey('camp'),
                   gold: gold,
@@ -1032,6 +1086,13 @@ class GameShellState extends State<GameShell> {
                   campaignCycle:
                       account.recruitmentCount +
                       account.factionReputation.values.fold(0, (a, b) => a + b),
+                  contentStage: widget.enableTutorial
+                      ? FirstRunExperienceRules.contentStage(
+                          clearedContractCount:
+                              account.clearedContractIds.length,
+                          commanderLevel: account.commanderLevel,
+                        )
+                      : 4,
                   onDeploy: () => go(AppScene.contracts),
                   onRoster: () => go(AppScene.roster),
                   onEquipment: () => openEquipment(AppScene.camp),
@@ -1231,6 +1292,7 @@ class GameShellState extends State<GameShell> {
                           account.serviceSkillLevels,
                           account.selectedSupportMercenaryId!,
                         ),
+                  introBattle: _introBattleActive,
                   gearBonus: applySupportCombatBonus(
                     base: GearRules.combatBonus(
                       GearSlot.values.map(
@@ -1253,8 +1315,13 @@ class GameShellState extends State<GameShell> {
                   growthReceipt: growthReceipt!,
                   saveNotice: saveNotice,
                   onRetrySave: retrySave,
-                  onCamp: () => go(AppScene.camp),
-                  onReplay: startBattle,
+                  onCamp: () {
+                    _introBattleActive = false;
+                    go(AppScene.camp);
+                  },
+                  onReplay: report!.isIntroBattle
+                      ? startFirstBattle
+                      : startBattle,
                 ),
                 AppScene.enemyCodex => EnemyCodexScreen(
                   key: const ValueKey('enemy-codex'),

@@ -350,9 +350,76 @@ void main() {
     expect(account.honor, 0);
     expect(account.mercenaryProgress.keys, ['luna']);
     expect(account.mercenaryProgress['luna']?.level, 1);
-    expect(account.weaponProgress.keys, ['iron_sword']);
+    expect(account.weaponProgress.keys, ['moon_blades', 'iron_sword']);
+    expect(account.equippedWeaponByMercenary['luna'], 'moon_blades');
     expect(account.inventory['contract_ticket'], 1);
     expect(AccountSave.betaTest().mercenaryProgress, hasLength(8));
+  });
+
+  test('first-run experience reveals existing systems in stages', () {
+    expect(
+      FirstRunExperienceRules.shouldStartIntro(
+        tutorialCompleted: false,
+        clearedContractCount: 0,
+      ),
+      isTrue,
+    );
+    expect(
+      FirstRunExperienceRules.shouldStartIntro(
+        tutorialCompleted: true,
+        clearedContractCount: 0,
+      ),
+      isFalse,
+    );
+    expect(
+      FirstRunExperienceRules.contentStage(
+        clearedContractCount: 1,
+        commanderLevel: 2,
+      ),
+      1,
+    );
+    expect(
+      FirstRunExperienceRules.contentStage(
+        clearedContractCount: 2,
+        commanderLevel: 5,
+      ),
+      2,
+    );
+    expect(
+      FirstRunExperienceRules.contentStage(
+        clearedContractCount: 3,
+        commanderLevel: 7,
+      ),
+      3,
+    );
+    expect(
+      FirstRunExperienceRules.contentStage(
+        clearedContractCount: 3,
+        commanderLevel: 8,
+      ),
+      4,
+    );
+  });
+
+  test('intro battle profile fits the promised first three minute beats', () {
+    const profile = IntroBattleProfile();
+
+    expect(profile.firstLevelUpAt, inInclusiveRange(15, 25));
+    expect(profile.allyReinforcementAt, lessThan(75));
+    expect(profile.ultimateReadyAt, inInclusiveRange(60, 100));
+    expect(profile.supportChoiceAt, lessThan(profile.bossArrivalAt));
+    expect(profile.bossArrivalAt, inInclusiveRange(140, 160));
+    expect(profile.enemyHpMultiplier, lessThan(1));
+    expect(profile.enemyDamageMultiplier, lessThan(.5));
+    expect(profile.xpMultiplier, greaterThan(1));
+  });
+
+  test('intro support presents two immediately readable army choices', () {
+    expect(introSupportEvent.choices, hasLength(2));
+    expect(
+      introSupportEvent.choices.map((choice) => choice.id),
+      orderedEquals(['intro_shield_support', 'intro_archer_support']),
+    );
   });
 
   test('contract tiers and commander progression pace early unlocks', () {

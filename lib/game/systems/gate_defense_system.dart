@@ -12,9 +12,15 @@ extension GateDefenseSystem on SurvivorGame {
     var enemyIndex = 0;
     var initialEnemySiege = 0;
     for (var i = 0; i < initialDeployment; i++) {
-      final ally = i % 5 < 2;
+      // 첫 55초는 루나 혼자 약한 선발대를 상대한다. 일반 계약의
+      // 전선 배치는 유지하고 인트로만 증원 연출 전까지 아군을 비운다.
+      final ally = config.isIntroBattle ? false : i % 5 < 2;
       final factionIndex = ally ? allyIndex++ : enemyIndex++;
-      final archetype = ally ? null : _enemyForIndex(factionIndex);
+      final archetype = ally
+          ? null
+          : config.isIntroBattle && factionIndex == 0
+          ? EnemyCatalog.byId('vargar_conscript')
+          : _enemyForIndex(factionIndex);
       var role = archetype?.role ?? _roleForFactionIndex(factionIndex);
       if (!ally && role == UnitRole.siege) {
         if (initialEnemySiege >= 4) {
@@ -114,8 +120,12 @@ extension GateDefenseSystem on SurvivorGame {
     final stagedPopulation =
         initialDeployment +
         ((activePopulationTarget - initialDeployment) * progress).round();
-    final enemyFloor = math.max(34, (stagedPopulation * .60).round());
-    final allyFloor = math.max(22, (stagedPopulation * .40).round());
+    final enemyFloor = config.isIntroBattle
+        ? math.max(10, (stagedPopulation * .58).round())
+        : math.max(34, (stagedPopulation * .60).round());
+    final allyFloor = config.isIntroBattle && !_introAlliesArrived
+        ? 0
+        : math.max(22, (stagedPopulation * .40).round());
     if (livingEnemies < enemyFloor) {
       final archetype = EnemyCatalog
           .common[(_elapsed ~/ 5).toInt() % EnemyCatalog.common.length];
@@ -333,6 +343,18 @@ extension GateDefenseSystem on SurvivorGame {
         lootDrops: List.unmodifiable(lootDrops),
         award: award,
         ultimateActivations: _ultimateActivation,
+        isIntroBattle: config.isIntroBattle,
+        funMetrics: config.isIntroBattle
+            ? FunPrototypeMetrics(
+                firstLevelUpSeconds: _firstLevelUpAt,
+                firstUltimateReadySeconds: _firstUltimateReadyAt,
+                firstUltimateUsedSeconds: _firstUltimateUsedAt,
+                deathSeconds: outcome == BattleOutcome.defeat ? _elapsed : null,
+                bossDefeatedSeconds: _bossDefeatedAt,
+                completionSeconds: _elapsed,
+                selectedGrowthIds: List.unmodifiable(_funGrowthChoices),
+              )
+            : null,
       ),
     );
   }

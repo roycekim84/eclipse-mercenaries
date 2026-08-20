@@ -13,6 +13,34 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('first deployment visual baseline at 1280x720', (tester) async {
+    await _setGoldenSurface(tester);
+    await tester.pumpWidget(
+      const _GoldenShell(child: FirstDeploymentScreen(onDeploy: _noop)),
+    );
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(FirstDeploymentScreen));
+      await Future.wait([
+        precacheImage(
+          const AssetImage(
+            'assets/images/battlefield/north_gate_battlefield.png',
+          ),
+          context,
+        ),
+        precacheImage(
+          AssetImage(gameContent.mercenaryById('luna').visual.portraitAsset),
+          context,
+        ),
+      ]);
+    });
+    await _settleImages(tester);
+
+    await expectLater(
+      find.byType(FirstDeploymentScreen),
+      matchesGoldenFile('goldens/first_deployment_1280x720.png'),
+    );
+  });
+
   testWidgets('camp visual baseline at 1280x720', (tester) async {
     await _setGoldenSurface(tester);
     await tester.pumpWidget(

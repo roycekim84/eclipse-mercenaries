@@ -2,6 +2,7 @@ part of '../survivor_game.dart';
 
 extension BattlefieldEventSystem on SurvivorGame {
   void _updateBattlefieldEvents() {
+    if (config.isIntroBattle) return;
     if (_eventClock < _nextEventAt ||
         eventPrompt.value != null ||
         _pausedForChoice ||
@@ -37,12 +38,14 @@ extension BattlefieldEventSystem on SurvivorGame {
       return;
     }
     final selected = index < 0
-        ? const BattlefieldEventChoiceSpec(
-            id: 'continue_mission',
-            label: '계약 목표 유지',
-            description: '위험한 사건에 개입하지 않고 본래 임무를 계속합니다.',
-            resultText: '사건에 개입하지 않고 계약 목표를 우선했습니다.',
-          )
+        ? activeEvent.id == introSupportEvent.id
+              ? activeEvent.choices.first
+              : const BattlefieldEventChoiceSpec(
+                  id: 'continue_mission',
+                  label: '계약 목표 유지',
+                  description: '위험한 사건에 개입하지 않고 본래 임무를 계속합니다.',
+                  resultText: '사건에 개입하지 않고 계약 목표를 우선했습니다.',
+                )
         : activeEvent.choices[index];
     unawaited(GameAudioFeedback.cue(AudioCue.choice, audioSettings));
     _applyBattlefieldEventChoice(selected);
@@ -89,6 +92,10 @@ extension BattlefieldEventSystem on SurvivorGame {
         _spawnEventWave(count: 42, archetypeId: 'vargar_conscript');
         _eventGoldBonus += 650;
         _eventXpBonus += 180;
+      case 'intro_shield_support':
+        _spawnEventWave(count: 24, ally: true, forcedRole: UnitRole.shield);
+      case 'intro_archer_support':
+        _spawnEventWave(count: 18, ally: true, forcedRole: UnitRole.archer);
       case 'tactical_retreat' || 'royal_retreat':
         return;
       case 'continue_mission':
@@ -196,6 +203,7 @@ extension BattlefieldEventSystem on SurvivorGame {
     required int count,
     bool ally = false,
     String? archetypeId,
+    UnitRole? forcedRole,
   }) {
     final archetype = archetypeId == null
         ? null
@@ -211,7 +219,7 @@ extension BattlefieldEventSystem on SurvivorGame {
               .length,
     );
     for (var i = 0; i < count; i++) {
-      var role = archetype?.role ?? _roleForFactionIndex(i + 1);
+      var role = forcedRole ?? archetype?.role ?? _roleForFactionIndex(i + 1);
       if (!ally && role == UnitRole.siege) {
         if (siegeSlots <= 0) {
           if (archetype?.role == UnitRole.siege) break;
@@ -251,6 +259,13 @@ extension BattlefieldEventSystem on SurvivorGame {
         archetype: archetype,
       );
       _units.add(unit);
+      if (role == UnitRole.commander) {
+        if (ally) {
+          _allyCommander = unit;
+        } else {
+          _enemyCommander = unit;
+        }
+      }
     }
     _peakActiveUnits = math.max(
       _peakActiveUnits,
